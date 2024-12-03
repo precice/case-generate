@@ -1,0 +1,4 @@
+myutils==0.0.21
+pyaml==24.9.0
+PyYAML==6.0.2
+termcolor==2.5.0
