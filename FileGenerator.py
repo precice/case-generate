@@ -9,6 +9,7 @@ sys.path.insert(0, str(( Path(__file__).parent / 'controller' ).resolve()))
 from controller.ui_struct.UI_UserInput import UI_UserInput
 from controller.myutils.UT_PCErrorLogging import UT_PCErrorLogging
 from precice_struct import PS_PreCICEConfig
+import argparse
 
 class FileGenerator:
     def __init__(self, file: Path) -> None:
@@ -103,6 +104,16 @@ class FileGenerator:
         pass
 
 if __name__ == "__main__":
-    fileGenerator = FileGenerator(Path("./examples/3/topology.yaml"))
+    parser = argparse.ArgumentParser(description="Takes topology.yaml files as input and writes out needed files to start the precice.")
+    parser.add_argument(
+        "-f", "--file", 
+        type=Path, 
+        required=False, 
+        help="Input topology.yaml file",
+        default=Path("controller/examples/1/topology.yaml")
+    )
+    args = parser.parse_args()
+
+    fileGenerator = FileGenerator(args.file)
     fileGenerator.generate_precice_config()
     fileGenerator.generate_README()
