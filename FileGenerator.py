@@ -2,12 +2,12 @@ from pathlib import Path
 from generation_utils.StructureHandler import StructureHandler
 import yaml
 from generation_utils.Logger import Logger
-import shutil
 import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'controller')))
-from ui_struct.UI_UserInput import UI_UserInput
-from myutils.UT_PCErrorLogging import UT_PCErrorLogging
+# Insert controller into syspath so imports within controller submodule will still work
+sys.path.insert(0, str(( Path(__file__).parent / 'controller' ).resolve()))
+# Import controller classes
+from controller.ui_struct.UI_UserInput import UI_UserInput
+from controller.myutils.UT_PCErrorLogging import UT_PCErrorLogging
 from precice_struct import PS_PreCICEConfig
 
 class FileGenerator:
