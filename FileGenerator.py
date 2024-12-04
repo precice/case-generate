@@ -1,11 +1,14 @@
 from pathlib import Path
 from generation_utils.StructureHandler import StructureHandler
-from precice_struct import PS_PreCICEConfig
 import yaml
-from ui_struct.UI_UserInput import UI_UserInput
-from myutils.UT_PCErrorLogging import UT_PCErrorLogging
 from generation_utils.Logger import Logger
 import shutil
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'controller')))
+from ui_struct.UI_UserInput import UI_UserInput
+from myutils.UT_PCErrorLogging import UT_PCErrorLogging
+from precice_struct import PS_PreCICEConfig
 
 class FileGenerator:
     def __init__(self, file: Path) -> None:
