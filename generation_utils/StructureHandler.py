@@ -8,7 +8,7 @@ class StructureHandler:
             :param clean_generated: If set to True, clean the _generated dir before the files are created.
             Can be useful if you added or adjusted files yourself and you are not sure what you changed."""
         # Objects
-        self.root = Path(__file__).parent
+        self.root = Path(__file__).parent.parent
         self.generated_root = self.root / "_generated"
         self.config_dir = self.generated_root / "config"
         self.logger = Logger()
