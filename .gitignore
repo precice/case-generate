@@ -2,3 +2,4 @@ __pycache__/
 precice_struct/__pycache__
 venv/
 _generated/
+/zzz things to not put on git/
