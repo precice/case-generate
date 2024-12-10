@@ -273,7 +273,7 @@ class PS_PreCICEConfig(object):
                     other_solver_mesh_name = self.get_mesh_name_by_participants(other_solver_name, solver_name)
                     mapped_tag = etree.SubElement(solver_tag, "mapping:nearest-neighbor", direction = "read",
                                                   from_ = other_solver_mesh_name, to= solvers_mesh_name,
-                                                  constraint = mapping_string, timing = "initial")
+                                                  constraint = mapping_string)
                     pass
                 # WRITES
                 for other_solver_name in list_of_solvers_with_higher_complexity_write:
@@ -282,14 +282,14 @@ class PS_PreCICEConfig(object):
                     other_solver_mesh_name = self.get_mesh_name_by_participants(other_solver_name, solver_name)
                     mapped_tag = etree.SubElement(solver_tag, "mapping:nearest-neighbor", direction="write",
                                               from___ = solvers_mesh_name, to = other_solver_mesh_name,
-                                              constraint = mapping_string, timing="initial")
+                                              constraint = mapping_string)
                     pass
                 # treat M2N communications with other solver
                 for other_solver_name in list_of_solvers_with_higher_complexity:
                     other_solver = list_of_solvers_with_higher_complexity[other_solver_name]
                     # we also add the M2N construct that is mandatory for the configuration
-                    m2n_tag = etree.SubElement( solver_interface_tag, "m2n:sockets", to = other_solver_name,
-                                                from___ = solver_name, exchange___directory = "../")
+                    m2n_tag = etree.SubElement( solver_interface_tag, "m2n:sockets", connector = other_solver_name,
+                                                acceptor = solver_name, exchange___directory = "../")
                 pass
 
         # 4 coupling scheme
