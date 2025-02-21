@@ -272,16 +272,39 @@ def main():
         help="Output path for the generated folder.",
         default=Path(__file__).parent
     )
+    parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        required=False,
+        help="Enable verbose logging output.",
+    )
 
     args = parser.parse_args()
 
     fileGenerator = FileGenerator(args.input_file, args.output_path)
+
+    # Clear any previous log state
+    fileGenerator.logger.clear_log_state()
+
     fileGenerator.generate_level_0()
     fileGenerator.generate_level_1()
-    
-    # Format the generated preCICE configuration
 
+    # Format the generated preCICE configuration
     fileGenerator.format_precice_config()
+    
+    # Handle output based on verbose mode and log state
+    if not args.verbose:
+        if not fileGenerator.logger.has_errors():
+            print("\033c", end="") # clear the terminal output
+            # No errors, show success message
+            fileGenerator.logger.success("Everything worked. You can find the generated files at: " + str(fileGenerator.structure.generated_root))
+            # Always show warnings if any exist
+            if fileGenerator.logger.has_warnings():
+                for warning in fileGenerator.logger.get_warnings():
+                    fileGenerator.logger.warning(warning)
+        
+    
+
 
 if __name__ == "__main__":
     main()
