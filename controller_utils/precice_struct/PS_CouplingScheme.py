@@ -123,6 +123,7 @@ class PS_CouplingScheme(object):
             # print("Current solver " + solver.name + " source meshes: " + str(solver_source_meshes))
             # print("Other solver " + other_solver_for_coupling.name + " source meshes: " + str(other_solver_source_meshes))
 
+            coupled_meshes = []
             for mesh in solver_mesh_names:
                 # Check if this mesh is shared by both solvers
                 if mesh in other_solver_source_meshes:
@@ -134,30 +135,41 @@ class PS_CouplingScheme(object):
 
                     # Check if meshes are provided/received in complementary ways
                     if (is_solver_providing_mesh and is_other_solver_receiving_mesh) or \
-                       (is_solver_receiving_mesh and is_other_solver_providing_mesh):
-                        coupled_mesh_name = mesh
-                        break
+                    (is_solver_receiving_mesh and is_other_solver_providing_mesh):
+                        coupled_meshes.append(mesh)
 
             # the from and to attributes
             from_s = "___"
             to_s = "__"
             exchange_mesh_name = q.source_mesh_name
 
+
             for exchange in config.exchanges:
                 if exchange.get('data') == q_name:
                     from_s = exchange.get('from')
                     to_s = exchange.get('to')
-            
-            if coupled_mesh_name:
-                if solver.name != simple_solver.name:
-                    exchange_mesh_name = coupled_mesh_name
-                else:
-                    exchange_mesh_name = coupled_mesh_name or q.source_mesh_name
+
+            read_mappings = [m.copy() for m in config.mappings_read]
+            write_mappings = [m.copy() for m in config.mappings_write]
+
+            read_mapping = next((m for m in read_mappings if 
+                                (m['from'] == from_s + '-Mesh' and m['to'] == to_s + '-Mesh') ), None)
+            write_mapping = next((m for m in write_mappings if 
+                                (m['from'] == from_s + '-Mesh' and m['to'] == to_s + '-Mesh')), None)
+
+            # # Choose mesh based on mapping constraint
+            if read_mapping and read_mapping['constraint'] == 'conservative':
+                exchange_mesh_name = read_mapping['to']
+            elif read_mapping and read_mapping['constraint'] == 'consistent':
+                exchange_mesh_name = read_mapping['from']
+            elif write_mapping and write_mapping['constraint'] == 'conservative':
+                exchange_mesh_name = write_mapping['to']
+            elif write_mapping and write_mapping['constraint'] == 'consistent':
+                exchange_mesh_name = write_mapping['from']
             else:
+                exchange_mesh_name = q.source_mesh_name
                 if solver.name != simple_solver.name:
                     exchange_mesh_name = other_mesh_name
-                else:
-                    exchange_mesh_name = q.source_mesh_name
 
             e = etree.SubElement(coupling_scheme, "exchange", data=q_name, mesh=exchange_mesh_name
                                  ,from___ = from_s, to=to_s)
@@ -223,6 +235,7 @@ class PS_ImplicitCoupling(PS_CouplingScheme):
 
         self.NrTimeStep = simulation_conf.NrTimeStep
         self.Dt = simulation_conf.Dt
+        self.maxIteration = simulation_conf.max_iterations
 
         pass
 
