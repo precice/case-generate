@@ -24,6 +24,27 @@ class FileGenerator:
     def _generate_precice_config(self) -> None:
         """Generates the precice-config.xml file based on the topology.yaml file."""
 
+        def is_utf8_encoded(file_path):
+            try:
+                with open(file_path, 'rb') as f:
+                    # Read the first few bytes to check for BOM
+                    bom = f.read(3)
+                    if bom == b'\xef\xbb\xbf':
+                        return False  # File has a BOM, so it's not considered pure UTF-8
+
+                    # Try to decode the rest of the file
+                    f.seek(0)  # Go back to the start of the file
+                    f.read().decode('utf-8')
+                return True
+            except UnicodeDecodeError:
+                return False
+
+        # Check if the topology YAML file is UTF-8 encoded
+        topology_file_path = self.input_file  # Assuming this is the path to your YAML file
+        if not is_utf8_encoded(topology_file_path):
+            self.logger.error(f"Input YAML file {topology_file_path} is not UTF-8 encoded.")
+            return
+
         # Try to open the yaml file and get the configuration
         try:
             with open(self.input_file, "r") as config_file:
@@ -263,7 +284,7 @@ def main():
         type=Path, 
         required=False, 
         help="Input topology.yaml file",
-        default=Path("controller_utils/examples/1/topology.yaml")
+        default=Path("examples/1/topology.yaml")
     )
     parser.add_argument(
         "-o", "--output-path",

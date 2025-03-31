@@ -27,16 +27,19 @@ class UI_UserInput(object):
         if "coupling-scheme" in etree and "participants" in etree and "exchanges" in etree:
             # --- Parse simulation info from 'coupling-scheme' ---
             simulation_info = etree["coupling-scheme"]
-            self.sim_info.sync_mode = simulation_info.get("sync-mode", "on")
-            self.sim_info.mode = simulation_info.get("mode", "fundamental")
-            self.sim_info.steady = False
-            self.sim_info.NrTimeStep = simulation_info.get("max-time", 1e-3)
-            self.sim_info.Dt = simulation_info.get("time-window-size", 1e-3)
-            self.sim_info.max_iterations = simulation_info.get("max-iterations", 50)
-            self.sim_info.accuracy = "medium"
+            self.sim_info.sync_mode = simulation_info.get("sync-mode")
+            self.sim_info.mode = simulation_info.get("mode")
+            self.sim_info.steady = simulation_info.get("steady-state")
+            self.sim_info.NrTimeStep = simulation_info.get("max-time")
+            self.sim_info.Dt = simulation_info.get("time-window-size")
+            self.sim_info.max_iterations = simulation_info.get("max-iterations")
+            self.sim_info.accuracy = simulation_info.get("accuracy")
+            self.sim_info.display_standard_values = simulation_info.get('display_standard_values', 'false')
+            self.sim_info.coupling = simulation_info.get("coupling", "parallel")
 
-            # Initialize coupling type to None
+            # Initialize coupling type+ acceleration to None
             self.coupling_type = None
+            self.acceleration = None
             
             # Extract coupling type from exchanges
             if 'exchanges' in etree:
@@ -56,6 +59,59 @@ class UI_UserInput(object):
                         # Mixed types, default to weak
                         #mylog.rep_error("Mixed exchange types detected. Defaulting to 'weak'.")
                         self.coupling_type = 'weak'
+            
+            # --- Parse Acceleration ---
+            if 'acceleration' in etree:
+                acceleration = etree['acceleration']
+                display_standard_values = acceleration.get('display_standard_values', 'false')
+                if display_standard_values.lower() not in ['true', 'false']:
+                    mylog.rep_error(f"Invalid display_standard_values value: {display_standard_values}. Must be 'true' or 'false'.")
+                if display_standard_values.lower() == 'true':
+                    self.acceleration = {
+                        'name': acceleration.get('name', 'IQN-ILS'),
+                        'initial-relaxation': acceleration.get('initial-relaxation', None),
+                        'preconditioner': {
+                            'freeze-after': acceleration.get('preconditioner', {}).get('freeze-after', -1),
+                            'type': acceleration.get('preconditioner', {}).get('type', None)
+                        },
+                        'filter': {
+                            'limit': acceleration.get('filter', {}).get('limit', 1e-16),
+                            'type': acceleration.get('filter', {}).get('type', None)
+                        },
+                        'max-used-iterations': acceleration.get('max-used-iterations', None),
+                        'time-windows-reused': acceleration.get('time-windows-reused', None),
+                        'imvj-restart-mode': {
+                            'truncation-threshold': acceleration.get('imvj-restart-mode', {}).get('truncation-threshold', None),
+                            'chunk-size': acceleration.get('imvj-restart-mode', {}).get('chunk-size', None),
+                            'reused-time-windows-at-restart': acceleration.get('imvj-restart-mode', {}).get('reused-time-windows-at-restart', None),
+                            'type': acceleration.get('imvj-restart-mode', {}).get('type', None)
+                        }if any(acceleration.get('imvj-restart-mode', {}).values()) else None,
+                        'display_standard_values': acceleration.get('display_standard_values', 'false')
+                    }
+                # If display_standard_values is false, set default values to none so they wont get displayed
+                else:
+                    self.acceleration = {
+                        'name': acceleration.get('name', 'IQN-ILS'),
+                        'initial-relaxation': acceleration.get('initial-relaxation', None),
+                        'preconditioner': {
+                            'freeze-after': acceleration.get('preconditioner', {}).get('freeze-after', None),
+                            'type': acceleration.get('preconditioner', {}).get('type', None)
+                        } if any(acceleration.get('preconditioner', {}).values()) else None,
+                        'filter': {
+                            'limit': acceleration.get('filter', {}).get('limit', None),
+                            'type': acceleration.get('filter', {}).get('type', None)
+                        } if any(acceleration.get('filter', {}).values()) else None,
+                        'max-used-iterations': acceleration.get('max-used-iterations', None),
+                        'time-windows-reused': acceleration.get('time-windows-reused', None),
+                        'imvj-restart-mode': {
+                            'truncation-threshold': acceleration.get('imvj-restart-mode', {}).get('truncation-threshold', None),
+                            'chunk-size': acceleration.get('imvj-restart-mode', {}).get('chunk-size', None),
+                            'reused-time-windows-at-restart': acceleration.get('imvj-restart-mode', {}).get('reused-time-windows-at-restart', None),
+                            'type': acceleration.get('imvj-restart-mode', {}).get('type', None)
+                        } if any(acceleration.get('imvj-restart-mode', {}).values()) else None,
+                        'display_standard_values': acceleration.get('display_standard_values', 'false')
+                    }
+                
             
             # --- Parse participants ---
             self.participants = {}
@@ -102,6 +158,7 @@ class UI_UserInput(object):
             # Group exchanges by unique participant pairs
             groups = {}
             for exchange in exchanges_list:
+                exchanges = exchange.get("data-type").lower() if  exchange.get("data-type") is not None else "scalar"
                 pair = tuple(sorted([exchange["from"], exchange["to"]]))
                 groups.setdefault(pair, []).append(exchange)
 
@@ -114,11 +171,12 @@ class UI_UserInput(object):
 
                 # Determine coupling type based on exchanged data
                 data_names = {ex["data"] for ex in ex_list}
-                if "Force" in data_names and "Displacement" in data_names:
+                if any("force" in name.lower() for name in data_names) and any("displacement" in name.lower() for name in data_names):
                     coupling.coupling_type = UI_CouplingType.fsi
-                elif "Force" in data_names:
+                elif any("force" in name.lower() for name in data_names):
                     coupling.coupling_type = UI_CouplingType.f2s
-                elif "Temperature" in data_names:
+                # elif any("temperature" in name.lower() or "heat" in name.lower() for name in data_names):
+                elif any("temperature" in name.lower() for name in data_names):
                     coupling.coupling_type = UI_CouplingType.cht
                 else:
                     coupling.coupling_type = UI_CouplingType.error_coupling
