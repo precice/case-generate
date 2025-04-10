@@ -1,5 +1,13 @@
 # precice-generate
 
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/precice-forschungsprojekt/precice-generate/check.yml?label=Examples%20generation%20and%20validation%20using%20config-checker)
+
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/precice-forschungsprojekt/precice-generate/installation.yml?label=Installation%20Checker)
+
+![GitHub License](https://img.shields.io/github/license/precice-forschungsprojekt/precice-generate)
+
+
+
 ## Project Overview
 
 The precice-generate is a Python-based utility designed to automate the generation of preCICE configuration files from YAML topology descriptions. This tool simplifies the process of setting up multi-physics simulations by transforming user-defined YAML configurations into preCICE-compatible XML configuration files.
@@ -12,18 +20,13 @@ The precice-generate is a Python-based utility designed to automate the generati
 - Comprehensive error logging and handling
 - Simple command-line interface
 
-## Prerequisites
-
-- **Python 3.11** (Required - not compatible with Python 3.8 or earlier)
-- preCICE library
-- Dependencies listed in `requirements.txt`
-
 ## Installation
 
 ### Prerequisites
-- Python 3.10 or higher
+- Python 3.11 or higher ([workflow validated](https://github.com/precice-forschungsprojekt/precice-generate/actions/workflows/installation.yml) with 3.11 and 3.12)
 - pip
 - venv
+- (preCICE library)
 
 ### Manual Installation
 
@@ -92,6 +95,53 @@ precice-gen -f path/to/your/topology.yaml
 2. Use the command-line interface to generate the preCICE configuration.
 3. The tool will create the necessary configuration files in the `_generated/` directory.
 
+## Creating Topology with Metaconfigurator
+
+You can easily create a topology for your preCICE simulation using the online Metaconfigurator. We provide a preloaded schema to help you get started:
+
+1. Open the Metaconfigurator with the preloaded schema: [Metaconfigurator Link](https://metaconfigurator.github.io/meta-configurator/?schema=https://github.com/precice-forschungsprojekt/precice-generate/blob/main/schemas/topology-schema.json)
+
+2. Use the interactive interface to define your topology:
+   - The preloaded schema provides a structured way to describe your simulation components
+   - Make sure you are in the Data Editor (not Schema Editor)
+   - Add configuration details on the right side of the screen
+
+3. Once complete, export your topology as a YAML file
+   - Save the generated YAML file
+   - Use this file with the `precice-generate` tool to create your preCICE configuration
+   - Validate the generated preCICE config with [config-checker](https://github.com/precice-forschungsprojekt/config-checker)
+   - Use `precice_configchecker` and/or `precice_tools check` to validate the generated preCICE config
+
+### Benefits of Using Metaconfigurator
+- Visual, user-friendly interface
+- Real-time validation against our predefined schema
+- Reduces manual configuration errors
+- Simplifies topology creation process
+
+## Example Configurations
+
+### Normal Examples (1-5)
+Our project provides a set of progressively complex example configurations to help you get started with preCICE simulations:
+
+- Located in `examples/1` through `examples/5`
+- Designed for beginners and intermediate users
+- Each example includes:
+  - A `topology.yaml` file defining the simulation setup
+  - A `precice-config.xml` file
+  - Subdirectories for different simulation components
+- Showcase simple, linear multi-physics scenarios
+- Ideal for learning basic preCICE configuration concepts
+
+### Expert Examples
+For advanced users, we offer more sophisticated configuration examples:
+
+- Located in `examples/expert`
+- Contain more advanced usage of topology options but just extend the according example with the same number
+- Demonstrate advanced coupling strategies and intricate topology configurations
+- Targeted at users with a better understanding of preCICE
+
+> [!TIP]
+> Start with normal examples (1-5) and progress to expert examples as you become more comfortable with preCICE configurations.
 
 ## Contributing
 
