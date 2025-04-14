@@ -49,7 +49,7 @@ jobs:
     - name: Find all examples
       id: find-examples
       run: |
-        EXAMPLES=$(find examples -name "topology.yaml" -exec dirname {} \; | sort | uniq)
+        EXAMPLES=$(find examples -path 'examples/0' -prune -o -name "topology.yaml" -exec dirname {} \; | sort | uniq)
         EXAMPLES_JSON=$(echo "$EXAMPLES" | jq -R -s -c 'split("\n") | map(select(. != ""))')
         echo "examples=$EXAMPLES_JSON" >> $GITHUB_OUTPUT
         echo "Found examples: $EXAMPLES_JSON"
@@ -99,6 +99,8 @@ jobs:
           # Validate the configuration
           echo "Validating configuration at $config_file..."
           python config-checker/preciceconfigchecker/cli.py "$config_file" --debug
+          echo "Validating configuration at $config_file... using precice tools check"
+          precice-tools check "$config_file"
           echo "Validation successful for $example_name"
         done
 
