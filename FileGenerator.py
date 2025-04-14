@@ -251,7 +251,8 @@ class FileGenerator:
             self.logger.error(f"Error reading input YAML file: {str(e)}")
             return
         
-        return list(config["participants"].keys())
+        # Extract participant names from the new list format
+        return [participant['name'] for participant in config.get('participants', [])]
     
     def generate_level_1(self) -> None:
         """Generates the files of level 1 (everything in the generated sub-folders)."""
