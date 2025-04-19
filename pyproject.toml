@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "precice-generate"
 description = "Generates File and Folder Structure, including all of the necessary files to quickly kickstart a simulation"
-version = "0.1.0"
+version = "1.0.0"
 
 readme = "README.md"
 license = {text = "MIT"}
@@ -15,39 +15,21 @@ authors = [
     { name = "Toddelismyname", email = "116207910+Toddelismyname@users.noreply.github.com" }
 ]
 
-requires-python = ">= 3.10"
+requires-python = ">= 3.9"
 dependencies = [
-    "attrs==24.2.0",
-    "colorama==0.4.6",
-    "exceptiongroup==1.2.2",
-    "iniconfig==2.0.0",
+    "attrs==25.3.0",
     "jsonschema==4.23.0",
     "jsonschema-specifications==2024.10.1",
-    "lxml==5.3.0",
-    "myutils==0.0.21",
-    "packaging==24.2",
-    "pip-check-reqs==2.5.3",
-    "pluggy==1.5.0",
-    "pyaml==24.9.0",
-    "pytest==8.3.4",
+    "lxml==5.3.2",
     "PyYAML==6.0.2",
-    "referencing==0.35.1",
-    "rpds-py==0.18.0",
-    "termcolor==2.5.0",
-    "tomli==2.2.1",
-    "xmltodict==0.14.2",
-]
-
-[project.optional-dependencies]
-dev = [
-    "black",
-    "isort",
-    "mypy",
-    "pytest-cov",
+    "referencing==0.36.2",
+    "rpds-py==0.24.0",
+    "termcolor==3.0.1",
+    "typing_extensions==4.13.2"
 ]
 
 [project.scripts]
-precice-gen = "file_generator:main"
+precice-gen = "cli:main"
 
 [project.urls]
 Repository = "https://github.com/precice-forschungsprojekt/precice-generate"
@@ -56,11 +38,15 @@ Documentation = "https://github.com/precice-forschungsprojekt/precice-generate/b
 
 [tool.setuptools]
 py-modules = [
-    "file_generator",
+    "cli",
     "generation_utils.adapter_config_generator",
     "generation_utils.format_precice_config",
     "generation_utils.logger",
     "generation_utils.structure_handler",
+    "generation_utils.other_files_generator",
+    "generation_utils.config_generator",
+    "generation_utils.readme_generator",
+    "generation_utils.file_generator",
     "controller_utils.myutils.UT_PCErrorLogging",
     "controller_utils.precice_struct.PS_CouplingScheme",
     "controller_utils.precice_struct.PS_Mesh",
