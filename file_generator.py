@@ -322,16 +322,20 @@ def main():
     # Format the generated preCICE configuration
     fileGenerator.format_precice_config()
     
+
     # Handle output based on verbose mode and log state
     if not args.verbose:
         if not fileGenerator.logger.has_errors():
-            print("\033c", end="") # clear the terminal output
+            fileGenerator.logger.clear_messages()
             # No errors, show success message
             fileGenerator.logger.success("Everything worked. You can find the generated files at: " + str(fileGenerator.structure.generated_root))
             # Always show warnings if any exist
             if fileGenerator.logger.has_warnings():
                 for warning in fileGenerator.logger.get_warnings():
                     fileGenerator.logger.warning(warning)
+
+    fileGenerator.logger.print_all()
+
     if args.validate_topology:
         with open(Path(__file__).parent / "schemas" / "topology-schema.json") as schema_file:
             schema = json.load(schema_file)
