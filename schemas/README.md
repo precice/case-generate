@@ -44,18 +44,59 @@ Define simulation participants with detailed specifications:
 - Minimum of 2 participant required
 
 ### 4. Exchanges Configuration
-Define data exchanges between participants:
+Each exchange defines a one-way data transfer between participants:
 
 #### Required Fields
-- `from`: Source participant
-- `from-patch`: Source interface patch
-- `to`: Target participant
-- `to-patch`: Target interface patch
-- `data`: Data identifier
-- `type`: Exchange type
+- `from`: Name of the source participant sending data (must match a name in the participants section)
+- `to`: Name of the target participant receiving data (must match a name in the participants section)
+- `data`: Type of data being exchanged (e.g., Force, Displacement, Velocity)
+- `type`: Coupling type defining the exchange interaction
+  - `strong`: Tight coupling with immediate data synchronization
+  - `weak`: Loose coupling with less frequent data exchange
+- `from-patch`: Source Interface Surface
+  - The physical boundary or interface region on the source participant's mesh where data is extracted.
+  - Must correspond to a defined boundary condition in the source solver.
+  - For fluids: Typically the fluid-structure interface (e.g., "interface")
+  - For solids: Typically the surface contacting the fluid (e.g., "surface")
+- `to-patch`: Target Interface Surface
+  - The physical boundary or interface region on the target participant's mesh where data will be applied.
+  - Must correspond to a defined boundary condition in the target solver.
+> [!NOTE]
+> `from-patch` and `to-patch` are only relevant for generating `adapter-config.json` files.
+
 
 #### Optional Fields
-- `data-type`: Data representation (scalar/vector, default: scalar)
+- `data-type`: Specifies the data representation
+  - `scalar`: Single numeric value (default)
+  - `vector`: Multi-dimensional numeric data
+
+#### Data Type Constraints
+- Supported data types: Force, Displacement, Velocity, Pressure, Temperature, HeatTransfer
+- Naming follows the pattern: `[BaseType][OptionalModifier]`
+
+#### Example
+```yaml
+coupling-scheme:
+  display_standard_values: true
+participants:
+  - name: Fluid
+    solver: SU2
+  - name: Solid
+    solver: Calculix
+exchanges:
+  - from: Fluid
+    from-patch: interface      # Fluid side boundary where forces are measured
+    to: Solid
+    to-patch: surface         # Solid surface receiving fluid forces
+    data: Force
+    type: strong
+  - from: Solid
+    from-patch: surface       # Solid surface where displacements occur
+    to: Fluid
+    to-patch: interface      # Fluid boundary that adapts to displacements
+    data: Displacement
+    type: strong
+```
 
 ## Schema Validation Rules
 
