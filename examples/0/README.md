@@ -5,4 +5,4 @@ Since it contains only a uni-directional data exchange and only data point, its 
 Inspired by: https://github.com/precice-forschungsprojekt/precice-generator/pull/55 and propably https://precice.org/configuration-coupling-mesh-exchange.html#example-configuration
 
 ![](config_graph.png)
-![](image.png)
+![](vis.png)
