@@ -1,57 +1,58 @@
+from enum import Enum
 from pathlib import Path
 from termcolor import colored
 from datetime import datetime
 
+class Level(Enum):
+    INFO = ("INFO", "blue", "ℹ️")
+    WARNING = ("WARNING", "yellow", "⚠️")
+    SUCCESS = ("SUCCESS", "green", "✅")
+    ERROR = ("ERROR", "red", "❌")
+
 class Logger:
-    def __init__(self) -> None:
+    def __init__(self, verbose: bool) -> None:
         """ Custom logger"""
         self.root_generated = Path(__file__).parent
+        self.verbose = verbose
         self._errors = []
         self._warnings = []
         self._messages = []
-
-    def _log(self, msg: str, level: str, color: str, symbol: str) -> None:
-        """
-        Internal method to log a message with a specified level, color, and symbol.
-        :param msg: The log message.
-        :param level: The log level (e.g., INFO, SUCCESS, ERROR).
-        :param color: The color for terminal output.
-        :param symbol: Symbol to display alongside the log.
-        """
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        formatted_msg = f"{timestamp} {symbol} [{level}] {msg}"
-        self._messages.append((formatted_msg, color))
-
-
-    def print_all(self) -> None:
-        """Prints all logged messages and clears the log state."""
-        for message, color in self._messages:
-            print(colored(message, color))
-        self._messages.clear()
     
     def clear_messages(self) -> None:
         """Clears all logged messages."""
         self._messages.clear()
 
+    def print_formatted(self, msg: str, level: Level) -> None:
+        """
+        Internal method to print a message with a specified level, color, and symbol.
+        :param msg: The log message.
+        :param level: The log level (e.g., INFO, WARNING, SUCCESS, ERROR).
+        """
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        (level_name, color, symbol) = level.value
+        formatted_msg = f"{timestamp} {symbol} [{level_name}] {msg}"
+        if level != Level.INFO or self.verbose:
+            print(colored(formatted_msg, color))
+
     def success(self, msg: str) -> None:
         """Logs a success message."""
-        self._log(msg, "SUCCESS", "green", "✅")
+        self.print_formatted(msg, Level.SUCCESS)
 
     def info(self, msg: str) -> None:
         """Logs an informational message."""
-        self._log(msg, "INFO", "blue", "ℹ️")
+        self.print_formatted(msg, Level.INFO)
 
     def warning(self, msg: str) -> None:
         """Logs a warning message."""
         if not msg in self._warnings:
             self._warnings.append(msg)
-        self._log(msg, "WARNING", "yellow", "⚠️")
+        self.print_formatted(msg, Level.WARNING)
 
     def error(self, msg: str) -> None:
         """Logs an error message."""
         if not msg in self._errors:
             self._errors.append(msg)
-        self._log(msg, "ERROR", "red", "❌")
+        self.print_formatted(msg, Level.ERROR)
         
     def has_errors(self) -> bool:
         """Check if any errors have been logged."""

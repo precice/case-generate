@@ -36,7 +36,7 @@ def parse_args():
 def main():
     args = parse_args()
 
-    file_generator = FileGenerator(args.input_file, args.output_path)
+    file_generator = FileGenerator(args.input_file, args.output_path, verbose=args.verbose)
 
     # Clear any previous log state
     file_generator.logger.clear_log_state()

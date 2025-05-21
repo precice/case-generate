@@ -16,7 +16,7 @@ from .structure_handler import StructureHandler
 
 
 class FileGenerator:
-    def __init__(self, input_file: Path, output_path: Path) -> None:
+    def __init__(self, input_file: Path, output_path: Path, verbose: bool) -> None:
         """ Class which takes care of generating the content of the necessary files
             :param input_file: Input yaml file that is needed for generation of the precice-config.xml file
             :param output_path: Path to the folder where the _generated/ folder will be placed"""
@@ -24,11 +24,11 @@ class FileGenerator:
         self.precice_config = PS_PreCICEConfig()
         self.mylog = UT_PCErrorLogging()
         self.user_ui = UI_UserInput()
-        self.logger = Logger()
-        self.structure = StructureHandler(output_path)
+        self.logger = Logger(verbose)
+        self.structure = StructureHandler(output_path, verbose)
         self.config_generator = ConfigGenerator()
         self.readme_generator = ReadmeGenerator()
-        self.other_files_generator = OtherFilesGenerator()
+        self.other_files_generator = OtherFilesGenerator(self.logger)
     
     
     def generate_level_0(self) -> None:
@@ -91,7 +91,6 @@ class FileGenerator:
                 if self.logger.has_warnings():
                     for warning in self.logger.get_warnings():
                         self.logger.warning(warning)
-        self.logger.print_all()
 
     @staticmethod
     def validate_topology(args):

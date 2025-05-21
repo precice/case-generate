@@ -5,7 +5,7 @@ import json
 import yaml
 
 class AdapterConfigGenerator:
-    def __init__(self, adapter_config_path: Path, precice_config_path: Path, topology_path: Path, target_participant: str) -> None:
+    def __init__(self, adapter_config_path: Path, precice_config_path: Path, topology_path: Path, target_participant: str, logger: Logger) -> None:
         """
         Initializes the AdapterConfigGenerator with paths to the adapter config, precice config, and topology file.
 
@@ -17,7 +17,7 @@ class AdapterConfigGenerator:
         """
         self.adapter_config_path = adapter_config_path
         self.adapter_config_schema_path = Path(__file__).parent.parent / "templates" / "adapter-config-template.json"
-        self.logger = Logger()
+        self.logger = logger
         self.precice_config_path = precice_config_path
         self.topology_path = topology_path
         self.target_participant = target_participant
