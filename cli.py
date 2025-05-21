@@ -41,7 +41,9 @@ def main():
     # Clear any previous log state
     file_generator.logger.clear_log_state()
 
+    # Generate precice-config.xml, README.md, clean.sh
     file_generator.generate_level_0()
+    # Generate configuration for the solvers
     file_generator.generate_level_1()
 
     # Format the generated preCICE configuration

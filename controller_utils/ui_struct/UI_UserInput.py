@@ -160,15 +160,16 @@ class UI_UserInput(object):
 
                 # Determine coupling type based on exchanged data
                 data_names = {ex["data"] for ex in ex_list}
-                if any("force" in name.lower() for name in data_names) and any("displacement" in name.lower() for name in data_names):
+                if any(name.startswith("Force") for name in data_names) and any(name.startswith("Displacement") for name in data_names):
                     coupling.coupling_type = UI_CouplingType.fsi
-                elif any("force" in name.lower() for name in data_names):
+                elif any(name.startswith("Force") for name in data_names):
                     coupling.coupling_type = UI_CouplingType.f2s
                 # elif any("temperature" in name.lower() or "heat" in name.lower() for name in data_names):
-                elif any("temperature" in name.lower() for name in data_names):
+                elif any(name.startswith("Temperature") or name.startswith("HeatTransfer") for name in data_names):
                     coupling.coupling_type = UI_CouplingType.cht
                 else:
-                    coupling.coupling_type = UI_CouplingType.error_coupling
+                    # TODO: Handle Velocity, Pressure
+                    raise NameError("Found Velocity, Pressure or an invalid coupling type that is unsupported.")
 
                 # Use the first exchange's patches as boundary interfaces (simple heuristic)
                 first_ex = ex_list[0]

@@ -28,7 +28,7 @@ class Logger:
         for message, color in self._messages:
             print(colored(message, color))
         self._messages.clear()
-    
+
     def clear_messages(self) -> None:
         """Clears all logged messages."""
         self._messages.clear()
@@ -52,7 +52,7 @@ class Logger:
         if not msg in self._errors:
             self._errors.append(msg)
         self._log(msg, "ERROR", "red", "❌")
-        
+
     def has_errors(self) -> bool:
         """Check if any errors have been logged."""
         return len(self._errors) > 0

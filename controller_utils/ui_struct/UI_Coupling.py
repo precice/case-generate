@@ -6,7 +6,6 @@ class UI_CouplingType(Enum):
     fsi = 0
     cht = 1
     f2s = 2
-    error_coupling = -1
 
 class UI_Coupling(object):
     """
@@ -19,7 +18,7 @@ class UI_Coupling(object):
         self.boundaryC2 = -1
         self.participant1 = None
         self.participant2 = None
-        self.coupling_type = UI_CouplingType.error_coupling
+        self.coupling_type = None
         pass
 
     def init_from_yaml(self, name_coupling: str, etree, participants: dict,

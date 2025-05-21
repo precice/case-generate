@@ -3,13 +3,13 @@ from generation_utils.logger import Logger
 from generation_utils.adapter_config_generator import AdapterConfigGenerator
 
 class OtherFilesGenerator:
-    def __init__(self, logger: Logger = None):
+    def __init__(self) -> None:
         """
         Initialize OtherFilesGenerator with optional logger.
         
         :param logger: Optional Logger instance. If not provided, a new Logger will be created.
         """
-        self.logger = logger or Logger()
+        self.logger = Logger()
 
     def _generate_static_files(self, target: Path, name: str) -> None:
         """Generate static files from templates
