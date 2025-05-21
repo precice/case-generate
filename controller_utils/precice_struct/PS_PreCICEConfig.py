@@ -204,7 +204,6 @@ class PS_PreCICEConfig(object):
         for solver_name in self.solvers:
             solver = self.solvers[solver_name]
             dimensionality = max ( dimensionality, solver.dimensionality )
-            pass
 
         # 1 quantities
         data_from_exchanges = []
@@ -215,13 +214,13 @@ class PS_PreCICEConfig(object):
 
             # Safely get coupling_quantity
             coupling_quantity = self.coupling_quantities.get(data_key)
-            dim = getattr(coupling_quantity, "dim", None)
+            dim = getattr(coupling_quantity, "dim", 1)
 
             data_from_exchanges.append((data_key, dim, data_type))
 
         # Track created data entries to prevent duplicates
         created_data = set()
-        for data, dim, data_type in data_from_exchanges:                
+        for data, dim, data_type in data_from_exchanges:
             mystr = "scalar"
             if data_type is not None:
                 mystr = data_type
@@ -234,7 +233,6 @@ class PS_PreCICEConfig(object):
                 data_tag = etree.SubElement(precice_configuration_tag, etree.QName("data:"+mystr),
                                         name=data)
                 created_data.add(data)
-            pass
 
         # 2 meshes
         for mesh_name in self.meshes:
