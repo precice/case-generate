@@ -3,7 +3,7 @@ from .logger import Logger
 import shutil
 
 class StructureHandler:
-    def __init__(self, output_path: Path, verbose: bool, clean_generated: bool = True) -> None:
+    def __init__(self, output_path: Path, clean_generated: bool = True) -> None:
         """ Creates the files and folders in a structure.
             :param clean_generated: If set to True, clean the _generated dir before the files are created.
             Can be useful if you added or adjusted files yourself, and you are not sure what you changed."""
@@ -11,7 +11,7 @@ class StructureHandler:
         self.run = None
         self.root = output_path
         self.generated_root = self.root / "_generated"
-        self.logger = Logger(verbose)
+        self.logger = Logger()
 
         # Create level 0 structure (everything in the root folder)
         if clean_generated:
