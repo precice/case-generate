@@ -1,15 +1,15 @@
 # precice-generator
 
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/precice-forschungsprojekt/precice-generator/check.yml?label=Examples%20generation%20and%20validation%20using%20config-checker)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/precice/case-generate/check.yml?label=Examples%20generation%20and%20validation%20using%20config-checker)
 
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/precice-forschungsprojekt/precice-generator/installation.yml?label=Installation%20Checker)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/precice/case-generate/installation.yml?label=Installation%20Checker)
 
-![GitHub License](https://img.shields.io/github/license/precice-forschungsprojekt/precice-generator)
+![GitHub License](https://img.shields.io/github/license/precice/case-generate)
 
 ## Project Overview
 
-The precice-generator is a Python-based utility designed to automate the generation of preCICE configuration files from
-YAML topology descriptions. This tool simplifies the process of setting up multi-physics simulations by transforming
+The preCICE case-generate package is a Python-based utility designed to automate the generation of preCICE configuration files from
+simple YAML topology descriptions. This tool simplifies the process of setting up multi-physics simulations by transforming
 user-defined YAML configurations into preCICE-compatible XML configuration files.
 
 ## Key Features
@@ -25,7 +25,7 @@ user-defined YAML configurations into preCICE-compatible XML configuration files
 ### Prerequisites
 
 - Python 3.9 or
-  higher ([workflow validated](https://github.com/precice-forschungsprojekt/precice-generator/actions/workflows/installation.yml)
+  higher ([workflow validated](https://github.com/precice/case-generate/actions/workflows/installation.yml)
   with 3.9, 3.10, 3.11 and 3.12)
 - pip
 - venv
@@ -36,7 +36,7 @@ user-defined YAML configurations into preCICE-compatible XML configuration files
 1. Clone the repository
 
 ```bash
-git clone https://github.com/precice-forschungsprojekt/precice-generator.git
+git clone https://github.com/precice/case-generate.git
 cd precice-generator
 ```
 
@@ -124,7 +124,7 @@ precice-gen -f custom_topology.yaml -o /path/to/output -v
 
 > [!NOTE]
 > You should validate your files by running them through precice-tools and the
-> preCICE [config-checker](https://github.com/precice-forschungsprojekt/config-checker) to avoid errors.
+> preCICE [config-checker](https://github.com/precice/case-generate) to avoid errors.
 
 ### Configuration
 
@@ -138,7 +138,7 @@ You can create a topology for your preCICE simulation using the online MetaConfi
 We provide a preloaded schema to help you get started:
 
 1. Open the MetaConfigurator with the preloaded
-   schema: [MetaConfigurator Link](https://metaconfigurator.github.io/meta-configurator/?schema=https://github.com/precice-forschungsprojekt/precice-generator/blob/main/schemas/topology-schema.json&settings=https://github.com/precice-forschungsprojekt/precice-structure-generator/blob/main/templates/metaConfiguratorSettings.json)
+   schema: [MetaConfigurator Link](https://metaconfigurator.github.io/meta-configurator/?schema=https://github.com/precice/case-generate/blob/main/schemas/topology-schema.json&settings=https://github.com/precice/case-generate/blob/main/templates/metaConfiguratorSettings.json)
 
 2. Use the interactive interface to define your topology:
     - The preloaded schema provides a structured way to describe your simulation components
@@ -148,7 +148,7 @@ We provide a preloaded schema to help you get started:
     - Save the generated YAML file
     - Use this file with the `precice-generator` tool to create your preCICE configuration
     - Validate the generated preCICE config
-      with [config-checker](https://github.com/precice-forschungsprojekt/config-checker)
+      with [config-checker](https://github.com/precice/config-check)
     - Use `precice-config-checker` and/or `precice-tools check` to validate the generated preCICE config
 
 ### Benefits of Using MetaConfigurator
