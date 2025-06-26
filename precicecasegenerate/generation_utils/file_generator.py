@@ -14,6 +14,7 @@ from .other_files_generator import OtherFilesGenerator
 from .readme_generator import ReadmeGenerator
 from .structure_handler import StructureHandler
 
+from importlib.resources import files
 
 class FileGenerator:
     def __init__(self, input_file: Path, output_path: Path) -> None:
@@ -97,8 +98,7 @@ class FileGenerator:
     def validate_topology(args):
         """Validate the topology.yaml file against the JSON schema."""
         if args.validate_topology:
-            with open(Path(__file__).parent.parent / "schemas" / "topology-schema.json") as schema_file:
-                schema = json.load(schema_file)
+            schema = json.loads(files("precicecasegenerate.schemas").joinpath("topology-schema.json").read_text())
             with open(args.input_file) as input_file:
                 data = yaml.load(input_file, Loader=yaml.SafeLoader)
             try:

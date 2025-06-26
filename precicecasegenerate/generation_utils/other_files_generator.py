@@ -1,6 +1,7 @@
 from pathlib import Path
 from . import Logger
 from . import AdapterConfigGenerator
+from importlib.resources import files
 
 class OtherFilesGenerator:
     def __init__(self) -> None:
@@ -16,7 +17,7 @@ class OtherFilesGenerator:
             :param target: target file path
             :param name: name of the function"""
         try:
-            template = Path(__file__).parent.parent / "templates" / f"template_{name}"
+            template = files("precicecasegenerate.templates").joinpath(f"template_{name}")
             self.logger.info(f"Reading in the template file for {name}")
 
             # Check if the template file exists

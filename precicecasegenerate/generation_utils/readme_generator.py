@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from importlib.resources import files
+
 class ReadmeGenerator:
     SOLVER_DOCS = {
         # CFD Solvers
@@ -26,10 +28,7 @@ class ReadmeGenerator:
         user_ui = file_generator.user_ui
         
         # Read the template README with explicit UTF-8 encoding
-        readme_template_path = Path(__file__).parent.parent / "templates" / "template_README.md"
-        
-        with open(readme_template_path, 'r', encoding='utf-8') as template_file:
-            readme_content = template_file.read()
+        readme_content = files("precicecasegenerate.templates").joinpath("template_README.md").read_text("utf-8")
 
         # Extract participants and their solvers
         participants_list = []

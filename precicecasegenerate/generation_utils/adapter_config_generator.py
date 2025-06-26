@@ -3,6 +3,7 @@ from . import Logger
 from lxml import etree
 import json
 import yaml
+from importlib.resources import files
 
 class AdapterConfigGenerator:
     def __init__(self, adapter_config_path: Path, precice_config_path: Path, topology_path: Path, target_participant: str) -> None:
@@ -16,34 +17,12 @@ class AdapterConfigGenerator:
             target_participant (str): Name of the target participant.
         """
         self.adapter_config_path = adapter_config_path
-        self.adapter_config_schema_path = Path(__file__).parent.parent / "templates" / "adapter-config-template.json"
+        self.adapter_config_schema = json.loads(files("precicecasegenerate.templates").joinpath("adapter-config-template.json").read_text("utf-8"))
         self.logger = Logger()
         self.precice_config_path = precice_config_path
         self.topology_path = topology_path
         self.target_participant = target_participant
 
-        # Load the JSON template into a dictionary during initialization
-        self.adapter_config_schema = self._load_adapter_schema()
-
-    def _load_adapter_schema(self) -> dict:
-        """
-        Loads the adapter-config JSON template from the templates directory.
-
-        Returns:
-            dict: The adapter configuration schema as a dictionary.
-        """
-        try:
-            with open(self.adapter_config_schema_path, 'r', encoding='utf-8') as adapter_config_template_file:
-                adapter_config_schema = json.load(adapter_config_template_file)
-            self.logger.info("Retrieved adapter-config template successfully.")
-            return adapter_config_schema
-        
-        except FileNotFoundError:
-            self.logger.error(f"Adapter-Config-Schema file doesn't exist at {self.adapter_config_schema_path}")
-
-        except json.JSONDecodeError as jsonDecodeError:
-            self.logger.error(f"Error decoding JSON from the adapter-config template: {jsonDecodeError}")
-            raise
 
     def _get_generated_precice_config(self):
         """
