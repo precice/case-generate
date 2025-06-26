@@ -39,3 +39,9 @@ Documentation = "https://github.com/precice-forschungsprojekt/precice-generator/
 
 [tool.setuptools]
 packages = ["precicecasegenerate"]
+
+[tool.setuptools.package-data]
+precicecasegenerate = [
+"templates/*",
+"schemas/*"
+]
