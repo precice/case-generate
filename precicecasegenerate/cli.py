@@ -1,5 +1,6 @@
 from .generation_utils.file_generator import FileGenerator
 import argparse
+import os
 from pathlib import Path
 
 def parse_args():
@@ -7,20 +8,18 @@ def parse_args():
     parser.add_argument(
         "-f", "--input-file", 
         type=Path, 
-        required=True,
+        default="topology.yaml",
         help="Input topology.yaml file"
     )
     parser.add_argument(
         "-o", "--output-path",
         type=Path,
-        required=False,
         help="Output path for the generated folder.",
-        default=Path(__file__).parent
+        default=Path.cwd()
     )
     parser.add_argument(
         "-v", "--verbose",
         action="store_true",
-        required=False,
         help="Enable verbose logging output.",
     )
     parser.add_argument(
