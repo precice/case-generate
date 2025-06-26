@@ -2,4 +2,5 @@
 venv/
 _generated/
 dist/
+build/
 *.egg-info/
