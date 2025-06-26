@@ -8,7 +8,8 @@ description = "Generates File and Folder Structure, including all of the necessa
 version = "1.0.0"
 
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 
 authors = [
     { name = "VanLaareN", email = "vanlaren@example.com" },
