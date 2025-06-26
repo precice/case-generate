@@ -1,4 +1,4 @@
-from controller_utils.myutils.UT_PCErrorLogging import UT_PCErrorLogging
+from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import UT_PCErrorLogging
 from enum import Enum
 
 class UI_CouplingType(Enum):

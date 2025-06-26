@@ -1,9 +1,9 @@
-from controller_utils.myutils.UT_PCErrorLogging import UT_PCErrorLogging
-from controller_utils.ui_struct.UI_UserInput import UI_UserInput
-from controller_utils.ui_struct.UI_Coupling import *
-from controller_utils.precice_struct.PS_Mesh import *
-from controller_utils.precice_struct.PS_ParticipantSolver import PS_ParticipantSolver
-from controller_utils.precice_struct.PS_CouplingScheme import *
+from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import UT_PCErrorLogging
+from precicecasegenerate.controller_utils.ui_struct.UI_UserInput import UI_UserInput
+from precicecasegenerate.controller_utils.ui_struct.UI_Coupling import *
+from precicecasegenerate.controller_utils.precice_struct.PS_Mesh import *
+from precicecasegenerate.controller_utils.precice_struct.PS_ParticipantSolver import PS_ParticipantSolver
+from precicecasegenerate.controller_utils.precice_struct.PS_CouplingScheme import *
 import xml.etree.ElementTree as etree
 import xml.dom.minidom as my_minidom
 

@@ -1,5 +1,5 @@
-from controller_utils.myutils.UT_PCErrorLogging import UT_PCErrorLogging
-from controller_utils.ui_struct.UI_Coupling import UI_Coupling
+from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import UT_PCErrorLogging
+from precicecasegenerate.controller_utils.ui_struct.UI_Coupling import UI_Coupling
 
 
 class UI_Participant(object):

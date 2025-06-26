@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "precice-generator"
+name = "precice-case-generate"
 description = "Generates File and Folder Structure, including all of the necessary files to quickly kickstart a simulation"
 version = "1.0.0"
 
@@ -30,7 +30,7 @@ dependencies = [
 ]
 
 [project.scripts]
-precice-gen = "cli:main"
+precice-case-generate = "precicecasegenerate.cli:main"
 
 [project.urls]
 Repository = "https://github.com/precice-forschungsprojekt/precice-generator"
@@ -38,24 +38,4 @@ Issues = "https://github.com/precice-forschungsprojekt/precice-generator/issues"
 Documentation = "https://github.com/precice-forschungsprojekt/precice-generator/blob/main/README.md"
 
 [tool.setuptools]
-py-modules = [
-    "cli",
-    "generation_utils.adapter_config_generator",
-    "generation_utils.format_precice_config",
-    "generation_utils.logger",
-    "generation_utils.structure_handler",
-    "generation_utils.other_files_generator",
-    "generation_utils.config_generator",
-    "generation_utils.readme_generator",
-    "generation_utils.file_generator",
-    "controller_utils.myutils.UT_PCErrorLogging",
-    "controller_utils.precice_struct.PS_CouplingScheme",
-    "controller_utils.precice_struct.PS_Mesh",
-    "controller_utils.precice_struct.PS_ParticipantSolver",
-    "controller_utils.precice_struct.PS_PreCICEConfig",
-    "controller_utils.precice_struct.PS_QuantityCoupled",
-    "controller_utils.ui_struct.UI_Coupling",
-    "controller_utils.ui_struct.UI_Participant",
-    "controller_utils.ui_struct.UI_SimulationInfo",
-    "controller_utils.ui_struct.UI_UserInput"
-]
+packages = ["precicecasegenerate"]

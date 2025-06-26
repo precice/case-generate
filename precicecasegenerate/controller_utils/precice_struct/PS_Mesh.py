@@ -1,4 +1,4 @@
-from controller_utils.precice_struct.PS_QuantityCoupled import *
+from precicecasegenerate.controller_utils.precice_struct.PS_QuantityCoupled import *
 #from .PS_ParticipantSolver import PS_ParticipantSolver #-> this would result in circular reference
 
 class PS_Mesh(object):

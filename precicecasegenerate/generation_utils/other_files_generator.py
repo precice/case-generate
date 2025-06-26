@@ -1,6 +1,6 @@
 from pathlib import Path
-from generation_utils.logger import Logger
-from generation_utils.adapter_config_generator import AdapterConfigGenerator
+from . import Logger
+from . import AdapterConfigGenerator
 
 class OtherFilesGenerator:
     def __init__(self) -> None:

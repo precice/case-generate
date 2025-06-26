@@ -1,5 +1,5 @@
 from pathlib import Path
-from .logger import Logger
+from precicecasegenerate.generation_utils.logger import Logger
 import shutil
 
 class StructureHandler:

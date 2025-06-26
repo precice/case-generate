@@ -4,9 +4,9 @@ import json
 import jsonschema
 import yaml
 
-from controller_utils.myutils.UT_PCErrorLogging import UT_PCErrorLogging
-from controller_utils.precice_struct import PS_PreCICEConfig
-from controller_utils.ui_struct.UI_UserInput import UI_UserInput
+from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import UT_PCErrorLogging
+from precicecasegenerate.controller_utils.precice_struct import PS_PreCICEConfig
+from precicecasegenerate.controller_utils.ui_struct.UI_UserInput import UI_UserInput
 from .config_generator import ConfigGenerator
 from .format_precice_config import PrettyPrinter
 from .logger import Logger

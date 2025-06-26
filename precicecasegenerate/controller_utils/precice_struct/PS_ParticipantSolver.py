@@ -1,8 +1,8 @@
-from controller_utils.myutils.UT_PCErrorLogging import UT_PCErrorLogging
-from controller_utils.ui_struct.UI_Participant import UI_Participant
-from controller_utils.ui_struct.UI_Coupling import UI_Coupling
-from controller_utils.precice_struct.PS_QuantityCoupled import QuantityCouple
-from controller_utils.precice_struct.PS_Mesh import PS_Mesh
+from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import UT_PCErrorLogging
+from precicecasegenerate.controller_utils.ui_struct.UI_Participant import UI_Participant
+from precicecasegenerate.controller_utils.ui_struct.UI_Coupling import UI_Coupling
+from precicecasegenerate.controller_utils.precice_struct.PS_QuantityCoupled import QuantityCouple
+from precicecasegenerate.controller_utils.precice_struct.PS_Mesh import PS_Mesh
 from enum import Enum
 
 

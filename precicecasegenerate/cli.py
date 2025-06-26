@@ -1,4 +1,4 @@
-from generation_utils.file_generator import FileGenerator
+from .generation_utils.file_generator import FileGenerator
 import argparse
 from pathlib import Path
 
