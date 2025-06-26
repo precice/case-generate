@@ -38,7 +38,13 @@ Issues = "https://github.com/precice-forschungsprojekt/precice-generator/issues"
 Documentation = "https://github.com/precice-forschungsprojekt/precice-generator/blob/main/README.md"
 
 [tool.setuptools]
-packages = ["precicecasegenerate"]
+packages = [
+"precicecasegenerate",
+"precicecasegenerate.generation_utils",
+"precicecasegenerate.controller_utils.myutils",
+"precicecasegenerate.controller_utils.precice_struct",
+"precicecasegenerate.controller_utils.ui_struct"
+]
 
 [tool.setuptools.package-data]
 precicecasegenerate = [
