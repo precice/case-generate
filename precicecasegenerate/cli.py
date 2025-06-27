@@ -8,14 +8,14 @@ def parse_args():
     parser.add_argument(
         "-f", "--input-file", 
         type=Path, 
-        default="topology.yaml",
-        help="Input topology.yaml file"
+        default=Path.cwd() / "topology.yaml",
+        help="Input topology.yaml file. Defaults to './topology.yaml'."
     )
     parser.add_argument(
         "-o", "--output-path",
         type=Path,
-        help="Output path for the generated folder.",
-        default=Path.cwd()
+        help="Output path for the generated folder. Defaults to './_generated'.",
+        default=Path.cwd() / "_generated"
     )
     parser.add_argument(
         "-v", "--verbose",

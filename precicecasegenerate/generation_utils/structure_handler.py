@@ -9,8 +9,7 @@ class StructureHandler:
             Can be useful if you added or adjusted files yourself, and you are not sure what you changed."""
         # Objects
         self.run = None
-        self.root = output_path
-        self.generated_root = self.root / "_generated"
+        self.generated_root = output_path
         self.logger = Logger()
 
         # Create level 0 structure (everything in the root folder)
