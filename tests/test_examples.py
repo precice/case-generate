@@ -10,16 +10,21 @@ def list_examples():
 
 
 @pytest.mark.parametrize("example", list_examples())
-def test_application_with_example(example: Path):
+def test_application_with_example(tmp_path, example: Path):
     """Test the application with each example topology files"""
 
     assert example.exists() and example.is_file(), "topology file doesn't exist"
 
-    with tempfile.TemporaryDirectory() as temp_dir:
-        cmd = ["precice-case-generate", "-f", str(example), "-o", temp_dir]
-        print(f"Running {cmd}")
-        subprocess.run(cmd)
+    cmd = ["precice-case-generate", "-f", str(example), "-o", str(tmp_path)]
+    print(f"Running {cmd}")
+    subprocess.run(cmd, check=True)
 
-        output = [p.name for p in Path(temp_dir).iterdir()]
-        print(f"Output {output}")
-        assert output, "Nothing generated"
+    output = list(tmp_path.iterdir())
+    print(f"Output {[p.name for p in output]}")
+    assert output, "Nothing generated"
+
+    config = tmp_path / "precice-config.xml"
+
+    assert config.exists(), "No precice-config.xml generated"
+
+    subprocess.run(["precice-cli", "config", "check", str(config)], check=True)
