@@ -82,44 +82,46 @@ pip install -e .
 - Test the CLI tool
 
 ```bash
-precice-gen --help
+precice-case-generate --help
 ```
 
 ## Usage
 
 ### Command-Line Interface
 
-Generate a preCICE configuration file from a YAML topology:
+Generate a preCICE configuration file from a YAML topology called `topology.yaml`:
 
 ```bash
-precice-gen -f path/to/your/topology.yaml
+precice-case-generate
 ```
 
-The `precice-gen` tool supports the following optional parameters:
+or pass a topology file via argument;
+
+```bash
+precice-case-generate -f path/to/your/topology.yaml
+```
+
+The `precice-case-generate` tool supports the following optional parameters:
 
 - `-f, --input-file`: Path to the input topology.yaml file.
-  - **Default**: `examples/1/topology.yaml`
-  - **Optional**: Yes
+  - **Default**: `./topology.yaml`
   - **Description**: Specify a custom topology file for configuration generation.
 
 - `-o, --output-path`: Destination path for the generated folder.
-  - **Default**: Current script's parent directory
-  - **Optional**: Yes
+  - **Default**: `./_generated/`
   - **Description**: Choose a specific output location for generated files.
 
 - `-v, --verbose`: Enable verbose logging.
   - **Default**: Disabled
-  - **Optional**: Yes
   - **Description**: Provides detailed logging information during execution.
 
 - `--validate-topology`: Validate the input topology.yaml against the preCICE topology schema.
   - **Default**: Enabled
-  - **Optional**: Yes
   - **Description**: Ensures the topology file meets the required schema specifications.
 
 Example usage:
 ```bash
-precice-gen -f custom_topology.yaml -o /path/to/output -v
+precice-case-generate -f custom_topology.yaml -o /path/to/output -v
 ```
 
 > [!NOTE]
