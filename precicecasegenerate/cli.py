@@ -3,22 +3,28 @@ import argparse
 import os
 from pathlib import Path
 
+
 def parse_args():
-    parser = argparse.ArgumentParser(description="Takes topology.yaml files as input and writes out needed files to start the precice.")
-    parser.add_argument(
-        "-f", "--input-file", 
-        type=Path, 
-        default=Path.cwd() / "topology.yaml",
-        help="Input topology.yaml file. Defaults to './topology.yaml'."
+    parser = argparse.ArgumentParser(
+        description="Takes topology.yaml files as input and writes out needed files to start the precice."
     )
     parser.add_argument(
-        "-o", "--output-path",
+        "-f",
+        "--input-file",
+        type=Path,
+        default=Path.cwd() / "topology.yaml",
+        help="Input topology.yaml file. Defaults to './topology.yaml'.",
+    )
+    parser.add_argument(
+        "-o",
+        "--output-path",
         type=Path,
         help="Output path for the generated folder. Defaults to './_generated'.",
-        default=Path.cwd() / "_generated"
+        default=Path.cwd() / "_generated",
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Enable verbose logging output.",
     )
@@ -47,12 +53,10 @@ def main():
 
     # Format the generated preCICE configuration
     file_generator.format_precice_config()
-    
 
     file_generator.handle_output(args)
 
     file_generator.validate_topology(args)
-    
 
 
 if __name__ == "__main__":

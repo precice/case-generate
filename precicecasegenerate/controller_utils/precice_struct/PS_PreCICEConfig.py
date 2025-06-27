@@ -1,25 +1,30 @@
-from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import UT_PCErrorLogging
+from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import (
+    UT_PCErrorLogging,
+)
 from precicecasegenerate.controller_utils.ui_struct.UI_UserInput import UI_UserInput
 from precicecasegenerate.controller_utils.ui_struct.UI_Coupling import *
 from precicecasegenerate.controller_utils.precice_struct.PS_Mesh import *
-from precicecasegenerate.controller_utils.precice_struct.PS_ParticipantSolver import PS_ParticipantSolver
+from precicecasegenerate.controller_utils.precice_struct.PS_ParticipantSolver import (
+    PS_ParticipantSolver,
+)
 from precicecasegenerate.controller_utils.precice_struct.PS_CouplingScheme import *
 import xml.etree.ElementTree as etree
 import xml.dom.minidom as my_minidom
 
+
 class PS_PreCICEConfig(object):
-    """Top main class for the preCICE config """
+    """Top main class for the preCICE config"""
 
     def __init__(self):
-        """ Ctor """
+        """Ctor"""
         # the overall coupling scheme
         # this contains all the coupling information between the solvers
         self.couplingScheme = None
         # here we enlist all the solvers including their meshes
-        self.solvers = {} # empty dictionary with the solvers
-        self.meshes = {} # dictionary with the meshes of the coupling scenario
-        self.coupling_quantities = {} # dictionary with the coupling quantities
-        self.exchanges = []    # list to store full exchange details
+        self.solvers = {}  # empty dictionary with the solvers
+        self.meshes = {}  # dictionary with the meshes of the coupling scenario
+        self.coupling_quantities = {}  # dictionary with the coupling quantities
+        self.exchanges = []  # list to store full exchange details
         self.mappings_read = []
         self.mappings_write = []
         self.couplingScheme_participants = None
@@ -27,9 +32,11 @@ class PS_PreCICEConfig(object):
         self.exchange_mesh_names = []
         pass
 
-    def get_coupling_quantity(self, quantity_name:str, source_mesh_name:str, bc: str, solver, read:bool):
-        """ returns the coupling quantity specified by name,
-        the name is a combination of mesh_name + quantity name """
+    def get_coupling_quantity(
+        self, quantity_name: str, source_mesh_name: str, bc: str, solver, read: bool
+    ):
+        """returns the coupling quantity specified by name,
+        the name is a combination of mesh_name + quantity name"""
         # there could be more than one pressure or temperature therefore we
         # add always as a prefix the name of the mesh such that it will become unique
         # IMPORTANT: we need to specify the source mesh of the quantity not other mesh
@@ -46,7 +53,7 @@ class PS_PreCICEConfig(object):
                 # print(" Set Solver name ", solver.name, " for i=", concat_quantity_name)
                 ret.source_solver = solver
                 ret.source_mesh_name = source_mesh_name
-            return  ret
+            return ret
         ret = get_quantity_object(quantity_name, bc, concat_quantity_name)
         self.coupling_quantities[concat_quantity_name] = ret
         ret.list_of_solvers[solver.name] = solver
@@ -60,7 +67,7 @@ class PS_PreCICEConfig(object):
         return ret
 
     def get_mesh_by_name(self, mesh_name: str):
-        """ returns the mesh specified by name """
+        """returns the mesh specified by name"""
         # VERY IMPORTANT: the naming convention of the mesh !!!
         # Therefore, the mesh name should be constructed only by the methods from this class
         if mesh_name in self.meshes:
@@ -71,8 +78,8 @@ class PS_PreCICEConfig(object):
         self.meshes[mesh_name] = new_mesh
         return self.meshes[mesh_name]
 
-    def get_mesh_name_by_participants(self, source_participant:str, participant2:str):
-        """ constructs the mash name out of the two participant names. """
+    def get_mesh_name_by_participants(self, source_participant: str, participant2: str):
+        """constructs the mash name out of the two participant names."""
         # IMPORTANT:  "ParticipantSource_Participant2_Mesh" -> naming convention is that the
         # first participant is the source (provider) of the mesh
         # list = [ participant1, participant2]
@@ -80,21 +87,21 @@ class PS_PreCICEConfig(object):
         mesh_name = source_participant + "-Mesh"
         return mesh_name
 
-    def get_mesh_by_participant_names(self, source_participant:str, participant2:str):
-        """ returns the mesh specified by the two participant names """
+    def get_mesh_by_participant_names(self, source_participant: str, participant2: str):
+        """returns the mesh specified by the two participant names"""
         mesh_name = self.get_mesh_name_by_participants(source_participant, participant2)
         mesh = self.get_mesh_by_name(mesh_name)
         return mesh
 
     def add_quantity_to_mesh(self, mesh_name: str, quantity: QuantityCouple):
-        """ Adds the quantity to a given mesh"""
+        """Adds the quantity to a given mesh"""
         if mesh_name in self.meshes:
             mesh = self.meshes[mesh_name]
             mesh.add_quantity(quantity)
         pass
 
-    def get_solver(self, solver_name:str):
-        """ returns the solver if exists """
+    def get_solver(self, solver_name: str):
+        """returns the solver if exists"""
         if solver_name in self.solvers:
             return self.solvers[solver_name]
         # TODO: create solver ... ?
@@ -138,50 +145,91 @@ class PS_PreCICEConfig(object):
             if coupling.coupling_type == UI_CouplingType.fsi:
                 # VERY IMPORTANT: we rely here on the fact that the participants are sorted alphabetically
                 participant1_solver.make_participant_fsi_fluid(
-                    self, coupling.boundaryC1, coupling.boundaryC2, participant2_solver.name )
+                    self,
+                    coupling.boundaryC1,
+                    coupling.boundaryC2,
+                    participant2_solver.name,
+                )
                 participant2_solver.make_participant_fsi_structure(
-                    self, coupling.boundaryC1, coupling.boundaryC2, participant1_solver.name)
+                    self,
+                    coupling.boundaryC1,
+                    coupling.boundaryC2,
+                    participant1_solver.name,
+                )
                 pass
             # ========== F2S =========
             if coupling.coupling_type == UI_CouplingType.f2s:
                 # VERY IMPORTANT: we rely here on the fact that the participants are sorted alphabetically
                 participant1_solver.make_participant_f2s_fluid(
-                    self, coupling.boundaryC1, coupling.boundaryC2, participant2_solver.name )
+                    self,
+                    coupling.boundaryC1,
+                    coupling.boundaryC2,
+                    participant2_solver.name,
+                )
                 participant2_solver.make_participant_f2s_structure(
-                    self, coupling.boundaryC1, coupling.boundaryC2, participant1_solver.name)
+                    self,
+                    coupling.boundaryC1,
+                    coupling.boundaryC2,
+                    participant1_solver.name,
+                )
                 pass
             # ========== CHT =========
             if coupling.coupling_type == UI_CouplingType.cht:
                 # VERY IMPORTANT: we rely here on the fact that the participants are sorted alphabetically
                 participant1_solver.make_participant_cht_fluid(
-                    self, coupling.boundaryC1, coupling.boundaryC2, participant2_solver.name, data_forward, data_backward)
+                    self,
+                    coupling.boundaryC1,
+                    coupling.boundaryC2,
+                    participant2_solver.name,
+                    data_forward,
+                    data_backward,
+                )
                 participant2_solver.make_participant_cht_structure(
-                    self, coupling.boundaryC1, coupling.boundaryC2, participant1_solver.name, data_forward, data_backward)
+                    self,
+                    coupling.boundaryC1,
+                    coupling.boundaryC2,
+                    participant1_solver.name,
+                    data_forward,
+                    data_backward,
+                )
                 pass
             pass
 
         # Determine coupling scheme based on new coupling type logic or existing max_coupling_value
-        if hasattr(user_input, 'coupling_type') and user_input.coupling_type is not None:
-            if user_input.coupling_type == 'strong':
+        if (
+            hasattr(user_input, "coupling_type")
+            and user_input.coupling_type is not None
+        ):
+            if user_input.coupling_type == "strong":
                 self.couplingScheme = PS_ImplicitCoupling()
-            elif user_input.coupling_type == 'weak':
+            elif user_input.coupling_type == "weak":
                 self.couplingScheme = PS_ExplicitCoupling()
             else:
                 # Fallback to existing logic if invalid type
-                self.couplingScheme = PS_ImplicitCoupling() if max_coupling_value < 2 else PS_ExplicitCoupling()
+                self.couplingScheme = (
+                    PS_ImplicitCoupling()
+                    if max_coupling_value < 2
+                    else PS_ExplicitCoupling()
+                )
         else:
             # Use existing logic if no coupling type specified
-            self.couplingScheme = PS_ImplicitCoupling() if max_coupling_value < 2 else PS_ExplicitCoupling()
-            #throw an error if no coupling type is specified and the coupling scheme is not compatible with the coupling type
-            #raise ValueError("No coupling type specified and coupling scheme is not compatible with the coupling type " + ("explicit" if self.couplingScheme is PS_ExplicitCoupling() else "implicit"))
-        
+            self.couplingScheme = (
+                PS_ImplicitCoupling()
+                if max_coupling_value < 2
+                else PS_ExplicitCoupling()
+            )
+            # throw an error if no coupling type is specified and the coupling scheme is not compatible with the coupling type
+            # raise ValueError("No coupling type specified and coupling scheme is not compatible with the coupling type " + ("explicit" if self.couplingScheme is PS_ExplicitCoupling() else "implicit"))
+
         # Initialize coupling scheme with user input
         self.couplingScheme.initFromUI(user_input, self)
 
         pass
 
-    def write_precice_xml_config(self, filename:str, log:UT_PCErrorLogging, sync_mode: str, mode: str):
-        """ This is the main entry point to write preCICE config into an XML file"""
+    def write_precice_xml_config(
+        self, filename: str, log: UT_PCErrorLogging, sync_mode: str, mode: str
+    ):
+        """This is the main entry point to write preCICE config into an XML file"""
 
         self.sync_mode = sync_mode  # Store sync_mode
         self.mode = mode  # Store mode
@@ -192,18 +240,17 @@ class PS_PreCICEConfig(object):
             "coupling-scheme": "coupling-scheme",
             "post-processing": "post-processing",
             "m2n": "m2n",
-            "master": "master"
+            "master": "master",
         }
 
         precice_configuration_tag = etree.Element("precice-configuration", nsmap=nsmap)
-
 
         # write out:
         # first get the dimensionality of the coupling
         dimensionality = 0
         for solver_name in self.solvers:
             solver = self.solvers[solver_name]
-            dimensionality = max ( dimensionality, solver.dimensionality )
+            dimensionality = max(dimensionality, solver.dimensionality)
 
         # 1 quantities
         data_from_exchanges = []
@@ -226,21 +273,31 @@ class PS_PreCICEConfig(object):
                 mystr = data_type
             if dim > 1:
                 if data_type == "scalar":
-                    log.rep_info(f"Data {data} is a vector, but data-type is set to scalar.")
+                    log.rep_info(
+                        f"Data {data} is a vector, but data-type is set to scalar."
+                    )
                 mystr = "vector"
-            
+
             if data not in created_data:
-                data_tag = etree.SubElement(precice_configuration_tag, etree.QName("data:"+mystr),
-                                        name=data)
+                data_tag = etree.SubElement(
+                    precice_configuration_tag, etree.QName("data:" + mystr), name=data
+                )
                 created_data.add(data)
 
         # 2 meshes
         for mesh_name in self.meshes:
             mesh = self.meshes[mesh_name]
-            mesh_tag = etree.SubElement(precice_configuration_tag, "mesh", name=mesh.name, dimensions=str(dimensionality))
+            mesh_tag = etree.SubElement(
+                precice_configuration_tag,
+                "mesh",
+                name=mesh.name,
+                dimensions=str(dimensionality),
+            )
             for quantities_name in mesh.quantities:
                 quant = mesh.quantities[quantities_name]
-                quant_tag = etree.SubElement(mesh_tag, "use-data", name=quant.instance_name)
+                quant_tag = etree.SubElement(
+                    mesh_tag, "use-data", name=quant.instance_name
+                )
 
         # Initialize dictionaries to store provide and receive meshes
         self.solver_provide_meshes = {}
@@ -250,8 +307,9 @@ class PS_PreCICEConfig(object):
         self.solver_tags = {}
         for solver_name in self.solvers:
             solver = self.solvers[solver_name]
-            solver_tag = etree.SubElement(precice_configuration_tag,
-                                          "participant", name=solver.name)
+            solver_tag = etree.SubElement(
+                precice_configuration_tag, "participant", name=solver.name
+            )
             self.solver_tags[solver_name] = solver_tag
 
             # Initialize lists for this solver's provide and receive meshes
@@ -261,14 +319,15 @@ class PS_PreCICEConfig(object):
             # there are more than one meshes per participant
             for solvers_mesh_name in solver.meshes:
                 # print("Mesh=", solvers_mesh_name)
-                solver_mesh_tag = etree.SubElement(solver_tag,
-                                              "provide-mesh", name=solvers_mesh_name)
+                solver_mesh_tag = etree.SubElement(
+                    solver_tag, "provide-mesh", name=solvers_mesh_name
+                )
                 # Save provided meshes
                 self.solver_provide_meshes[solver_name].append(solvers_mesh_name)
 
                 list_of_solvers_with_higher_complexity = {}
-                type_of_the_mapping = {} # for each solver for the mapping
-                                        # we also save the type of mapping (conservative / consistent)
+                type_of_the_mapping = {}  # for each solver for the mapping
+                # we also save the type of mapping (conservative / consistent)
                 list_of_solvers_with_higher_complexity_read = {}
                 type_of_the_mapping_read = {}
                 list_of_solvers_with_higher_complexity_write = {}
@@ -280,46 +339,74 @@ class PS_PreCICEConfig(object):
                 used_meshes = {}
                 for q_name in solver.quantities_read:
                     q = solver.quantities_read[q_name]
-                    read_tag = etree.SubElement(solver_tag,
-                                                       "read-data", name=q.instance_name, mesh=solvers_mesh_name)
+                    read_tag = etree.SubElement(
+                        solver_tag,
+                        "read-data",
+                        name=q.instance_name,
+                        mesh=solvers_mesh_name,
+                    )
                     for other_solvers_name in q.list_of_solvers:
                         other_solver = q.list_of_solvers[other_solvers_name]
                         # consistent only read
-                        if other_solvers_name != solver_name \
-                                and q.is_consistent:
-                            #print(" other solver:", other_solvers_name, " solver", solver_name)
-                            list_of_solvers_with_higher_complexity[other_solvers_name] = other_solver
+                        if other_solvers_name != solver_name and q.is_consistent:
+                            # print(" other solver:", other_solvers_name, " solver", solver_name)
+                            list_of_solvers_with_higher_complexity[
+                                other_solvers_name
+                            ] = other_solver
                             type_of_the_mapping[other_solvers_name] = q.mapping_string
-                            list_of_solvers_with_higher_complexity_read[other_solvers_name] = other_solver
-                            type_of_the_mapping_read[other_solvers_name] = q.mapping_string
+                            list_of_solvers_with_higher_complexity_read[
+                                other_solvers_name
+                            ] = other_solver
+                            type_of_the_mapping_read[
+                                other_solvers_name
+                            ] = q.mapping_string
                             # within one participant put the "use-mesh" only once there
-                            if solvers_mesh_name != q.source_mesh_name and \
-                                            q.source_mesh_name not in used_meshes:
-                                solver_mesh_tag = etree.SubElement(solver_tag,
-                                                                   "receive-mesh", name=q.source_mesh_name,
-                                                                   from___=q.source_solver.name)
+                            if (
+                                solvers_mesh_name != q.source_mesh_name
+                                and q.source_mesh_name not in used_meshes
+                            ):
+                                solver_mesh_tag = etree.SubElement(
+                                    solver_tag,
+                                    "receive-mesh",
+                                    name=q.source_mesh_name,
+                                    from___=q.source_solver.name,
+                                )
                                 # Save received meshes
                                 if solver_name not in self.solver_receive_meshes:
                                     self.solver_receive_meshes[solver_name] = []
-                                if q.source_mesh_name not in self.solver_receive_meshes[solver_name]:
-                                    self.solver_receive_meshes[solver_name].append(q.source_mesh_name)
+                                if (
+                                    q.source_mesh_name
+                                    not in self.solver_receive_meshes[solver_name]
+                                ):
+                                    self.solver_receive_meshes[solver_name].append(
+                                        q.source_mesh_name
+                                    )
                                 used_meshes[q.source_mesh_name] = 1
                                 pass
                     pass
                 for q_name in solver.quantities_write:
                     q = solver.quantities_write[q_name]
-                    write_tag = etree.SubElement(solver_tag,
-                                                       "write-data", name=q.instance_name, mesh=solvers_mesh_name)
+                    write_tag = etree.SubElement(
+                        solver_tag,
+                        "write-data",
+                        name=q.instance_name,
+                        mesh=solvers_mesh_name,
+                    )
                     for other_solvers_name in q.list_of_solvers:
                         other_solver = q.list_of_solvers[other_solvers_name]
                         # conservative only write
-                        if other_solvers_name != solver_name \
-                                and not q.is_consistent:
-                            #print(" other solver:", other_solvers_name, " solver", solver_name)
-                            list_of_solvers_with_higher_complexity[other_solvers_name] = other_solver
+                        if other_solvers_name != solver_name and not q.is_consistent:
+                            # print(" other solver:", other_solvers_name, " solver", solver_name)
+                            list_of_solvers_with_higher_complexity[
+                                other_solvers_name
+                            ] = other_solver
                             type_of_the_mapping[other_solvers_name] = q.mapping_string
-                            list_of_solvers_with_higher_complexity_write[other_solvers_name] = other_solver
-                            type_of_the_mapping_write[other_solvers_name] = q.mapping_string
+                            list_of_solvers_with_higher_complexity_write[
+                                other_solvers_name
+                            ] = other_solver
+                            type_of_the_mapping_write[
+                                other_solvers_name
+                            ] = q.mapping_string
                     pass
 
                 # do the mesh mapping on the more "complex" side of the computations, to avoid data intensive traffic
@@ -327,42 +414,72 @@ class PS_PreCICEConfig(object):
 
                 # READS
                 for other_solver_name in list_of_solvers_with_higher_complexity_read:
-                    other_solver = list_of_solvers_with_higher_complexity_read[other_solver_name]
+                    other_solver = list_of_solvers_with_higher_complexity_read[
+                        other_solver_name
+                    ]
                     mapping_string = type_of_the_mapping_read[other_solver_name]
-                    other_solver_mesh_name = self.get_mesh_name_by_participants(other_solver_name, solver_name)
-                    mapped_tag = etree.SubElement(solver_tag, "mapping:nearest-neighbor", direction = "read",
-                                                  from___ = other_solver_mesh_name, to= solvers_mesh_name,
-                                                  constraint = mapping_string)
-                    self.mappings_read.append({
-                        'other_solver_name': other_solver_name,
-                        'from': other_solver_mesh_name,
-                        'to': solvers_mesh_name,
-                        'constraint': mapping_string
-                    })
-                
+                    other_solver_mesh_name = self.get_mesh_name_by_participants(
+                        other_solver_name, solver_name
+                    )
+                    mapped_tag = etree.SubElement(
+                        solver_tag,
+                        "mapping:nearest-neighbor",
+                        direction="read",
+                        from___=other_solver_mesh_name,
+                        to=solvers_mesh_name,
+                        constraint=mapping_string,
+                    )
+                    self.mappings_read.append(
+                        {
+                            "other_solver_name": other_solver_name,
+                            "from": other_solver_mesh_name,
+                            "to": solvers_mesh_name,
+                            "constraint": mapping_string,
+                        }
+                    )
+
                 # WRITES
                 for other_solver_name in list_of_solvers_with_higher_complexity_write:
-                    other_solver = list_of_solvers_with_higher_complexity_write[other_solver_name]
+                    other_solver = list_of_solvers_with_higher_complexity_write[
+                        other_solver_name
+                    ]
                     mapping_string = type_of_the_mapping_write[other_solver_name]
-                    other_solver_mesh_name = self.get_mesh_name_by_participants(other_solver_name, solver_name)
-                    
+                    other_solver_mesh_name = self.get_mesh_name_by_participants(
+                        other_solver_name, solver_name
+                    )
+
                     # Always add receive mesh for the participant specifying a mapping if it does not already exist
-                    if other_solver_mesh_name not in self.solver_receive_meshes[solver_name]:
-                        solver_mesh_tag = etree.SubElement(solver_tag,
-                                                           "receive-mesh", name=other_solver_mesh_name,
-                                                           from___=other_solver_name)
-                        self.solver_receive_meshes[solver_name].append(other_solver_mesh_name)
-                    
+                    if (
+                        other_solver_mesh_name
+                        not in self.solver_receive_meshes[solver_name]
+                    ):
+                        solver_mesh_tag = etree.SubElement(
+                            solver_tag,
+                            "receive-mesh",
+                            name=other_solver_mesh_name,
+                            from___=other_solver_name,
+                        )
+                        self.solver_receive_meshes[solver_name].append(
+                            other_solver_mesh_name
+                        )
+
                     # Add write mapping
-                    mapped_tag = etree.SubElement(solver_tag, "mapping:nearest-neighbor", direction="write",
-                                              from___ = solvers_mesh_name, to = other_solver_mesh_name,
-                                              constraint = mapping_string)
-                    self.mappings_write.append({
-                        'other_solver_name': other_solver_name,
-                        'from': solvers_mesh_name,
-                        'to': other_solver_mesh_name,
-                        'constraint': mapping_string
-                    })
+                    mapped_tag = etree.SubElement(
+                        solver_tag,
+                        "mapping:nearest-neighbor",
+                        direction="write",
+                        from___=solvers_mesh_name,
+                        to=other_solver_mesh_name,
+                        constraint=mapping_string,
+                    )
+                    self.mappings_write.append(
+                        {
+                            "other_solver_name": other_solver_name,
+                            "from": solvers_mesh_name,
+                            "to": other_solver_mesh_name,
+                            "constraint": mapping_string,
+                        }
+                    )
                 # treat M2N communications with other solver
                 for other_solver_name in list_of_solvers_with_higher_complexity:
                     if solver_name == other_solver_name:
@@ -371,10 +488,13 @@ class PS_PreCICEConfig(object):
                     # Check if this pair or its reverse has already been added
                     m2n_pair = tuple(sorted([solver_name, other_solver_name]))
                     if m2n_pair not in m2n_pairs_added:
-                        m2n_tag = etree.SubElement(precice_configuration_tag, "m2n:sockets", 
-                                                   acceptor=solver_name, 
-                                                   connector=other_solver_name, 
-                                                   exchange___directory="..")
+                        m2n_tag = etree.SubElement(
+                            precice_configuration_tag,
+                            "m2n:sockets",
+                            acceptor=solver_name,
+                            connector=other_solver_name,
+                            exchange___directory="..",
+                        )
                         m2n_pairs_added.add(m2n_pair)
                 pass
 
@@ -383,32 +503,45 @@ class PS_PreCICEConfig(object):
         self.couplingScheme.write_precice_xml_config(precice_configuration_tag, self)
 
         # Validate mesh exchanges for convergence measures
-        self.validate_convergence_measure_mesh_exchange(self,self.exchange_mesh_names)
+        self.validate_convergence_measure_mesh_exchange(self, self.exchange_mesh_names)
         # =========== generate XML ===========================
 
-        xml_string = etree.tostring(precice_configuration_tag, #pretty_print=True, xml_declaration=True,
-                                    encoding="UTF-8")
+        xml_string = etree.tostring(
+            precice_configuration_tag,  # pretty_print=True, xml_declaration=True,
+            encoding="UTF-8",
+        )
         # Remove xmlns:* attributes which are not recognized by preCICE
         # print( " STR: ", xml_string)
         from_index = xml_string.decode("ascii").find("<precice-configuration")
         to_index = xml_string.decode("ascii").find(">", from_index)
-        xml_string = xml_string.decode("ascii")[0:from_index] + "<precice-configuration>" + xml_string.decode("ascii")[
-                                                                                            to_index + 1:]
+        xml_string = (
+            xml_string.decode("ascii")[0:from_index]
+            + "<precice-configuration>"
+            + xml_string.decode("ascii")[to_index + 1 :]
+        )
         # just a workaround of how to avoid problems with the parser
         # TODO: later we should find a more elegant solution
-        replace_only_list = [("from___", "from"), ("exchange___directory", "exchange-directory")]
-        for a,b in replace_only_list:
+        replace_only_list = [
+            ("from___", "from"),
+            ("exchange___directory", "exchange-directory"),
+        ]
+        for a, b in replace_only_list:
             xml_string = xml_string.replace(a, b)
-        replace_list = [("data:", "data___"), ("mapping:nearest", "mapping___nearest"), ("m2n:", "m2n___" ),
-                        ("coupling-scheme:","coupling-scheme___"), ("acceleration:", "acceleration___")]
-        for a,b in replace_list:
+        replace_list = [
+            ("data:", "data___"),
+            ("mapping:nearest", "mapping___nearest"),
+            ("m2n:", "m2n___"),
+            ("coupling-scheme:", "coupling-scheme___"),
+            ("acceleration:", "acceleration___"),
+        ]
+        for a, b in replace_list:
             xml_string = xml_string.replace(a, b)
 
         # reformat the XML and add indents
         replaced_str = my_minidom.parseString(xml_string)
         xml_string = replaced_str.toprettyxml(indent="   ")
 
-        for a,b in replace_list:
+        for a, b in replace_list:
             xml_string = xml_string.replace(b, a)
 
         output_xml_file = open(filename, "w")
@@ -422,11 +555,11 @@ class PS_PreCICEConfig(object):
     def validate_convergence_measure_mesh_exchange(self, config, exchange_mesh_names):
         """
         Validate that meshes used in convergence measures are properly exchanged in multi-coupling schemes.
-        
+
         Args:
             config (PS_PreCICEConfig): The configuration to validate
             exchange_mesh_names (list): List of mesh names exchanged during configuration
-        
+
         Raises:
             ValueError: If a mesh used in convergence measure is not exchanged to the control participant
         """
@@ -435,48 +568,65 @@ class PS_PreCICEConfig(object):
             return
 
         # Find the control participant (the one with the most meshes)
-        control_participant = max(config.solvers, key=lambda p: len(config.solvers[p].meshes))
+        control_participant = max(
+            config.solvers, key=lambda p: len(config.solvers[p].meshes)
+        )
 
         # Combine provided and received meshes for the control participant
         control_participant_meshes = set(config.solvers[control_participant].meshes)
-        control_participant_meshes.update(self.solver_receive_meshes.get(control_participant, []))
+        control_participant_meshes.update(
+            self.solver_receive_meshes.get(control_participant, [])
+        )
 
         exchanged_data_on_control = []
         for exchange in config.exchanges:
-            if exchange.get('to').lower() == control_participant.lower():
-                exchanged_data_on_control.append(exchange.get('data'))
+            if exchange.get("to").lower() == control_participant.lower():
+                exchanged_data_on_control.append(exchange.get("data"))
 
         # Check if each exchanged mesh is present in the control participant's meshes
         for mesh in exchange_mesh_names:
             # Find which participant provides this mesh
             providing_participants = [
-                p_name for p_name, p in config.solvers.items() 
-                if mesh in p.meshes
+                p_name for p_name, p in config.solvers.items() if mesh in p.meshes
             ]
 
             # If no participant provides the mesh, raise an error
             if not providing_participants:
-                raise ValueError(f"Mesh '{mesh}' used in configuration is not available to any participant")
+                raise ValueError(
+                    f"Mesh '{mesh}' used in configuration is not available to any participant"
+                )
 
-            #get data via topology
-            for exchange in config.exchanges:                  
-                if providing_participants[0].lower() == exchange.get('from').lower():
-                    data = exchange.get('data')
-                    if (data not in exchanged_data_on_control) and (exchange.get('from').lower() != control_participant.lower()):
+            # get data via topology
+            for exchange in config.exchanges:
+                if providing_participants[0].lower() == exchange.get("from").lower():
+                    data = exchange.get("data")
+                    if (data not in exchanged_data_on_control) and (
+                        exchange.get("from").lower() != control_participant.lower()
+                    ):
                         exchanged_data_on_control.append(data)
-                        e = etree.SubElement(self.coupling_scheme, "exchange", 
-                            data= data, mesh=mesh,
-                            from___=providing_participants[0], to=control_participant)
-                        config.exchanges.append({
-                            'data': data,
-                            'mesh': mesh,
-                            'from': providing_participants[0],
-                            'to': control_participant
-                        }) 
-                    
+                        e = etree.SubElement(
+                            self.coupling_scheme,
+                            "exchange",
+                            data=data,
+                            mesh=mesh,
+                            from___=providing_participants[0],
+                            to=control_participant,
+                        )
+                        config.exchanges.append(
+                            {
+                                "data": data,
+                                "mesh": mesh,
+                                "from": providing_participants[0],
+                                "to": control_participant,
+                            }
+                        )
+
             if mesh not in control_participant_meshes:
                 # Add the mesh to the control participant as receive and add an exchange for it
                 solver_tag = self.solver_tags[control_participant]
-                solver_mesh_tag = etree.SubElement(solver_tag,
-                                    "receive-mesh", name=mesh,
-                                    from___=providing_participants[0])
+                solver_mesh_tag = etree.SubElement(
+                    solver_tag,
+                    "receive-mesh",
+                    name=mesh,
+                    from___=providing_participants[0],
+                )

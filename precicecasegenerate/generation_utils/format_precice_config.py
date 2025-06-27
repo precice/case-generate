@@ -12,11 +12,13 @@ def is_empty_tag(element):
     """
     return not element.getchildren()
 
+
 def is_comment(element):
     """
     Check if the given element is an XML comment.
     """
     return isinstance(element, etree._Comment)
+
 
 def attrib_length(element):
     """
@@ -31,6 +33,7 @@ def attrib_length(element):
     total += len(element.attrib) - 1
     return total
 
+
 def element_len(element):
     """
     Estimate the length of an element's start tag (including its attributes).
@@ -44,6 +47,7 @@ def element_len(element):
         total += 2  # For the space and slash in an empty tag "<tag />"
     return total
 
+
 class PrettyPrinter:
     """
     Class to handle the prettification of XML content.
@@ -51,23 +55,30 @@ class PrettyPrinter:
     in a prettified format, but also methods to parse and reformat
     an XML file directly.
     """
-    def __init__(self, stream=sys.stdout, indent='  ', max_width=100, max_group_level=1):
-        self.stream = stream      # Output stream (can be a file, StringIO, etc.)
-        self.indent = indent      # String used for indentation (2 spaces)
+
+    def __init__(
+        self, stream=sys.stdout, indent="  ", max_width=100, max_group_level=1
+    ):
+        self.stream = stream  # Output stream (can be a file, StringIO, etc.)
+        self.indent = indent  # String used for indentation (2 spaces)
         self.max_width = max_width  # Maximum width for a single line
-        self.max_group_level = max_group_level  # Maximum depth to group elements on one line
-        self.global_newline_between_groups = True  # Add newline between top-level groups
-        
+        self.max_group_level = (
+            max_group_level  # Maximum depth to group elements on one line
+        )
+        self.global_newline_between_groups = (
+            True  # Add newline between top-level groups
+        )
+
         # Specific ordering for top-level elements
         self.top_level_order = [
-            'data:vector',
-            'mesh',
-            'participant',
-            'm2n:sockets',
-            'coupling-scheme:'
+            "data:vector",
+            "mesh",
+            "participant",
+            "m2n:sockets",
+            "coupling-scheme:",
         ]
 
-    def print(self, text='', end='\n'):
+    def print(self, text="", end="\n"):
         """
         Write text to the output stream with optional end character.
         """
@@ -90,8 +101,11 @@ class PrettyPrinter:
         """
         Print the XML declaration at the beginning of the file.
         """
-        self.print('<?xml version="{}" encoding="{}"?>'.format(
-            root.docinfo.xml_version, root.docinfo.encoding))
+        self.print(
+            '<?xml version="{}" encoding="{}"?>'.format(
+                root.docinfo.xml_version, root.docinfo.encoding
+            )
+        )
 
     def print_root(self, root):
         """
@@ -108,13 +122,21 @@ class PrettyPrinter:
         assert isinstance(element, etree._Element)
         # Always use self-closing tags for empty elements
         if not element.getchildren() and element.attrib:
-            self.print("{}<{} {}/>".format(self.indent * level, element.tag, self.fmt_attr_h(element)))
+            self.print(
+                "{}<{} {}/>".format(
+                    self.indent * level, element.tag, self.fmt_attr_h(element)
+                )
+            )
         elif not element.getchildren():
             self.print("{}<{} />".format(self.indent * level, element.tag))
         else:
             # For non-empty elements, use traditional open/close tags
             if element.attrib:
-                self.print("{}<{} {}>".format(self.indent * level, element.tag, self.fmt_attr_h(element)))
+                self.print(
+                    "{}<{} {}>".format(
+                        self.indent * level, element.tag, self.fmt_attr_h(element)
+                    )
+                )
             else:
                 self.print("{}<{}>".format(self.indent * level, element.tag))
 
@@ -133,7 +155,11 @@ class PrettyPrinter:
         """
         assert isinstance(element, etree._Element)
         if element.attrib:
-            self.print("{}<{} {}/>".format(self.indent * level, element.tag, self.fmt_attr_h(element)))
+            self.print(
+                "{}<{} {}/>".format(
+                    self.indent * level, element.tag, self.fmt_attr_h(element)
+                )
+            )
         else:
             self.print("{}<{} />".format(self.indent * level, element.tag))
 
@@ -171,11 +197,11 @@ class PrettyPrinter:
             tag = str(elem.tag)
             # Predefined order for top-level elements with prefix matching
             order = {
-                'data:': 1,  # Matches data:vector, data:scalar, etc.
-                'mesh': 2,
-                'participant': 3,
-                'm2n:': 4,
-                'coupling-scheme:': 5
+                "data:": 1,  # Matches data:vector, data:scalar, etc.
+                "mesh": 2,
+                "participant": 3,
+                "m2n:": 4,
+                "coupling-scheme:": 5,
             }
             # Find the first matching key
             for prefix, rank in order.items():
@@ -189,167 +215,182 @@ class PrettyPrinter:
         last = len(sorted_children)
         for i, group in enumerate(sorted_children, start=1):
             # Special handling for participants to reorder child elements
-            if 'participant' in str(group.tag):
+            if "participant" in str(group.tag):
                 # Define order for participant child elements with more generalized matching
                 participant_order = {
-                    'provide-mesh': 1,
-                    'receive-mesh': 2,
-                    'write-data': 3,
-                    'read-data': 4,
-                    'mapping:': 5  # Matches mapping:nearest-neighbor, mapping:rbf, etc.
+                    "provide-mesh": 1,
+                    "receive-mesh": 2,
+                    "write-data": 3,
+                    "read-data": 4,
+                    "mapping:": 5,  # Matches mapping:nearest-neighbor, mapping:rbf, etc.
                 }
-                
+
                 # Sort participant's children based on the defined order
                 sorted_participant_children = sorted(
-                    group.getchildren(), 
+                    group.getchildren(),
                     key=lambda child: next(
-                        (rank for prefix, rank in participant_order.items() 
-                         if str(child.tag).startswith(prefix)), 
-                        6  # Unknown elements appear last
-                    )
+                        (
+                            rank
+                            for prefix, rank in participant_order.items()
+                            if str(child.tag).startswith(prefix)
+                        ),
+                        6,  # Unknown elements appear last
+                    ),
                 )
-                
+
                 # Separate different types of elements
                 mesh_elements = []
                 data_elements = []
                 mapping_elements = []
-                
+
                 for child in sorted_participant_children:
-                    if str(child.tag) in ['provide-mesh', 'receive-mesh']:
+                    if str(child.tag) in ["provide-mesh", "receive-mesh"]:
                         mesh_elements.append(child)
-                    elif str(child.tag) in ['write-data', 'read-data']:
+                    elif str(child.tag) in ["write-data", "read-data"]:
                         data_elements.append(child)
-                    elif str(child.tag).startswith('mapping:'):
+                    elif str(child.tag).startswith("mapping:"):
                         mapping_elements.append(child)
-                
+
                 # Construct participant tag with attributes
                 participant_tag = "<{}".format(group.tag)
                 for attr, value in group.items():
                     participant_tag += ' {}="{}"'.format(attr, value)
                 participant_tag += ">"
-                
+
                 # Print participant opening tag
                 self.print(self.indent * level + participant_tag)
-                
+
                 # Print mesh elements
                 for child in mesh_elements:
                     self.print_element(child, level + 1)
-                
+
                 # Add newline between mesh and data
                 if mesh_elements and data_elements:
                     self.print()
-                
+
                 # Print data elements
                 for child in data_elements:
                     self.print_element(child, level + 1)
-                
+
                 # Add newline before mapping
                 if data_elements and mapping_elements:
                     self.print()
-                
+
                 # Print mapping elements with multi-line formatting
                 for mapping_elem in mapping_elements:
                     # Check if the mapping element has multiple attributes
                     if len(mapping_elem.items()) > 2:
-                        self.print("{}<{}".format(self.indent * (level + 1), mapping_elem.tag))
+                        self.print(
+                            "{}<{}".format(self.indent * (level + 1), mapping_elem.tag)
+                        )
                         for k, v in mapping_elem.items():
-                            self.print("{}{}=\"{}\"".format(self.indent * (level + 2), k, v))
+                            self.print(
+                                '{}{}="{}"'.format(self.indent * (level + 2), k, v)
+                            )
                         self.print("{} />".format(self.indent * (level + 1)))
                     else:
                         # Single-line formatting for simple mappings
                         self.print_element(mapping_elem, level + 1)
-                
+
                 # Close participant tag
                 self.print("{}</participant>".format(self.indent * level))
-                
+
                 # Add newline after participant if not the last element
                 if i < last:
                     self.print()
-                
+
                 continue
-            
+
             # Special handling for coupling-scheme elements
-            elif 'coupling-scheme' in str(group.tag):
+            elif "coupling-scheme" in str(group.tag):
                 # Sort children of coupling-scheme
                 sorted_scheme_children = sorted(
                     group.getchildren(),
-                    key=lambda child: 0 if str(child.tag) == 'relative-convergence-measure' else 
-                                      1 if str(child.tag) == 'exchange' else 2
+                    key=lambda child: 0
+                    if str(child.tag) == "relative-convergence-measure"
+                    else 1
+                    if str(child.tag) == "exchange"
+                    else 2,
                 )
-                
+
                 # Separate different types of elements
                 other_elements = []
                 exchange_elements = []
                 convergence_elements = []
                 acceleration_elements = []
-                
+
                 for child in sorted_scheme_children:
                     tag = str(child.tag)
-                    if tag == 'exchange':
+                    if tag == "exchange":
                         exchange_elements.append(child)
-                    elif tag == 'relative-convergence-measure':
+                    elif tag == "relative-convergence-measure":
                         convergence_elements.append(child)
-                    elif tag.startswith('acceleration'):
+                    elif tag.startswith("acceleration"):
                         acceleration_elements.append(child)
                     else:
                         other_elements.append(child)
-                
+
                 # Print coupling-scheme opening tag
                 self.print(self.indent * level + "<{}>".format(group.tag))
-                
+
                 # Print initial elements
                 initial_elements = [
-                    elem for elem in other_elements 
-                    if str(elem.tag) in ['participants', 'participant', 'max-time', 'time-window-size']
+                    elem
+                    for elem in other_elements
+                    if str(elem.tag)
+                    in ["participants", "participant", "max-time", "time-window-size"]
                 ]
                 for child in initial_elements:
                     self.print_element(child, level + 1)
-                
+
                 # Print convergence measures first
                 if convergence_elements:
                     if initial_elements:
                         self.print()
                     for conv in convergence_elements:
                         self.print_element(conv, level + 1)
-                
+
                 # Print exchanges
                 if exchange_elements:
                     if initial_elements or convergence_elements:
                         self.print()
                     for exchange in exchange_elements:
                         self.print_element(exchange, level + 1)
-                
+
                 # Print max-iterations if present
                 max_iterations = [
-                    elem for elem in other_elements 
-                    if str(elem.tag) == 'max-iterations'
+                    elem for elem in other_elements if str(elem.tag) == "max-iterations"
                 ]
                 if max_iterations:
                     if exchange_elements or convergence_elements or initial_elements:
                         self.print()
                     for child in max_iterations:
                         self.print_element(child, level + 1)
-                
+
                 # Print acceleration elements
                 if acceleration_elements:
-                    if exchange_elements or convergence_elements or max_iterations or initial_elements:
+                    if (
+                        exchange_elements
+                        or convergence_elements
+                        or max_iterations
+                        or initial_elements
+                    ):
                         self.print()
                     for child in acceleration_elements:
                         self.print_element(child, level + 1)
-                
+
                 # Close coupling-scheme tag
-                self.print("{}</{}>"
-                    .format(self.indent * level, group.tag))
-                
+                self.print("{}</{}>".format(self.indent * level, group.tag))
+
                 # Add newline after coupling-scheme if not the last element
                 if i < last:
                     self.print()
-                
+
                 continue
-            
+
             # Print the element normally
             self.print_element(group, level=level)
-            
+
             # Add an extra newline between top-level groups
             if i < last:
                 self.print()
@@ -358,14 +399,16 @@ class PrettyPrinter:
     def parse_xml(content):
         """
         Parse XML content into a lxml ElementTree, with recovery and whitespace cleanup.
-        
+
         Parameters:
           content (bytes): The XML content in bytes.
-        
+
         Returns:
           An lxml ElementTree object.
         """
-        parser = etree.XMLParser(recover=True, remove_comments=False, remove_blank_text=True)
+        parser = etree.XMLParser(
+            recover=True, remove_comments=False, remove_blank_text=True
+        )
         return etree.fromstring(content, parser).getroottree()
 
     def prettify_file(self, file_path):
@@ -374,16 +417,16 @@ class PrettyPrinter:
 
         Parameters:
           file_path (str): Path to the XML file.
-        
+
         Returns:
           bool: True if the file was processed (even if no changes were made), False if an error occurred.
         """
         try:
             # Open and read the file as bytes.
-            with open(file_path, 'rb') as xml_file:
+            with open(file_path, "rb") as xml_file:
                 content = xml_file.read()
         except Exception as e:
-            print(f"Unable to open file: \"{file_path}\"")
+            print(f'Unable to open file: "{file_path}"')
             print(e)
             return False
 
@@ -391,15 +434,19 @@ class PrettyPrinter:
             # Parse the XML content using the static method.
             xml_tree = PrettyPrinter.parse_xml(content)
         except Exception as e:
-            print(f"Error occurred while parsing file: \"{file_path}\"")
+            print(f'Error occurred while parsing file: "{file_path}"')
             print(e)
             return False
 
         # Create an in-memory text stream to hold the prettified XML.
         buffer = io.StringIO()
         # Use a temporary PrettyPrinter instance with the buffer as output.
-        temp_printer = PrettyPrinter(stream=buffer, indent=self.indent,
-                                     max_width=self.max_width, max_group_level=self.max_group_level)
+        temp_printer = PrettyPrinter(
+            stream=buffer,
+            indent=self.indent,
+            max_width=self.max_width,
+            max_group_level=self.max_group_level,
+        )
         temp_printer.print_root(xml_tree)
 
         # Get the prettified content from the buffer.
@@ -412,9 +459,9 @@ class PrettyPrinter:
                     buffer.seek(0)
                     shutil.copyfileobj(buffer, xml_file)
             except Exception as e:
-                print(f"Failed to write prettified content to file: \"{file_path}\"")
+                print(f'Failed to write prettified content to file: "{file_path}"')
                 print(e)
                 return False
         else:
-            print(f"No changes required for file: \"{file_path}\"")
+            print(f'No changes required for file: "{file_path}"')
         return True

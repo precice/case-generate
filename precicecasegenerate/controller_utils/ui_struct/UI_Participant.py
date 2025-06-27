@@ -1,4 +1,6 @@
-from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import UT_PCErrorLogging
+from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import (
+    UT_PCErrorLogging,
+)
 from precicecasegenerate.controller_utils.ui_struct.UI_Coupling import UI_Coupling
 
 
@@ -7,8 +9,15 @@ class UI_Participant(object):
     This class represents one participant as it is declared on the user input level
     """
 
-    def __init__(self, name: str = "", solver_name: str = "", list_of_couplings=None,
-                 solver_domain: str = "", data_type: str = "scalar", dimensionality: int = None):
+    def __init__(
+        self,
+        name: str = "",
+        solver_name: str = "",
+        list_of_couplings=None,
+        solver_domain: str = "",
+        data_type: str = "scalar",
+        dimensionality: int = None,
+    ):
         if list_of_couplings is None:
             list_of_couplings = []
 
@@ -23,7 +32,7 @@ class UI_Participant(object):
 
     @classmethod
     def from_yaml(cls, etree, participant_name: str, mylog: UT_PCErrorLogging):
-        """ Method to initialize fields from a parsed YAML file node """
+        """Method to initialize fields from a parsed YAML file node"""
         self = cls()
 
         try:

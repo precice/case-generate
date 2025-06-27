@@ -2,9 +2,10 @@ from pathlib import Path
 from termcolor import colored
 from datetime import datetime
 
+
 class Logger:
     def __init__(self) -> None:
-        """ Custom logger"""
+        """Custom logger"""
         self.root_generated = Path(__file__).parent
         self._errors = []
         self._warnings = []
@@ -21,7 +22,6 @@ class Logger:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         formatted_msg = f"{timestamp} {symbol} [{level}] {msg}"
         self._messages.append((formatted_msg, color))
-
 
     def print_all(self) -> None:
         """Prints all logged messages and clears the log state."""

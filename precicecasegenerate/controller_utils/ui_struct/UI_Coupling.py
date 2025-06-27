@@ -1,17 +1,23 @@
-from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import UT_PCErrorLogging
+from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import (
+    UT_PCErrorLogging,
+)
 from enum import Enum
 
+
 class UI_CouplingType(Enum):
-    """ enum type to represent the different coupling types"""
+    """enum type to represent the different coupling types"""
+
     fsi = 0
     cht = 1
     f2s = 2
+
 
 class UI_Coupling(object):
     """
     This class contains information on the user input level
     regarding the coupling of two participants
     """
+
     def __init__(self):
         """The constructor."""
         self.boundaryC1 = -1
@@ -21,9 +27,10 @@ class UI_Coupling(object):
         self.coupling_type = None
         pass
 
-    def init_from_yaml(self, name_coupling: str, etree, participants: dict,
-                       mylog: UT_PCErrorLogging):
-        """ Method to initialize fields from a parsed YAML file node """
+    def init_from_yaml(
+        self, name_coupling: str, etree, participants: dict, mylog: UT_PCErrorLogging
+    ):
+        """Method to initialize fields from a parsed YAML file node"""
 
         # new coupling info
         # name of the coupling is the type "fsi" or "chi"
@@ -49,8 +56,8 @@ class UI_Coupling(object):
         try:
             # TODO: we assume that we will have only fluids and structures?
             # TODO: we should all all of this to a single list
-            participants_loop = { "fluid" : etree["fluid"]}
-            participants_loop.update({ "structure" : etree["structure"] } )
+            participants_loop = {"fluid": etree["fluid"]}
+            participants_loop.update({"structure": etree["structure"]})
 
             # VERY IMPORTANT: we sort here the keys alphabetically!!!
             # this is an important assumption also in other parts of the code, that the participant1
@@ -62,7 +69,7 @@ class UI_Coupling(object):
                 participant_interface = participant_el["interface"]
 
                 participant = participants[participant_real_name]
-                participant.solver_domain = participant_name # this might be fuild or structure or something else
+                participant.solver_domain = participant_name  # this might be fuild or structure or something else
                 # add only to the first participant the coupling
                 participant.list_of_couplings.append(self)
                 # now link this to one of the participants
@@ -74,5 +81,9 @@ class UI_Coupling(object):
                     self.boundaryC2 = participant_interface
 
         except:
-            mylog.rep_error("Error in YAML initialization of the Coupling name=" + name_coupling + " data:")
+            mylog.rep_error(
+                "Error in YAML initialization of the Coupling name="
+                + name_coupling
+                + " data:"
+            )
         pass

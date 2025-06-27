@@ -4,7 +4,9 @@ import json
 import jsonschema
 from ruamel.yaml import YAML
 
-from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import UT_PCErrorLogging
+from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import (
+    UT_PCErrorLogging,
+)
 from precicecasegenerate.controller_utils.precice_struct import PS_PreCICEConfig
 from precicecasegenerate.controller_utils.ui_struct.UI_UserInput import UI_UserInput
 from .config_generator import ConfigGenerator
@@ -16,11 +18,12 @@ from .structure_handler import StructureHandler
 
 from importlib.resources import files
 
+
 class FileGenerator:
     def __init__(self, input_file: Path, output_path: Path) -> None:
-        """ Class which takes care of generating the content of the necessary files
-            :param input_file: Input yaml file that is needed for generation of the precice-config.xml file
-            :param output_path: Path to the folder where the case will be generated"""
+        """Class which takes care of generating the content of the necessary files
+        :param input_file: Input yaml file that is needed for generation of the precice-config.xml file
+        :param output_path: Path to the folder where the case will be generated"""
         self.input_file = input_file
         self.precice_config = PS_PreCICEConfig()
         self.mylog = UT_PCErrorLogging()
@@ -30,14 +33,13 @@ class FileGenerator:
         self.config_generator = ConfigGenerator()
         self.readme_generator = ReadmeGenerator()
         self.other_files_generator = OtherFilesGenerator()
-    
-    
+
     def generate_level_0(self) -> None:
         """Fills out the files of level 0 (everything in the root folder)."""
         self.other_files_generator.generate_clean(clean_sh=self.structure.clean)
         self.config_generator.generate_precice_config(self)
         self.readme_generator.generate_readme(self)
-    
+
     def _extract_participants(self) -> list[str]:
         """Extracts the participants from the topology.yaml file."""
         try:
@@ -50,35 +52,44 @@ class FileGenerator:
         except Exception as e:
             self.logger.error(f"Error reading input YAML file: {str(e)}")
             return None
-        
+
         # Extract participant names from the new list format
-        return [participant['name'] for participant in config.get('participants', [])]
-    
+        return [participant["name"] for participant in config.get("participants", [])]
+
     def generate_level_1(self) -> None:
         """Generates the files of level 1 (everything in the generated sub-folders)."""
 
         participants = self._extract_participants()
         for participant in participants:
-            target_participant = self.structure.create_level_1_structure(participant, self.user_ui)
+            target_participant = self.structure.create_level_1_structure(
+                participant, self.user_ui
+            )
             adapter_config = target_participant[1]
             run_sh = target_participant[2]
-            self.other_files_generator.generate_adapter_config(target_participant=participant, adapter_config=adapter_config,
-                                                                precice_config=self.structure.precice_config, topology_path=self.input_file)
+            self.other_files_generator.generate_adapter_config(
+                target_participant=participant,
+                adapter_config=adapter_config,
+                precice_config=self.structure.precice_config,
+                topology_path=self.input_file,
+            )
             self.other_files_generator.generate_run(run_sh)
 
     def format_precice_config(self) -> None:
         """Formats the generated preCICE configuration file."""
-        
+
         precice_config_path = self.structure.precice_config
         # Create an instance of PrettyPrinter.
-        printer = PrettyPrinter(indent='    ', max_width=120)
+        printer = PrettyPrinter(indent="    ", max_width=120)
         # Specify the path to the XML file you want to prettify.
         try:
             printer.prettify_file(precice_config_path)
             self.logger.success(f"Successfully prettified preCICE configuration XML")
         except Exception as prettify_exception:
-            self.logger.error("An error occurred during XML prettification: " + str(prettify_exception))
-            
+            self.logger.error(
+                "An error occurred during XML prettification: "
+                + str(prettify_exception)
+            )
+
     def handle_output(self, args):
         """
         Handle output based on verbose mode and log state
@@ -87,7 +98,10 @@ class FileGenerator:
             if not self.logger.has_errors():
                 self.logger.clear_messages()
                 # No errors, show success message
-                self.logger.success("Everything worked. You can find the generated files at: " + str(self.structure.generated_root))
+                self.logger.success(
+                    "Everything worked. You can find the generated files at: "
+                    + str(self.structure.generated_root)
+                )
                 # Always show warnings if any exist
                 if self.logger.has_warnings():
                     for warning in self.logger.get_warnings():
@@ -98,7 +112,11 @@ class FileGenerator:
     def validate_topology(args):
         """Validate the topology.yaml file against the JSON schema."""
         if args.validate_topology:
-            schema = json.loads(files("precicecasegenerate.schemas").joinpath("topology-schema.json").read_text())
+            schema = json.loads(
+                files("precicecasegenerate.schemas")
+                .joinpath("topology-schema.json")
+                .read_text()
+            )
             with open(args.input_file) as input_file:
                 data = YAML().load(input_file)
             try:

@@ -1,25 +1,35 @@
-from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import UT_PCErrorLogging
+from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import (
+    UT_PCErrorLogging,
+)
 from enum import Enum
 
+
 class QuantityCouple(object):
-    """ the quantity that is coupled """
+    """the quantity that is coupled"""
+
     def __init__(self):
-        self.name = "None"   # the name of the quantity as it is called physically
-        self.instance_name = "None" # this will be the solver name "-" quantity name, example: "InnerSolver-Pressure"
-        self.unit = "None"   # unit of the quantity
-        self.BC = -1 # boundary code for the coupling
-        self.relative_tolerance = 1E-4 # the relative convergence for coupling
-        self.list_of_solvers = {} # list of solvers that use this quantity (either read or write)
-        self.source_solver = None # the origin of this quantity the solver how creates it
-        self.source_mesh_name = "None" # the source mesh name
-        self.mapping_string = "ERROR" # conservative or consistent
-        self.dim = 3 # the dimension of the quantity
-        self.is_consistent = True # True if this quantity is consistent False if it is conservative
+        self.name = "None"  # the name of the quantity as it is called physically
+        self.instance_name = "None"  # this will be the solver name "-" quantity name, example: "InnerSolver-Pressure"
+        self.unit = "None"  # unit of the quantity
+        self.BC = -1  # boundary code for the coupling
+        self.relative_tolerance = 1e-4  # the relative convergence for coupling
+        self.list_of_solvers = (
+            {}
+        )  # list of solvers that use this quantity (either read or write)
+        self.source_solver = (
+            None  # the origin of this quantity the solver how creates it
+        )
+        self.source_mesh_name = "None"  # the source mesh name
+        self.mapping_string = "ERROR"  # conservative or consistent
+        self.dim = 3  # the dimension of the quantity
+        self.is_consistent = (
+            True  # True if this quantity is consistent False if it is conservative
+        )
         pass
 
 
-def get_quantity_object(name:str, bc:str, instance_name:str):
-    """ Function to create coupling quantity """
+def get_quantity_object(name: str, bc: str, instance_name: str):
+    """Function to create coupling quantity"""
     ret = None
     if name.startswith("Force"):
         ret = Force()
@@ -44,8 +54,10 @@ def get_quantity_object(name:str, bc:str, instance_name:str):
         ret.instance_name = instance_name
         return ret
 
+
 class Force(QuantityCouple):
-    """ Forces """
+    """Forces"""
+
     def __init__(self):
         super().__init__()
         self.name = "Force"
@@ -56,7 +68,8 @@ class Force(QuantityCouple):
 
 
 class Displacement(QuantityCouple):
-    """ Displacements """
+    """Displacements"""
+
     def __init__(self):
         super().__init__()
         self.name = "Displacement"
@@ -66,7 +79,8 @@ class Displacement(QuantityCouple):
 
 
 class Velocity(QuantityCouple):
-    """ Velocities """
+    """Velocities"""
+
     def __init__(self):
         super().__init__()
         self.name = "Velocity"
@@ -76,7 +90,8 @@ class Velocity(QuantityCouple):
 
 
 class Pressure(QuantityCouple):
-    """ Pressures """
+    """Pressures"""
+
     def __init__(self):
         super().__init__()
         self.name = "Pressure"
@@ -87,7 +102,8 @@ class Pressure(QuantityCouple):
 
 
 class Temperature(QuantityCouple):
-    """ temperature """
+    """temperature"""
+
     def __init__(self):
         super().__init__()
         self.name = "Temperature"
@@ -98,7 +114,8 @@ class Temperature(QuantityCouple):
 
 
 class HeatTransfer(QuantityCouple):
-    """ heat transfer """
+    """heat transfer"""
+
     def __init__(self):
         super().__init__()
         self.name = "HeatTransfer"

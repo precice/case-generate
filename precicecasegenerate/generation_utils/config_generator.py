@@ -6,15 +6,15 @@ class ConfigGenerator:
     def is_utf8_encoded(file_path):
         """Check if a file is UTF-8 encoded without BOM"""
         try:
-            with open(file_path, 'rb') as f:
+            with open(file_path, "rb") as f:
                 # Read the first few bytes to check for BOM
                 bom = f.read(3)
-                if bom == b'\xef\xbb\xbf':
+                if bom == b"\xef\xbb\xbf":
                     return False  # File has a BOM, so it's not considered pure UTF-8
 
                 # Try to decode the rest of the file
                 f.seek(0)  # Go back to the start of the file
-                f.read().decode('utf-8')
+                f.read().decode("utf-8")
             return True
         except UnicodeDecodeError:
             return False
@@ -61,7 +61,7 @@ class ConfigGenerator:
                 target,
                 file_generator.mylog,
                 sync_mode=user_ui.sim_info.sync_mode,
-                mode=user_ui.sim_info.mode
+                mode=user_ui.sim_info.mode,
             )
         except Exception as e:
             logger.error(f"Failed to write preCICE XML config: {str(e)}")

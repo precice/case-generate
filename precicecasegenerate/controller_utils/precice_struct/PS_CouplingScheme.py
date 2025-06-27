@@ -1,26 +1,34 @@
-from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import UT_PCErrorLogging
-from precicecasegenerate.controller_utils.precice_struct.PS_ParticipantSolver import PS_ParticipantSolver
+from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import (
+    UT_PCErrorLogging,
+)
+from precicecasegenerate.controller_utils.precice_struct.PS_ParticipantSolver import (
+    PS_ParticipantSolver,
+)
 from precicecasegenerate.controller_utils.ui_struct.UI_UserInput import UI_UserInput
 import xml.etree.ElementTree as etree
 
+
 class PS_CouplingScheme(object):
-    """Class to represent the Coupling schemes """
+    """Class to represent the Coupling schemes"""
+
     def __init__(self):
-        """Ctor to initialize all the fields """
+        """Ctor to initialize all the fields"""
         self.firstSolver = None
         self.secondSolver = None
         pass
 
-    def init_from_UI(self, ui_config:UI_UserInput, conf): # : PS_PreCICEConfig
-        """ This method should be overwritten by the subclasses """
+    def init_from_UI(self, ui_config: UI_UserInput, conf):  # : PS_PreCICEConfig
+        """This method should be overwritten by the subclasses"""
         pass
 
-    def write_precice_xml_config(self, tag: etree, config): # config: PS_PreCICEConfig
-        """ parent function to write out XML file """
+    def write_precice_xml_config(self, tag: etree, config):  # config: PS_PreCICEConfig
+        """parent function to write out XML file"""
         pass
 
-    def write_participants_and_coupling_scheme(self, tag: etree, config, coupling_str:str ):
-        """ write out the config XMl file """
+    def write_participants_and_coupling_scheme(
+        self, tag: etree, config, coupling_str: str
+    ):
+        """write out the config XMl file"""
         if len(config.solvers) <= 2:
             # for only
             coupling_scheme = etree.SubElement(tag, "coupling-scheme:" + coupling_str)
@@ -36,14 +44,16 @@ class PS_CouplingScheme(object):
                 pass
             # the solver with the higher complexity should be first
             if mycomplexity[0] < mycomplexity[1]:
-                i = etree.SubElement(coupling_scheme, "participants", first=mylist[0],
-                                     second=mylist[1])
+                i = etree.SubElement(
+                    coupling_scheme, "participants", first=mylist[0], second=mylist[1]
+                )
                 config.couplingScheme_participants = mylist[0], mylist[1]
             else:
-                i = etree.SubElement(coupling_scheme, "participants", first=mylist[1],
-                                     second=mylist[0])
+                i = etree.SubElement(
+                    coupling_scheme, "participants", first=mylist[1], second=mylist[0]
+                )
                 config.couplingScheme_participants = mylist[1], mylist[0]
-            
+
         else:
             # TODO: is "multi" good for all
             coupling_scheme = etree.SubElement(tag, "coupling-scheme:multi")
@@ -61,9 +71,16 @@ class PS_CouplingScheme(object):
             for participant_name in config.solvers:
                 participant = config.solvers[participant_name]
                 if participant.name == control_participant_name:
-                    i = etree.SubElement(coupling_scheme, "participant", name=participant_name, control="yes")
+                    i = etree.SubElement(
+                        coupling_scheme,
+                        "participant",
+                        name=participant_name,
+                        control="yes",
+                    )
                 else:
-                    i = etree.SubElement(coupling_scheme, "participant", name=participant_name)
+                    i = etree.SubElement(
+                        coupling_scheme, "participant", name=participant_name
+                    )
                     pass
                 pass
             pass
@@ -93,51 +110,75 @@ class PS_CouplingScheme(object):
                         other_mesh_name = allm
         return other_solver_for_coupling, other_mesh_name
 
-    def write_exchange_and_convergance(self, config, coupling_scheme, relative_conv_str:str):
+    def write_exchange_and_convergance(
+        self, config, coupling_scheme, relative_conv_str: str
+    ):
         """Writes to the XML the exchange list"""
         for exchange in config.exchanges:
-            from_s = exchange.get('from')
-            to_s = exchange.get('to')
-            data = exchange.get('data')
+            from_s = exchange.get("from")
+            to_s = exchange.get("to")
+            data = exchange.get("data")
 
             # Process mappings
             read_mappings = [m.copy() for m in config.mappings_read]
             write_mappings = [m.copy() for m in config.mappings_write]
 
-            read_mapping = next((m for m in read_mappings if 
-                                (m['from'] == from_s + '-Mesh' and m['to'] == to_s + '-Mesh') ), None)
-            write_mapping = next((m for m in write_mappings if 
-                                (m['from'] == from_s + '-Mesh' and m['to'] == to_s + '-Mesh')), None)
+            read_mapping = next(
+                (
+                    m
+                    for m in read_mappings
+                    if (m["from"] == from_s + "-Mesh" and m["to"] == to_s + "-Mesh")
+                ),
+                None,
+            )
+            write_mapping = next(
+                (
+                    m
+                    for m in write_mappings
+                    if (m["from"] == from_s + "-Mesh" and m["to"] == to_s + "-Mesh")
+                ),
+                None,
+            )
 
             # Choose mesh based on mapping constraint
-            if read_mapping and read_mapping['constraint'] == 'conservative':
-                exchange_mesh_name = read_mapping['to']
-            elif read_mapping and read_mapping['constraint'] == 'consistent':
-                exchange_mesh_name = read_mapping['from']
-            elif write_mapping and write_mapping['constraint'] == 'conservative':
-                exchange_mesh_name = write_mapping['to']
-            elif write_mapping and write_mapping['constraint'] == 'consistent':
-                exchange_mesh_name = write_mapping['from']
+            if read_mapping and read_mapping["constraint"] == "conservative":
+                exchange_mesh_name = read_mapping["to"]
+            elif read_mapping and read_mapping["constraint"] == "consistent":
+                exchange_mesh_name = read_mapping["from"]
+            elif write_mapping and write_mapping["constraint"] == "conservative":
+                exchange_mesh_name = write_mapping["to"]
+            elif write_mapping and write_mapping["constraint"] == "consistent":
+                exchange_mesh_name = write_mapping["from"]
             else:
-                exchange_mesh_name = from_s + '-Mesh'
+                exchange_mesh_name = from_s + "-Mesh"
             if exchange_mesh_name not in config.exchange_mesh_names:
                 config.exchange_mesh_names.append(exchange_mesh_name)
-            e = etree.SubElement(coupling_scheme, "exchange", 
-                                data=data, mesh=exchange_mesh_name,
-                                from___=from_s, to=to_s)
+            e = etree.SubElement(
+                coupling_scheme,
+                "exchange",
+                data=data,
+                mesh=exchange_mesh_name,
+                from___=from_s,
+                to=to_s,
+            )
             # Use the same mesh for the relative convergence measure
             if relative_conv_str != "":
-                c = etree.SubElement(coupling_scheme, "relative-convergence-measure",
-                                 limit=relative_conv_str, mesh=exchange_mesh_name
-                                 ,data=data)
+                c = etree.SubElement(
+                    coupling_scheme,
+                    "relative-convergence-measure",
+                    limit=relative_conv_str,
+                    mesh=exchange_mesh_name,
+                    data=data,
+                )
             pass
 
 
 class PS_ExplicitCoupling(PS_CouplingScheme):
-    """ Explicit coupling scheme """
+    """Explicit coupling scheme"""
+
     def __init__(self):
         self.NrTimeStep = -1
-        self.Dt = 1E-4
+        self.Dt = 1e-4
         pass
 
     def initFromUI(self, ui_config: UI_UserInput, conf):  # conf : PS_PreCICEConfig
@@ -150,23 +191,29 @@ class PS_ExplicitCoupling(PS_CouplingScheme):
         self.coupling = simulation_conf.coupling
         pass
 
-    def write_precice_xml_config(self, tag:etree, config): # config: PS_PreCICEConfig
-        """ write out the config XMl file """
-        coupling_scheme = self.write_participants_and_coupling_scheme( tag, config, f"{self.coupling}-explicit" )
+    def write_precice_xml_config(self, tag: etree, config):  # config: PS_PreCICEConfig
+        """write out the config XMl file"""
+        coupling_scheme = self.write_participants_and_coupling_scheme(
+            tag, config, f"{self.coupling}-explicit"
+        )
         config.coupling_scheme = coupling_scheme
-        if str(self.display_standard_values).lower() == 'true':
+        if str(self.display_standard_values).lower() == "true":
             if self.NrTimeStep is None:
                 self.NrTimeStep = 1e-3
             if self.Dt is None:
                 self.Dt = 1e-3
-            i = etree.SubElement(coupling_scheme, "max-time", value=str(self.NrTimeStep))
-            attr = { "value": str(self.Dt)}
+            i = etree.SubElement(
+                coupling_scheme, "max-time", value=str(self.NrTimeStep)
+            )
+            attr = {"value": str(self.Dt)}
             i = etree.SubElement(coupling_scheme, "time-window-size", attr)
         else:
             if self.NrTimeStep is not None:
-                i = etree.SubElement(coupling_scheme, "max-time", value=str(self.NrTimeStep))
+                i = etree.SubElement(
+                    coupling_scheme, "max-time", value=str(self.NrTimeStep)
+                )
             if self.Dt is not None:
-                attr = { "value": str(self.Dt)}
+                attr = {"value": str(self.Dt)}
                 i = etree.SubElement(coupling_scheme, "time-window-size", attr)
 
         # write out the exchange but not the convergence (if empty it will not be written)
@@ -174,21 +221,22 @@ class PS_ExplicitCoupling(PS_CouplingScheme):
 
 
 class PS_ImplicitCoupling(PS_CouplingScheme):
-    """ Implicit coupling scheme """
+    """Implicit coupling scheme"""
+
     def __init__(self):
 
         # TODO: define here only implicit coupling specific measures
 
         self.NrTimeStep = -1
-        self.Dt = 1E-4
+        self.Dt = 1e-4
         self.maxIteration = 50
-        self.relativeConverganceEps = 1E-4
+        self.relativeConverganceEps = 1e-4
         self.extrapolation_order = 2
-        self.acceleration = PS_ImplicitAcceleration() # this is the acceleration
+        self.acceleration = PS_ImplicitAcceleration()  # this is the acceleration
         self.display_standard_values = "false"
         pass
 
-    def initFromUI(self, ui_config:UI_UserInput, conf): # conf : PS_PreCICEConfig
+    def initFromUI(self, ui_config: UI_UserInput, conf):  # conf : PS_PreCICEConfig
         # call theinitialization from the UI data structures
         super(PS_ImplicitCoupling, self).init_from_UI(ui_config, conf)
 
@@ -206,38 +254,52 @@ class PS_ImplicitCoupling(PS_CouplingScheme):
 
         pass
 
-    def write_precice_xml_config(self, tag:etree, config): # config: PS_PreCICEConfig
-        """ write out the config XMl file """
-        if self.coupling not in ['serial', 'parallel']:
-            raise ValueError(f"coupling must be 'serial' or 'parallel', but got {self.coupling}")
-        coupling_scheme = self.write_participants_and_coupling_scheme( tag, config, f"{self.coupling}-implicit" )
+    def write_precice_xml_config(self, tag: etree, config):  # config: PS_PreCICEConfig
+        """write out the config XMl file"""
+        if self.coupling not in ["serial", "parallel"]:
+            raise ValueError(
+                f"coupling must be 'serial' or 'parallel', but got {self.coupling}"
+            )
+        coupling_scheme = self.write_participants_and_coupling_scheme(
+            tag, config, f"{self.coupling}-implicit"
+        )
         config.coupling_scheme = coupling_scheme
 
-        if str(self.display_standard_values).lower() == 'true':
+        if str(self.display_standard_values).lower() == "true":
             if self.NrTimeStep is None:
                 self.NrTimeStep = 1e-3
             if self.Dt is None:
                 self.Dt = 1e-3
             if self.maxIteration is None:
                 self.maxIteration = 50
-            i = etree.SubElement(coupling_scheme, "max-time", value = str(self.NrTimeStep))
-            attr = { "value": str(self.Dt)}
+            i = etree.SubElement(
+                coupling_scheme, "max-time", value=str(self.NrTimeStep)
+            )
+            attr = {"value": str(self.Dt)}
             i = etree.SubElement(coupling_scheme, "time-window-size", attr)
-            i = etree.SubElement(coupling_scheme, "max-iterations", value=str(self.maxIteration))
-            #i = etree.SubElement(coupling_scheme, "extrapolation-order", value=str(self.extrapolation_order))
+            i = etree.SubElement(
+                coupling_scheme, "max-iterations", value=str(self.maxIteration)
+            )
+            # i = etree.SubElement(coupling_scheme, "extrapolation-order", value=str(self.extrapolation_order))
         else:
             if self.NrTimeStep is not None:
-                i = etree.SubElement(coupling_scheme, "max-time", value = str(self.NrTimeStep))
+                i = etree.SubElement(
+                    coupling_scheme, "max-time", value=str(self.NrTimeStep)
+                )
             if self.Dt is not None:
-                attr = { "value": str(self.Dt)}
+                attr = {"value": str(self.Dt)}
                 i = etree.SubElement(coupling_scheme, "time-window-size", attr)
             if self.maxIteration is not None:
-                i = etree.SubElement(coupling_scheme, "max-iterations", value=str(self.maxIteration))
-            #if self.extrapolation_order is not None:
+                i = etree.SubElement(
+                    coupling_scheme, "max-iterations", value=str(self.maxIteration)
+                )
+            # if self.extrapolation_order is not None:
             #    i = etree.SubElement(coupling_scheme, "extrapolation-order", value=str(self.extrapolation_order))
 
         # write out the exchange and the convergence rate
-        self.write_exchange_and_convergance(config, coupling_scheme, str(self.relativeConverganceEps))
+        self.write_exchange_and_convergance(
+            config, coupling_scheme, str(self.relativeConverganceEps)
+        )
 
         # finally we write out the post processing...
         self.acceleration.write_precice_xml_config(coupling_scheme, config, self)
@@ -246,19 +308,28 @@ class PS_ImplicitCoupling(PS_CouplingScheme):
 
 
 class PS_ImplicitAcceleration(object):
-    """ Class to model the post-processing part of the implicit coupling """
+    """Class to model the post-processing part of the implicit coupling"""
+
     def __init__(self):
-        """ Ctor for the acceleration """
+        """Ctor for the acceleration"""
         self.name = "IQN-ILS"
         self.precondition_type = "residual-sum"
-        self.post_process_quantities = {} # The quantities that are in the acceleration
+        self.post_process_quantities = {}  # The quantities that are in the acceleration
 
     def write_precice_xml_config(self, tag: etree.Element, config, parent):
-        """ Write out the config XML file of the acceleration in case of implicit coupling
-            Only for explicit coupling (one directional) this should not write out anything """
+        """Write out the config XML file of the acceleration in case of implicit coupling
+        Only for explicit coupling (one directional) this should not write out anything"""
 
-        self.name = config.acceleration["name"] if config.acceleration is not None else "IQN-ILS"
-        self.display_standard_values = config.acceleration["display_standard_values"] if config.acceleration is not None else "false"
+        self.name = (
+            config.acceleration["name"]
+            if config.acceleration is not None
+            else "IQN-ILS"
+        )
+        self.display_standard_values = (
+            config.acceleration["display_standard_values"]
+            if config.acceleration is not None
+            else "false"
+        )
 
         post_processing = etree.SubElement(tag, "acceleration:" + self.name)
 
@@ -273,16 +344,11 @@ class PS_ImplicitAcceleration(object):
         # Attempt to find the 'simplest' solver (e.g., solid solver)
         # This is a heuristic and might need adjustment based on specific use cases
         def solver_complexity(solver_name):
-            complexity_map = {
-                'solid': 1,
-                'structural': 1,
-                'fluid': 2,
-                'thermal': 3
-            }
+            complexity_map = {"solid": 1, "structural": 1, "fluid": 2, "thermal": 3}
             return complexity_map.get(solver_name.lower(), 10)
 
         sorted_solvers = sorted(solver_meshes.keys(), key=solver_complexity)
-        
+
         # Choose the simplest solver's mesh
         simple_solver = sorted_solvers[0] if sorted_solvers else None
 
@@ -299,111 +365,204 @@ class PS_ImplicitAcceleration(object):
                     if self.name == "IQN-ILS":
                         if a == "initial-relaxation":
                             if b.get("enforce") is not None:
-                                i = etree.SubElement(post_processing, a, value=str(b.get("value")), enforce=str(b.get("enforce")))
+                                i = etree.SubElement(
+                                    post_processing,
+                                    a,
+                                    value=str(b.get("value")),
+                                    enforce=str(b.get("enforce")),
+                                )
                             else:
-                                i = etree.SubElement(post_processing, a, value=str(b.get("value")))
+                                i = etree.SubElement(
+                                    post_processing, a, value=str(b.get("value"))
+                                )
                         elif a == "max-used-iterations" or a == "time-windows-reused":
                             i = etree.SubElement(post_processing, a, value=str(b))
                         elif a == "filter":
                             if b.get("type") is not None:
-                                i = etree.SubElement(post_processing, a, limit=str(b.get("limit")), type=str(b.get("type")))
+                                i = etree.SubElement(
+                                    post_processing,
+                                    a,
+                                    limit=str(b.get("limit")),
+                                    type=str(b.get("type")),
+                                )
                             else:
-                                i = etree.SubElement(post_processing, a, limit=str(b.get("limit")))
+                                i = etree.SubElement(
+                                    post_processing, a, limit=str(b.get("limit"))
+                                )
                         elif a == "preconditioner":
                             if b.get("type") is not None:
-                                i = etree.SubElement(post_processing, a, type=str(b.get("type")))                                
+                                i = etree.SubElement(
+                                    post_processing, a, type=str(b.get("type"))
+                                )
                                 i.set("freeze-after", str(b.get("freeze-after")))
                             else:
-                                i = etree.SubElement(post_processing, a, freeze_after=str(b.get("freeze-after")))
+                                i = etree.SubElement(
+                                    post_processing,
+                                    a,
+                                    freeze_after=str(b.get("freeze-after")),
+                                )
                     if self.name == "aitken":
                         if a == "initial-relaxation":
                             if b.get("enforce") is not None:
-                                i = etree.SubElement(post_processing, a, value=str(b.get("value")), enforce=str(b.get("enforce")))
+                                i = etree.SubElement(
+                                    post_processing,
+                                    a,
+                                    value=str(b.get("value")),
+                                    enforce=str(b.get("enforce")),
+                                )
                             else:
-                                i = etree.SubElement(post_processing, a, value=str(b.get("value")))
+                                i = etree.SubElement(
+                                    post_processing, a, value=str(b.get("value"))
+                                )
                         elif a == "preconditioner":
                             if b.get("type") is not None:
-                                i = etree.SubElement(post_processing, a, type=str(b.get("type")))                                
+                                i = etree.SubElement(
+                                    post_processing, a, type=str(b.get("type"))
+                                )
                                 i.set("freeze-after", str(b.get("freeze-after")))
                             else:
-                                i = etree.SubElement(post_processing, a, freeze_after=str(b.get("freeze-after")))
+                                i = etree.SubElement(
+                                    post_processing,
+                                    a,
+                                    freeze_after=str(b.get("freeze-after")),
+                                )
                     if self.name == "IQN-IMVJ":
                         if a == "initial-relaxation":
                             if b.get("enforce") is not None:
-                                i = etree.SubElement(post_processing, a, value=str(b.get("value")), enforce=str(b.get("enforce")))
+                                i = etree.SubElement(
+                                    post_processing,
+                                    a,
+                                    value=str(b.get("value")),
+                                    enforce=str(b.get("enforce")),
+                                )
                             else:
-                                i = etree.SubElement(post_processing, a, value=str(b.get("value")))
+                                i = etree.SubElement(
+                                    post_processing, a, value=str(b.get("value"))
+                                )
                         elif a == "max-used-iterations" or a == "time-windows-reused":
                             i = etree.SubElement(post_processing, a, value=str(b))
                         elif a == "filter":
                             if b.get("type") is not None:
-                                i = etree.SubElement(post_processing, a, limit=str(b.get("limit")), type=str(b.get("type")))
+                                i = etree.SubElement(
+                                    post_processing,
+                                    a,
+                                    limit=str(b.get("limit")),
+                                    type=str(b.get("type")),
+                                )
                             else:
-                                i = etree.SubElement(post_processing, a, limit=str(b.get("limit")))
+                                i = etree.SubElement(
+                                    post_processing, a, limit=str(b.get("limit"))
+                                )
                         elif a == "preconditioner":
                             if b.get("type") is not None:
-                                i = etree.SubElement(post_processing, a, type=str(b.get("type")))                                
+                                i = etree.SubElement(
+                                    post_processing, a, type=str(b.get("type"))
+                                )
                                 i.set("freeze-after", str(b.get("freeze-after")))
                             else:
-                                i = etree.SubElement(post_processing, a, freeze_after=str(b.get("freeze-after")))                          
+                                i = etree.SubElement(
+                                    post_processing,
+                                    a,
+                                    freeze_after=str(b.get("freeze-after")),
+                                )
                         elif a == "imvj-restart-mode":
                             i = etree.SubElement(
                                 post_processing,
                                 a,
                                 {
-                                    "truncation-threshold": str(b.get("truncation-threshold")),
+                                    "truncation-threshold": str(
+                                        b.get("truncation-threshold")
+                                    ),
                                     "chunk-size": str(b.get("chunk-size")),
-                                    "reused-time-windows-at-restart": str(b.get("reused-time-windows-at-restart")),
-                                    "type": str(b.get("type"))
-                                }
+                                    "reused-time-windows-at-restart": str(
+                                        b.get("reused-time-windows-at-restart")
+                                    ),
+                                    "type": str(b.get("type")),
+                                },
                             )
-                            
 
-                            
         if simple_solver:
             for q_name, q in config.coupling_quantities.items():
                 # Use the first mesh from the simplest solver
                 mesh_name = list(solver_meshes[simple_solver])[0]
-                
-                # i = etree.SubElement(post_processing, "data", 
-                #                      name=q.instance_name, 
+
+                # i = etree.SubElement(post_processing, "data",
+                #                      name=q.instance_name,
                 #                      mesh=mesh_name)
-        
-                #Copy over logic from _determine_exchange_mesh to determine right mesh
+
+                # Copy over logic from _determine_exchange_mesh to determine right mesh
                 for exchange in config.exchanges:
                     # print("Exchange data: " + exchange.get('data'))
                     # print("Quantity name: " + q.instance_name)
-                    if exchange.get('data').lower() == q.instance_name.lower():
-                        from_s = exchange.get('from')
-                        to_s = exchange.get('to')        
+                    if exchange.get("data").lower() == q.instance_name.lower():
+                        from_s = exchange.get("from")
+                        to_s = exchange.get("to")
 
                         # Process mappings
-                        read_mapping = next((m for m in read_mappings if 
-                                            (m['from'] == from_s + '-Mesh' and m['to'] == to_s + '-Mesh') ), None)
-                        write_mapping = next((m for m in write_mappings if 
-                                            (m['from'] == from_s + '-Mesh' and m['to'] == to_s + '-Mesh')), None)
+                        read_mapping = next(
+                            (
+                                m
+                                for m in read_mappings
+                                if (
+                                    m["from"] == from_s + "-Mesh"
+                                    and m["to"] == to_s + "-Mesh"
+                                )
+                            ),
+                            None,
+                        )
+                        write_mapping = next(
+                            (
+                                m
+                                for m in write_mappings
+                                if (
+                                    m["from"] == from_s + "-Mesh"
+                                    and m["to"] == to_s + "-Mesh"
+                                )
+                            ),
+                            None,
+                        )
 
                         # Choose mesh based on mapping constraint
-                        if read_mapping and read_mapping['constraint'] == 'conservative':
-                            exchange_mesh_name = read_mapping['to']
-                        elif read_mapping and read_mapping['constraint'] == 'consistent':
-                            exchange_mesh_name = read_mapping['from']
-                        elif write_mapping and write_mapping['constraint'] == 'conservative':
-                            exchange_mesh_name = write_mapping['to']
-                        elif write_mapping and write_mapping['constraint'] == 'consistent':
-                            exchange_mesh_name = write_mapping['from']
+                        if (
+                            read_mapping
+                            and read_mapping["constraint"] == "conservative"
+                        ):
+                            exchange_mesh_name = read_mapping["to"]
+                        elif (
+                            read_mapping and read_mapping["constraint"] == "consistent"
+                        ):
+                            exchange_mesh_name = read_mapping["from"]
+                        elif (
+                            write_mapping
+                            and write_mapping["constraint"] == "conservative"
+                        ):
+                            exchange_mesh_name = write_mapping["to"]
+                        elif (
+                            write_mapping
+                            and write_mapping["constraint"] == "consistent"
+                        ):
+                            exchange_mesh_name = write_mapping["from"]
                         else:
                             exchange_mesh_name = q.source_mesh_name
 
                 # print(exchange_mesh_name)
                 if exchange_mesh_name != "":
-                    if config.couplingScheme.coupling == 'serial':
-                        if exchange_mesh_name == config.couplingScheme_participants[1]+"-Mesh":
-                            i = etree.SubElement(post_processing, "data", 
-                                    name=q.instance_name, 
-                                    mesh=exchange_mesh_name)
+                    if config.couplingScheme.coupling == "serial":
+                        if (
+                            exchange_mesh_name
+                            == config.couplingScheme_participants[1] + "-Mesh"
+                        ):
+                            i = etree.SubElement(
+                                post_processing,
+                                "data",
+                                name=q.instance_name,
+                                mesh=exchange_mesh_name,
+                            )
                     # parallel coupling
                     else:
-                        i = etree.SubElement(post_processing, "data", 
-                                    name=q.instance_name, 
-                                    mesh=exchange_mesh_name)
+                        i = etree.SubElement(
+                            post_processing,
+                            "data",
+                            name=q.instance_name,
+                            mesh=exchange_mesh_name,
+                        )

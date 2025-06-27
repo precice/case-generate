@@ -5,8 +5,15 @@ import json
 from ruamel.yaml import YAML
 from importlib.resources import files
 
+
 class AdapterConfigGenerator:
-    def __init__(self, adapter_config_path: Path, precice_config_path: Path, topology_path: Path, target_participant: str) -> None:
+    def __init__(
+        self,
+        adapter_config_path: Path,
+        precice_config_path: Path,
+        topology_path: Path,
+        target_participant: str,
+    ) -> None:
         """
         Initializes the AdapterConfigGenerator with paths to the adapter config, precice config, and topology file.
 
@@ -17,36 +24,43 @@ class AdapterConfigGenerator:
             target_participant (str): Name of the target participant.
         """
         self.adapter_config_path = adapter_config_path
-        self.adapter_config_schema = json.loads(files("precicecasegenerate.templates").joinpath("adapter-config-template.json").read_text("utf-8"))
+        self.adapter_config_schema = json.loads(
+            files("precicecasegenerate.templates")
+            .joinpath("adapter-config-template.json")
+            .read_text("utf-8")
+        )
         self.logger = Logger()
         self.precice_config_path = precice_config_path
         self.topology_path = topology_path
         self.target_participant = target_participant
-
 
     def _get_generated_precice_config(self):
         """
         Parses the precice-config.xml file, removes namespaces, and stores the root element.
         """
         try:
-            with open(self.precice_config_path, 'r', encoding='utf-8') as precice_config_file:
+            with open(
+                self.precice_config_path, "r", encoding="utf-8"
+            ) as precice_config_file:
                 precice_config = precice_config_file.read()
         except FileNotFoundError:
-            self.logger.error(f"PreCICE config file not found at {self.precice_config_path}")
+            self.logger.error(
+                f"PreCICE config file not found at {self.precice_config_path}"
+            )
             raise
 
         # Parse with lxml and clean namespaces
         parser = etree.XMLParser(ns_clean=True, recover=True)
         try:
-            doc = etree.fromstring(precice_config.encode('utf-8'), parser=parser)
+            doc = etree.fromstring(precice_config.encode("utf-8"), parser=parser)
         except etree.XMLSyntaxError as e:
             self.logger.error(f"Error parsing XML: {e}")
             raise
 
         # Strip namespace prefixes from tags
         for elem in doc.iter():
-            if isinstance(elem.tag, str) and '}' in elem.tag:
-                elem.tag = elem.tag.split('}', 1)[1]
+            if isinstance(elem.tag, str) and "}" in elem.tag:
+                elem.tag = elem.tag.split("}", 1)[1]
 
         self.root = doc
         self.logger.info("Parsed precice-config.xml successfully.")
@@ -59,21 +73,23 @@ class AdapterConfigGenerator:
             dict: Patch information for the target participant.
         """
         try:
-            with open(self.topology_path, 'r', encoding='utf-8') as topology_file:
+            with open(self.topology_path, "r", encoding="utf-8") as topology_file:
                 topology = YAML().load(topology_file)
-            
+
             # Find the exchange for the target participant
-            for exchange in topology.get('exchanges', []):
-                if exchange.get('to') == self.target_participant:
+            for exchange in topology.get("exchanges", []):
+                if exchange.get("to") == self.target_participant:
                     return {
-                        'from_participant': exchange.get('from'),
-                        'from_patch': exchange.get('from-patch'),
-                        'to_patch': exchange.get('to-patch')
+                        "from_participant": exchange.get("from"),
+                        "from_patch": exchange.get("from-patch"),
+                        "to_patch": exchange.get("to-patch"),
                     }
-            
-            self.logger.warning(f"No exchange found for participant {self.target_participant}")
+
+            self.logger.warning(
+                f"No exchange found for participant {self.target_participant}"
+            )
             return None
-        
+
         except FileNotFoundError:
             self.logger.error(f"Topology file not found at {self.topology_path}")
             return None
@@ -97,7 +113,9 @@ class AdapterConfigGenerator:
                 break
 
         if participant_elem is None:
-            self.logger.error(f"Participant '{self.target_participant}' not found in precice-config.xml.")
+            self.logger.error(
+                f"Participant '{self.target_participant}' not found in precice-config.xml."
+            )
             return
 
         # Attempt to find read-data and write-data elements
@@ -106,9 +124,13 @@ class AdapterConfigGenerator:
 
         # Log warnings if certain elements are missing
         if read_data_elem is None:
-            self.logger.warning(f"Participant '{self.target_participant}' is missing a 'read-data' element.")
+            self.logger.warning(
+                f"Participant '{self.target_participant}' is missing a 'read-data' element."
+            )
         if write_data_elem is None:
-            self.logger.warning(f"Participant '{self.target_participant}' is missing a 'write-data' element.")
+            self.logger.warning(
+                f"Participant '{self.target_participant}' is missing a 'write-data' element."
+            )
 
         # Update the adapter_config_schema dictionary according to the new template
         self.adapter_config_schema["participant_name"] = self.target_participant
@@ -136,12 +158,14 @@ class AdapterConfigGenerator:
         # Add patch information from topology if available
         if topology_info:
             # Use the to-patch value from topology
-            interface_dict["patches"] = [topology_info.get('to_patch')]
-            
+            interface_dict["patches"] = [topology_info.get("to_patch")]
+
             # Remove previously added keys
             interface_dict.pop("from_participant", None)
             interface_dict.pop("from_patch", None)
-            interface_dict.pop("patch_name", None)  # Remove patch_name if it was added previously
+            interface_dict.pop(
+                "patch_name", None
+            )  # Remove patch_name if it was added previously
 
         # Remove keys if their lists are empty
         if not interface_dict["write_data_names"]:
@@ -151,8 +175,6 @@ class AdapterConfigGenerator:
 
         self.logger.info("Adapter configuration schema filled out successfully.")
 
-
-        
     def write_to_file(self) -> None:
         """
         Writes the filled adapter configuration schema to the specified JSON file.
@@ -160,9 +182,13 @@ class AdapterConfigGenerator:
         self._fill_out_adapter_schema()
 
         try:
-            with open(self.adapter_config_path, 'w', encoding='utf-8') as adapter_config_file:
+            with open(
+                self.adapter_config_path, "w", encoding="utf-8"
+            ) as adapter_config_file:
                 json.dump(self.adapter_config_schema, adapter_config_file, indent=4)
-            self.logger.success(f"Adapter configuration written to {self.adapter_config_path}")
+            self.logger.success(
+                f"Adapter configuration written to {self.adapter_config_path}"
+            )
         except IOError as e:
             self.logger.error(f"Failed to write adapter configuration to file: {e}")
             raise
