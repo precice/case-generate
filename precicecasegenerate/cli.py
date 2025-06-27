@@ -6,7 +6,7 @@ from pathlib import Path
 
 def makeGenerateParser(add_help: bool = True):
     parser = argparse.ArgumentParser(
-        description="Takes topology.yaml files as input and writes out needed files to start the precice.",
+        description="Initialize a preCICE case given a topology file",
         add_help=add_help,
     )
     parser.add_argument(
