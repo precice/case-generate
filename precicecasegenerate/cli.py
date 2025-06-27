@@ -1,12 +1,13 @@
 from .generation_utils.file_generator import FileGenerator
 import argparse
-import os
+import sys
 from pathlib import Path
 
 
-def parse_args():
+def makeGenerateParser(add_help: bool = True):
     parser = argparse.ArgumentParser(
-        description="Takes topology.yaml files as input and writes out needed files to start the precice."
+        description="Takes topology.yaml files as input and writes out needed files to start the precice.",
+        add_help=add_help,
     )
     parser.add_argument(
         "-f",
@@ -35,29 +36,37 @@ def parse_args():
         default=True,
         help="Whether to validate the input topology.yaml file against the preCICE topology schema.",
     )
-    return parser.parse_args()
+    return parser
+
+
+def runGenerate(ns):
+    try:
+        file_generator = FileGenerator(ns.input_file, ns.output_path)
+
+        # Clear any previous log state
+        file_generator.logger.clear_log_state()
+
+        # Generate precice-config.xml, README.md, clean.sh
+        file_generator.generate_level_0()
+        # Generate configuration for the solvers
+        file_generator.generate_level_1()
+
+        # Format the generated preCICE configuration
+        file_generator.format_precice_config()
+
+        file_generator.handle_output(ns)
+
+        file_generator.validate_topology(ns)
+
+        return 0
+    except:
+        return 1
 
 
 def main():
-    args = parse_args()
-
-    file_generator = FileGenerator(args.input_file, args.output_path)
-
-    # Clear any previous log state
-    file_generator.logger.clear_log_state()
-
-    # Generate precice-config.xml, README.md, clean.sh
-    file_generator.generate_level_0()
-    # Generate configuration for the solvers
-    file_generator.generate_level_1()
-
-    # Format the generated preCICE configuration
-    file_generator.format_precice_config()
-
-    file_generator.handle_output(args)
-
-    file_generator.validate_topology(args)
+    args = makeGenerateParser().parse_args()
+    return runGenerate(args)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
