@@ -1,4 +1,4 @@
-import yaml
+from ruamel.yaml import YAML
 
 
 class ConfigGenerator:
@@ -32,7 +32,7 @@ class ConfigGenerator:
         # Try to open the yaml file and get the configuration
         try:
             with open(topology_file_path, "r") as config_file:
-                config = yaml.load(config_file.read(), Loader=yaml.SafeLoader)
+                config = YAML().load(config_file)
                 logger.info(f"Input YAML file: {topology_file_path}")
         except FileNotFoundError:
             logger.error(f"Input YAML file {topology_file_path} not found.")

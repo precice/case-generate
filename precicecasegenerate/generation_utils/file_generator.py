@@ -2,7 +2,7 @@ from pathlib import Path
 
 import json
 import jsonschema
-import yaml
+from ruamel.yaml import YAML
 
 from precicecasegenerate.controller_utils.myutils.UT_PCErrorLogging import UT_PCErrorLogging
 from precicecasegenerate.controller_utils.precice_struct import PS_PreCICEConfig
@@ -20,7 +20,7 @@ class FileGenerator:
     def __init__(self, input_file: Path, output_path: Path) -> None:
         """ Class which takes care of generating the content of the necessary files
             :param input_file: Input yaml file that is needed for generation of the precice-config.xml file
-            :param output_path: Path to the folder where the _generated/ folder will be placed"""
+            :param output_path: Path to the folder where the case will be generated"""
         self.input_file = input_file
         self.precice_config = PS_PreCICEConfig()
         self.mylog = UT_PCErrorLogging()
@@ -42,7 +42,7 @@ class FileGenerator:
         """Extracts the participants from the topology.yaml file."""
         try:
             with open(self.input_file, "r") as config_file:
-                config = yaml.load(config_file.read(), Loader=yaml.SafeLoader)
+                config = YAML().load(config_file)
                 self.logger.info(f"Input YAML file: {self.input_file}")
         except FileNotFoundError:
             self.logger.error(f"Input YAML file {self.input_file} not found.")
@@ -100,7 +100,7 @@ class FileGenerator:
         if args.validate_topology:
             schema = json.loads(files("precicecasegenerate.schemas").joinpath("topology-schema.json").read_text())
             with open(args.input_file) as input_file:
-                data = yaml.load(input_file, Loader=yaml.SafeLoader)
+                data = YAML().load(input_file)
             try:
                 jsonschema.validate(instance=data, schema=schema)
             except jsonschema.exceptions.ValidationError as e:

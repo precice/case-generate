@@ -2,7 +2,7 @@ from pathlib import Path
 from . import Logger
 from lxml import etree
 import json
-import yaml
+from ruamel.yaml import YAML
 from importlib.resources import files
 
 class AdapterConfigGenerator:
@@ -60,7 +60,7 @@ class AdapterConfigGenerator:
         """
         try:
             with open(self.topology_path, 'r', encoding='utf-8') as topology_file:
-                topology = yaml.safe_load(topology_file)
+                topology = YAML().load(topology_file)
             
             # Find the exchange for the target participant
             for exchange in topology.get('exchanges', []):
