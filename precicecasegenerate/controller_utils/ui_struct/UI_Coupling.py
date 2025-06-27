@@ -48,7 +48,7 @@ class UI_Coupling(object):
         # parse all the participants within a coupling
         try:
             # TODO: we assume that we will have only fluids and structures?
-            # TODO: we should all all of this to a singel list
+            # TODO: we should all all of this to a single list
             participants_loop = { "fluid" : etree["fluid"]}
             participants_loop.update({ "structure" : etree["structure"] } )
 

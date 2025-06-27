@@ -45,7 +45,7 @@ class PS_ParticipantSolver(object):
         
         self.nature = SolverNature.STATIONARY
         self.quantities_read = {}  # list of quantities that are read by this solver
-        self.quantities_write = {} # list of quantities that are writen by this solver
+        self.quantities_write = {} # list of quantities that are written by this solver
 
         self.meshes = {} # we have each mesh for each coupling
         self.coupling_participants = {} # for each coupling we also store the name of the participant

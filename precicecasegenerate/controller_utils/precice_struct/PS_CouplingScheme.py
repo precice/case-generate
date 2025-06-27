@@ -193,7 +193,7 @@ class PS_ImplicitCoupling(PS_CouplingScheme):
         super(PS_ImplicitCoupling, self).init_from_UI(ui_config, conf)
 
         # TODO: should we add all quantities?
-        # later do delte some quantities from the list?
+        # later do delete some quantities from the list?
         self.acceleration.post_process_quantities = conf.coupling_quantities
 
         simulation_conf = ui_config.sim_info
@@ -236,7 +236,7 @@ class PS_ImplicitCoupling(PS_CouplingScheme):
             #if self.extrapolation_order is not None:
             #    i = etree.SubElement(coupling_scheme, "extrapolation-order", value=str(self.extrapolation_order))
 
-        # write out the exchange and the convergance rate
+        # write out the exchange and the convergence rate
         self.write_exchange_and_convergance(config, coupling_scheme, str(self.relativeConverganceEps))
 
         # finally we write out the post processing...
