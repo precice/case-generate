@@ -10,8 +10,8 @@
 #
 # Example: https://github.com/precice/tutorials/blob/develop/flow-over-heated-plate/solid-dunefem/run.sh
 #
-# Note: In the example `run.sh` file, most setup steps (such as creating and activating a virtual environment 
-# or installing dependencies) have already been completed. 
+# Note: In the example `run.sh` file, most setup steps (such as creating and activating a virtual environment
+# or installing dependencies) have already been completed.
 # Therefore, you may only need to add:
 #
 # python path/to/file.py

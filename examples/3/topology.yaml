@@ -1,7 +1,7 @@
 coupling-scheme:
   max-time: 1.0
-  time-window-size: 1e-3  
-  max-iterations: 30  
+  time-window-size: 1e-3
+  max-iterations: 30
   coupling: serial
 
 participants:
@@ -14,9 +14,9 @@ participants:
 
 acceleration:
   name: aitken
-  initial-relaxation: 
+  initial-relaxation:
     value: 0.5
-      
+
 exchanges:
   - from: Solid
     from-patch: interface

@@ -39,7 +39,7 @@ Advanced coupling acceleration with multiple configuration options:
 Define simulation participants with detailed specifications:
 
 - Mandatory fields: `name`, `solver`
-- Optional fields: 
+- Optional fields:
   - `dimensionality` (default: 3)
 - Minimum of 2 participant required
 

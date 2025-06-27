@@ -14,7 +14,7 @@ This project utilizes **preCICE** (Precise Code Interaction Coupling Environment
 - **Solvers**:
   {SOLVERS_LIST}
 
-- **Coupling Strategy**: 
+- **Coupling Strategy**:
   {COUPLING_STRATEGY}
 
 ---

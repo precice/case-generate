@@ -177,7 +177,7 @@
               "description": "Name of the source participant sending data"
             },
             "from-patch": {
-              "type": "string", 
+              "type": "string",
               "description": "Specific interface patch or surface on the source participant from which data is sent"
             },
             "to": {
@@ -200,14 +200,14 @@
               "default": "scalar"
             },
             "type": {
-              "type": "string", 
+              "type": "string",
               "description": "Defines the coupling type: 'strong' for tight coupling, 'weak' for loose coupling",
               "enum": ["strong", "weak"]
             }
           },
           "required": [
             "from",
-            "from-patch", 
+            "from-patch",
             "to",
             "to-patch",
             "data",

@@ -4,7 +4,7 @@
 
   <data:vector name="Force"/>
   <data:vector name="Displacement"/>
-  
+
   <mesh name="Fluid-Mesh" dimensions="3">
     <use-data name="Force"/>
     <use-data name="Displacement"/>
@@ -18,10 +18,10 @@
   <participant name="Fluid">
     <provide-mesh name="Fluid-Mesh"/>
     <receive-mesh name="Solid-Mesh" from="Solid"/>
-    
+
     <write-data name="Force" mesh="Fluid-Mesh"/>
     <read-data  name="Displacement" mesh="Fluid-Mesh"/>
-    
+
     <mapping:nearest-neighbor
         direction="write"
         from="Fluid-Mesh" to="Solid-Mesh"
@@ -39,7 +39,7 @@
   </participant>
 
   <m2n:sockets acceptor="Fluid" connector="Solid" exchange-directory=".."/>
-  
+
   <coupling-scheme:parallel-implicit>
     <participants first="Fluid" second="Solid"/>
     <max-time value="1e-1"/>

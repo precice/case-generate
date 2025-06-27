@@ -9,7 +9,7 @@ on:
 jobs:
   process-examples:
     runs-on: ubuntu-latest
-    
+
     steps:
     # Initial setup
     - name: Checkout code
@@ -67,20 +67,20 @@ jobs:
         EXAMPLES: ${{ steps.find-examples.outputs.examples }}
       run: |
         source venv/bin/activate
-        
+
         # Process each example
         for example in $(echo "$EXAMPLES" | jq -r '.[]'); do
           echo "========================================"
           echo "Processing example: $example"
           example_name=$(basename "$example")
-          
+
           # Check for YAML input file
           yaml_file="$example/topology.yaml"
-          
+
           if [ -f "$yaml_file" ]; then
             echo "Generating configuration from $yaml_file"
             precice-gen -f "$yaml_file" -o "$(dirname "$yaml_file")" -v
-            
+
             # Check if generation was successful
             if [ -f "$example/_generated/precice-config.xml" ]; then
               echo "Generated configuration found in $example/_generated/"
@@ -95,14 +95,14 @@ jobs:
               exit 1
             fi
           fi
-          
+
           # Determine which config file to validate
           if [ -f "$example/_generated/precice-config.xml" ]; then
             config_file="$example/_generated/precice-config.xml"
           else
             config_file="$example/precice-config.xml"
           fi
-          
+
           # Validate the configuration
           echo "Validating configuration at $config_file..."
           python config-checker/preciceconfigchecker/cli.py "$config_file" --debug
@@ -116,22 +116,22 @@ jobs:
       run: |
         # Create directory for artifacts
         mkdir -p artifacts
-        
+
         # Find and copy all _generated directories
         find examples -type d -name "_generated" | while read -r gen_dir; do
           example_dir=$(dirname "$gen_dir")
           example_name=$(basename "$example_dir")
-          
+
           # Copy the _generated directory to artifacts
           mkdir -p "artifacts/$example_name"
           cp -r "$gen_dir" "artifacts/$example_name/"
-          
+
           # Also copy the original precice-config.xml if it exists
           #if [ -f "$example_dir/precice-config.xml" ]; then
           #  cp "$example_dir/precice-config.xml" "artifacts/$example_name/original_precice-config.xml"
           #fi
         done
-        
+
         echo "Collected artifacts:"
         tree artifacts
 

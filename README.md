@@ -97,7 +97,7 @@ precice-gen -f path/to/your/topology.yaml
 
 The `precice-gen` tool supports the following optional parameters:
 
-- `-f, --input-file`: Path to the input topology.yaml file. 
+- `-f, --input-file`: Path to the input topology.yaml file.
   - **Default**: `examples/1/topology.yaml`
   - **Optional**: Yes
   - **Description**: Specify a custom topology file for configuration generation.
@@ -191,7 +191,7 @@ For advanced users, we offer more sophisticated configuration examples:
 
 The template for our `topology.yaml` file can be found in the `schemas` folder.
 
-Alongside it, you will find `README.md`, which explains the topology's parameters. 
+Alongside it, you will find `README.md`, which explains the topology's parameters.
 
 ## Contributing
 
