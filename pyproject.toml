@@ -1,11 +1,11 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=61.0", "wheel", "setuptools-git-versioning"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "precice-case-generate"
+dynamic = [ "version" ]
 description = "Generates File and Folder Structure, including all of the necessary files to quickly kickstart a simulation"
-version = "1.0.0"
 
 readme = "README.md"
 license = "MIT"
@@ -45,6 +45,9 @@ packages = [
 "precicecasegenerate.controller_utils.precice_struct",
 "precicecasegenerate.controller_utils.ui_struct"
 ]
+
+[tool.setuptools-git-versioning]
+enabled = true
 
 [tool.setuptools.package-data]
 precicecasegenerate = [
