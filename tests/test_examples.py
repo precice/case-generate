@@ -3,6 +3,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from preciceconfigcheck.cli import runCheck
+
 
 def list_examples():
     examples = Path(__file__).parent.parent / "examples"
@@ -23,3 +25,11 @@ def test_application_with_example(example: Path):
         output = [p.name for p in Path(temp_dir).iterdir()]
         print(f"Output {output}")
         assert output, "Nothing generated"
+
+        config = Path(temp_dir) / "precice-config.xml"
+        assert config.exists(), "No config generated"
+        ret = runCheck(config, True)
+        if ret != 0:
+            print("Failed config:")
+            print(config.read_text())
+            assert False, "The config failed to validate"
