@@ -40,6 +40,8 @@ Documentation = "https://github.com/precice-forschungsprojekt/precice-generator/
 [tool.setuptools]
 packages = [
 "precicecasegenerate",
+"precicecasegenerate.schemas",
+"precicecasegenerate.templates",
 "precicecasegenerate.generation_utils",
 "precicecasegenerate.controller_utils.myutils",
 "precicecasegenerate.controller_utils.precice_struct",
