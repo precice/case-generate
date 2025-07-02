@@ -59,7 +59,8 @@ def runGenerate(ns):
         file_generator.validate_topology(ns)
 
         return 0
-    except:
+    except Exception as e:
+        print(e, file=sys.stderr)
         return 1
 
 
