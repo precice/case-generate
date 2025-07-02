@@ -34,6 +34,14 @@ class FileGenerator:
         self.readme_generator = ReadmeGenerator()
         self.other_files_generator = OtherFilesGenerator()
 
+        if not self.input_file.exists():
+            import errno
+            import os
+
+            raise FileNotFoundError(
+                errno.ENOENT, os.strerror(errno.ENOENT), str(self.input_file)
+            )
+
     def generate_level_0(self) -> None:
         """Fills out the files of level 0 (everything in the root folder)."""
         self.other_files_generator.generate_clean(clean_sh=self.structure.clean)
