@@ -140,7 +140,7 @@ You can create a topology for your preCICE simulation using the online MetaConfi
 We provide a preloaded schema to help you get started:
 
 1. Open the MetaConfigurator with the preloaded
-   schema: [MetaConfigurator Link](https://metaconfigurator.github.io/meta-configurator/?schema=https://github.com/precice/case-generate/blob/main/schemas/topology-schema.json&settings=https://github.com/precice/case-generate/blob/main/templates/metaConfiguratorSettings.json)
+   schema: [MetaConfigurator Link](https://metaconfigurator.github.io/meta-configurator/?schema=https://github.com/precice/case-generate/blob/main/precicecasegenerate/schemas/topology-schema.json&settings=https://github.com/precice/case-generate/blob/main/precicecasegenerate/templates/metaConfiguratorSettings.json)
 
 2. Use the interactive interface to define your topology:
     - The preloaded schema provides a structured way to describe your simulation components
