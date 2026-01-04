@@ -55,12 +55,6 @@ class NodeCreator:
         participant_patch_label_map: dict[tuple[n.ParticipantNode, n.ParticipantNode], dict[str, set[str]]] = (
             self._patch_preprocessing(participant_map))
 
-        # TODO If it is possible that the same patch can exchange multiple data, then we need to do something about that :|
-        #  A dict mapping exchanges to patches would probably be needed.
-        #  If it is not possible, then we still need that dict and make distinct patches out of one patch with multiple data.
-        #  If it is possible, then we maybe need to differentiate between the case 2*intensive/extensive, and extensive+intensive.
-        #  In the former case, the same patch should be fine. In the latter case, we would probably need to create a new patch.
-
         # Initialize data from exchanges tag (defined implicitly)
         # This uses the topology dict as keys, so it needs to be done after the patch preprocessing.
         data_map: dict[frozenset, n.DataNode] = self._initialize_data(participant_map)
@@ -70,8 +64,6 @@ class NodeCreator:
         mesh_map: dict[tuple[n.ParticipantNode, n.ParticipantNode, str], n.MeshNode] = self._initialize_meshes(
             participant_patch_label_map)
         logger.debug(f"Created {len(set(mesh_map.values()))} mesh nodes.")
-
-        # TODO update usage of mesh_map
 
         # Initialize mappings from the exchanges tag (defined implicitly)
         mapping_map: dict[tuple[n.MeshNode, n.MeshNode], n.MappingNode] = self._initialize_mappings(participant_map,
@@ -103,8 +95,6 @@ class NodeCreator:
         # Create M2Ns
         self._create_M2N()
         logger.debug(f"Created {len(self.m2ns)} M2N nodes.")
-
-    # TODO Finish up, i.e., add mising tags to nodes
 
     def _create_M2N(self) -> None:
         """
@@ -193,8 +183,6 @@ class NodeCreator:
         # If so, add it to bidirectional_strong_couplings
         for coupling in strong_couplings:
             if frozenset((coupling["from"], coupling["to"])) in bidirectional_strong_coupling_participant_pairs:
-                # TODO can we put this in the loop above?
-                #  i.e., add coupling and other_coupling to bidirectional_strong_couplings
                 bidirectional_strong_couplings.append(coupling)
 
         unidirectional_strong_couplings: list[dict] = [coupling for coupling in strong_couplings if
@@ -601,22 +589,6 @@ class NodeCreator:
 
         return participant_label_mesh_map
 
-    def _participant_communication_map(self, participant_map: dict[str, n.ParticipantNode]) -> dict[
-        n.ParticipantNode, set[n.ParticipantNode]]:
-        """
-        Create a dict mapping participants to their "neighbors", i.e., other participants that exchange data with them.
-        :param participant_map: A dict mapping participant names to participant nodes.
-        :return: A dict mapping participants to their neighbors.
-        """
-        communication_map: dict[n.ParticipantNode, set[n.ParticipantNode]] = {}
-        for exchange in self.topology["exchanges"]:
-            from_participant: n.ParticipantNode = participant_map[exchange["from"]]
-            to_participant: n.ParticipantNode = participant_map[exchange["to"]]
-            communication_map[from_participant].add(to_participant)
-            communication_map[to_participant].add(from_participant)
-            logger.debug(f"Added entries for communication between {from_participant.name} and {to_participant.name}.")
-        return communication_map
-
     def _initialize_participants(self) -> dict[str, n.ParticipantNode]:
         """
         Initialize participant nodes and their dimensionality from the topology dict.
@@ -626,7 +598,7 @@ class NodeCreator:
         participant_map: dict[str, n.ParticipantNode] = {}
         for participant in self.topology["participants"]:
             # The value is a dict that contains "name, solver, optional[dimensionality]"
-            parzival: n.ParticipantNode = n.ParticipantNode(name=participant["name"].capitalize())
+            parzival: n.ParticipantNode = n.ParticipantNode(name=participant["name"])
             participant_map[participant["name"]] = parzival
             self.participants.append(parzival)
             dim: int = participant.get("dimensionality", helper.DEFAULT_PARTICIPANT_DIMENSIONALITY)
