@@ -1,51 +1,36 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel", "setuptools-git-versioning"]
+requires = ["setuptools>=41", "wheel", "setuptools-git-versioning"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "precice-case-generate"
-dynamic = [ "version" ]
-description = "Generates File and Folder Structure, including all of the necessary files to quickly kickstart a simulation"
-
+dynamic = ["version"]
+description = "Generate files and folder structure for a coupled simulation with preCICE."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 
 authors = [
-    { name = "VanLaareN", email = "vanlaren@example.com" },
-    { name = "Toddelismyname", email = "116207910+Toddelismyname@users.noreply.github.com" }
+    { name = "Orlando", email = "orlac2700@gmail.com" },
 ]
 
-requires-python = ">= 3.9"
+requires-python = ">= 3.10"
 dependencies = [
-    "attrs>=25.3",
-    "jsonschema>=4.23",
-    "jsonschema-specifications>=2024.10",
-    "lxml>=5.3",
-    "ruamel_yaml",
-    "referencing>=0.36",
-    "rpds-py>=0.24",
-    "termcolor>=3",
-    "typing_extensions>=4.13",
+    "precice-config-graph",
+    "pyyaml",
+    "jsonschema"
 ]
 
 [project.scripts]
 precice-case-generate = "precicecasegenerate.cli:main"
 
 [project.urls]
-Repository = "https://github.com/precice-forschungsprojekt/precice-generator"
-Issues = "https://github.com/precice-forschungsprojekt/precice-generator/issues"
-Documentation = "https://github.com/precice-forschungsprojekt/precice-generator/blob/main/README.md"
+Repository = "https://github.com/precice/case-generate"
+Documentation = "https://github.com/precice/case-generate/blob/main/README.md"
 
 [tool.setuptools]
 packages = [
-"precicecasegenerate",
-"precicecasegenerate.schemas",
-"precicecasegenerate.templates",
-"precicecasegenerate.generation_utils",
-"precicecasegenerate.controller_utils.myutils",
-"precicecasegenerate.controller_utils.precice_struct",
-"precicecasegenerate.controller_utils.ui_struct"
+    "precicecasegenerate",
 ]
 
 [tool.setuptools-git-versioning]
@@ -53,6 +38,6 @@ enabled = true
 
 [tool.setuptools.package-data]
 precicecasegenerate = [
-"templates/*",
-"schemas/*"
+    "templates/*",
+    "schemas/*"
 ]
