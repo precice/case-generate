@@ -12,8 +12,8 @@ DEFAULT_CONVERGENCE_MEASURE_TYPE: e.ConvergenceMeasureType = e.ConvergenceMeasur
 DEFAULT_DATA_KIND: str = "intensive"
 DEFAULT_MAPPING_KIND: str = "read"
 
-EXTENSIVE_DATA: list[str] = ["force"]
-INTENSIVE_DATA: list[str] = ["temperature", "pressure", "velocity", "heat-flux", "displacement"]
+EXTENSIVE_DATA: list[str] = ["force", "displacement"]
+INTENSIVE_DATA: list[str] = ["temperature", "pressure", "velocity", "heat-flux", ]
 
 # To make duplicate data names unique
 DATA_UNIQUIFIERS: list[str] = [
