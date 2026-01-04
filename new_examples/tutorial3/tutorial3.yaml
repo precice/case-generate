@@ -1,0 +1,22 @@
+participants:
+  - name: Fluid
+    solver: OpenFOAM
+    dimensionality: 2
+  - name: Solid
+    solver: Nutils
+    dimensionality: 2
+exchanges:
+  - from: Fluid
+    to: Solid
+    from-patch: interface
+    to-patch: interface
+    data: Temperature
+    type: strong
+    data-type: scalar
+  - from: Solid
+    to: Fluid
+    from-patch: interface
+    to-patch: interface
+    data: Heat-Flux
+    type: strong
+    data-type: scalar

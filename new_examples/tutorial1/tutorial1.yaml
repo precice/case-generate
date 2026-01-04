@@ -1,0 +1,15 @@
+participants:
+  - name: Generator
+    solver: FlexSolver2000
+    dimensionality: 2
+  - name: Propagator
+    solver: InvisSolve
+    dimensionality: 2
+exchanges:
+  - from: Generator
+    to: Propagator
+    from-patch: interface
+    to-patch: interface
+    data: Color
+    type: weak
+    data-type: scalar
