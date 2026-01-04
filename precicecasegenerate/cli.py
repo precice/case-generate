@@ -1,73 +1,69 @@
-from .generation_utils.file_generator import FileGenerator
-import argparse
+import os
 import sys
-from pathlib import Path
+import argparse
+import shutil
 
-
-def makeGenerateParser(add_help: bool = True):
-    parser = argparse.ArgumentParser(
-        description="Initialize a preCICE case given a topology file",
-        add_help=add_help,
-    )
-    parser.add_argument(
-        "-f",
-        "--input-file",
-        type=Path,
-        default=Path.cwd() / "topology.yaml",
-        help="Input topology.yaml file. Defaults to './topology.yaml'.",
-    )
-    parser.add_argument(
-        "-o",
-        "--output-path",
-        type=Path,
-        help="Output path for the generated folder. Defaults to './_generated'.",
-        default=Path.cwd() / "_generated",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="Enable verbose logging output.",
-    )
-    parser.add_argument(
-        "--validate-topology",
-        action="store_true",
-        required=False,
-        default=True,
-        help="Whether to validate the input topology.yaml file against the preCICE topology schema.",
-    )
-    return parser
-
-
-def runGenerate(ns):
-    try:
-        file_generator = FileGenerator(ns.input_file, ns.output_path)
-
-        # Clear any previous log state
-        file_generator.logger.clear_log_state()
-
-        # Generate precice-config.xml, README.md, clean.sh
-        file_generator.generate_level_0()
-        # Generate configuration for the solvers
-        file_generator.generate_level_1()
-
-        # Format the generated preCICE configuration
-        file_generator.format_precice_config()
-
-        file_generator.handle_output(ns)
-
-        file_generator.validate_topology(ns)
-
-        return 0
-    except Exception as e:
-        print(e, file=sys.stderr)
-        return 1
+from precicecasegenerate.logging_setup import setup_logging
+from precicecasegenerate.config_creator.node_creator import NodeCreator
+from precicecasegenerate.config_creator.config_creator import ConfigCreator
+from precicecasegenerate.input_handler.topology_reader import TopologyReader
 
 
 def main():
-    args = makeGenerateParser().parse_args()
-    return runGenerate(args)
+    logger = setup_logging()
+    logger.info("Program started.")
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "file_path",
+        type=str,
+        help="Path to the input YAML file."
+    )
+    logger.debug("Parsing arguments.")
+    args = parser.parse_args()
+    logger.debug(f"Arguments parsed. Arguments: {vars(args)}. Checking if given file exists.")
+
+    # Check if the file exists
+    if not os.path.isfile(args.file_path):
+        logger.critical(f"File {os.path.abspath(args.file_path)} does not exist. Aborting program.")
+        sys.exit(1)
+    logger.debug("File exists.")
+
+    # Check if the file is a YAML file
+    _, ext = os.path.splitext(args.file_path)
+    if ext.lower() in [".yaml", ".yml"]:
+        logger.debug("File is a YAML file.")
+    else:
+        logger.critical(f"File {os.path.abspath(args.file_path)} is not a YAML file. Aborting program.")
+
+    # Create a new directory for the generated files
+    path_to_generated: str = "_generated/"
+    logger.debug(f"Resetting generated files at {os.path.abspath(path_to_generated)}.")
+    # Ignore errors if the directory does not exist
+    shutil.rmtree(path_to_generated, ignore_errors=True)
+    os.makedirs(path_to_generated)
+
+    logger.debug("Starting topology reader.")
+    topology_reader: TopologyReader = TopologyReader(args.file_path)
+    topology: dict = topology_reader.get_topology()
+    logger.debug("Topology reader finished.")
+
+    logger.debug("Starting node creator.")
+    node_creator: NodeCreator = NodeCreator(topology)
+    nodes: dict = node_creator.get_nodes()
+    logger.debug("Node creator finished.")
+
+    logger.debug("Starting config creator.")
+    config_creator: ConfigCreator = ConfigCreator(nodes)
+    config_str: str = config_creator.create_config_str()
+    config_creator.create_config_file(config_str, directory=path_to_generated, filename="precice-config.xml")
+    logger.debug("Config creator finished.")
+
+    # TODO other generation steps
+    logger.info("Program finished.")
+    sys.exit(0)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
