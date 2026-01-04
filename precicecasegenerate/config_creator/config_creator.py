@@ -1,0 +1,69 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class ConfigCreator:
+
+    def __init__(self, config_topology: dict):
+        self.config_topology = config_topology
+
+    def create_config_str(self) -> str:
+        """
+        Create a string representing a preCICE configuration file.
+        This is done by iterating over the given topology dict and creating a string for each element.
+        :return: A string representing a preCICE configuration file.
+        """
+        # "Header" information
+        config_str: str = (f"<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+                           f"<precice-configuration>\n"
+                           f"  <log>\n"
+                           f"    <sink\n"
+                           f"      filter=\"%Severity% > debug\"\n"
+                           f"      format=\"---[precice] %ColorizedSeverity% %Message%\"\n"
+                           f"      enabled=\"true\" />\n"
+                           f"  </log>\n\n")  # two newlines to separate the header from the content
+
+        for data in self.config_topology["data"]:
+            config_str += f"  " + data.to_xml() + "\n"
+
+        config_str += "\n"  # separate mesh from data
+
+        mesh_str: str = ""
+        for mesh in self.config_topology["meshes"]:
+            mesh_str += f"{mesh.to_xml()}"
+        config_str += "".join("  " + line for line in mesh_str.splitlines(keepends=True))
+
+        config_str += "\n"  # separate mesh from participants
+
+        participant_str: str = ""
+        for participant in self.config_topology["participants"]:
+            participant_str += f"{participant.to_xml()}"
+        config_str += "".join("  " + line for line in participant_str.splitlines(keepends=True))
+
+        config_str += "\n"  # separate participants from coupling-schemes
+
+        coupling_scheme_str: str = ""
+        for coupling_scheme in self.config_topology["coupling-schemes"]:
+            coupling_scheme_str += f"{coupling_scheme.to_xml()}"
+        config_str += "".join("  " + line for line in coupling_scheme_str.splitlines(keepends=True))
+
+        config_str += "\n"  # separate coupling-schemes from m2ns
+
+        for m2n in self.config_topology["m2n"]:
+            config_str += f"  {m2n.to_xml()}"
+
+        config_str += f"\n</precice-configuration>"
+        return config_str
+
+    def create_config_file(self, config_str: str, directory: str = "./", filename: str = "precice-config.xml") -> None:
+        """
+        Create a configuration file from the given configuration string.
+        The file is saved in the given directory with the given filename.
+        :param config_str: A string representing the configuration.
+        :param directory: The directory to save the file in.
+        :param filename: The filename of the file.
+        """
+        with open(directory + filename, "w") as f:
+            f.write(config_str)
+        logger.info(f"preCICE configuration file written to {directory + filename}")
