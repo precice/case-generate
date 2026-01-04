@@ -1,11 +1,15 @@
 **/__pycache__/
 venv/
-_generated/
 dist/
 build/
 *.egg-info/
+
+# macOS
 .DS_Store
 
+# IntelliJ
 .idea/*
 
+# Created directories during runs
+*_generated/
 *logs/
