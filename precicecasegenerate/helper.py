@@ -47,7 +47,9 @@ def get_participant_solver_directory(parent_directory: str, participant_name: st
     :param solver_name: The name of the solver.
     :return: A string representing the directory name.
     """
-    return parent_directory.lower() + "/" + participant_name.lower() + "-" + solver_name.lower() + "/"
+    # Append a / if needed
+    parent_directory = parent_directory if parent_directory.endswith("/") else parent_directory + "/"
+    return parent_directory.lower() + participant_name.lower() + "-" + solver_name.lower() + "/"
 
 
 class PatchState(Enum):
