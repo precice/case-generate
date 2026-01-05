@@ -1,12 +1,12 @@
 participants:
   - name: Generator-Left
-    solver: FlexSolver2000
+    solver: ASolver
     dimensionality: 2
   - name: Generator-Right
-    solver: FlexSolver2000
+    solver: ASolver
     dimensionality: 2
   - name: Propagator
-    solver: InvisSolve
+    solver: BSolver
     dimensionality: 2
 exchanges:
   - from: Generator-Left

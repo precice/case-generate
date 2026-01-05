@@ -1,9 +1,9 @@
 participants:
   - name: Generator
-    solver: FlexSolver2000
+    solver: ASolver
     dimensionality: 2
   - name: Propagator
-    solver: InvisSolve
+    solver: BSolver
     dimensionality: 2
 exchanges:
   - from: Generator

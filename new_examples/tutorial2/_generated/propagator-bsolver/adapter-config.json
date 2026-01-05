@@ -1,0 +1,24 @@
+{
+	"participant_name": "Propagator",
+	"precice_config_file_name": "../precice-config.xml",
+	"interfaces": [
+		{
+			"mesh_name": "Propagator-Generator-Left-Mesh",
+			"patches": [
+			  "interface"
+			],
+			"read_data_names": [
+			  "Color"
+			]
+		},
+		{
+			"mesh_name": "Propagator-Generator-Right-Mesh",
+			"patches": [
+			  "interface"
+			],
+			"read_data_names": [
+			  "Pretty-Color"
+			]
+		}
+	]
+}

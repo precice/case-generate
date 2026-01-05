@@ -1,0 +1,15 @@
+{
+	"participant_name": "Generator-Right",
+	"precice_config_file_name": "../precice-config.xml",
+	"interfaces": [
+		{
+			"mesh_name": "Generator-Right-Mesh",
+			"patches": [
+			  "interface"
+			],
+			"write_data_names": [
+			  "Pretty-Color"
+			]
+		}
+	]
+}

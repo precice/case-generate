@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink
+      filter="%Severity% > debug"
+      format="---[precice] %ColorizedSeverity% %Message%"
+      enabled="true" />
+  </log>
+
+  <data:vector name="Forces1" />
+  <data:vector name="Forces2" />
+  <data:vector name="Forces3" />
+  <data:vector name="Displacements1" />
+  <data:vector name="Displacements2" />
+  <data:vector name="Displacements3" />
+
+  <mesh name="NASTIN-SOLIDZ1-Mesh" dimensions="3">
+    <use-data name="Forces1" />
+    <use-data name="Displacements1" />
+  </mesh>
+  <mesh name="SOLIDZ1-Mesh" dimensions="3">
+    <use-data name="Forces1" />
+    <use-data name="Displacements1" />
+  </mesh>
+  <mesh name="NASTIN-SOLIDZ2-Mesh" dimensions="3">
+    <use-data name="Forces2" />
+    <use-data name="Displacements2" />
+  </mesh>
+  <mesh name="SOLIDZ2-Mesh" dimensions="3">
+    <use-data name="Forces2" />
+    <use-data name="Displacements2" />
+  </mesh>
+  <mesh name="NASTIN-SOLIDZ3-Mesh" dimensions="3">
+    <use-data name="Forces3" />
+    <use-data name="Displacements3" />
+  </mesh>
+  <mesh name="SOLIDZ3-Mesh" dimensions="3">
+    <use-data name="Forces3" />
+    <use-data name="Displacements3" />
+  </mesh>
+
+  <participant name="NASTIN">
+    <provide-mesh name="NASTIN-SOLIDZ1-Mesh" />
+    <provide-mesh name="NASTIN-SOLIDZ2-Mesh" />
+    <provide-mesh name="NASTIN-SOLIDZ3-Mesh" />
+    <receive-mesh name="SOLIDZ1-Mesh" from="NASTIN" />
+    <receive-mesh name="SOLIDZ2-Mesh" from="NASTIN" />
+    <receive-mesh name="SOLIDZ3-Mesh" from="NASTIN" />
+    <write-data name="Forces1" mesh="NASTIN-SOLIDZ1-Mesh" />
+    <write-data name="Forces2" mesh="NASTIN-SOLIDZ2-Mesh" />
+    <write-data name="Forces3" mesh="NASTIN-SOLIDZ3-Mesh" />
+    <read-data name="Displacements1" mesh="NASTIN-SOLIDZ1-Mesh" />
+    <read-data name="Displacements2" mesh="NASTIN-SOLIDZ2-Mesh" />
+    <read-data name="Displacements3" mesh="NASTIN-SOLIDZ3-Mesh" />
+    <mapping:nearest-neighbor
+    direction="write"
+    from="NASTIN-SOLIDZ1-Mesh"
+    to="SOLIDZ1-Mesh"
+    constraint="conservative"
+  />
+    <mapping:nearest-neighbor
+    direction="write"
+    from="NASTIN-SOLIDZ2-Mesh"
+    to="SOLIDZ2-Mesh"
+    constraint="conservative"
+  />
+    <mapping:nearest-neighbor
+    direction="write"
+    from="NASTIN-SOLIDZ3-Mesh"
+    to="SOLIDZ3-Mesh"
+    constraint="conservative"
+  />
+  </participant>
+  <participant name="SOLIDZ1">
+    <provide-mesh name="SOLIDZ1-Mesh" />
+    <receive-mesh name="NASTIN-SOLIDZ1-Mesh" from="SOLIDZ1" />
+    <write-data name="Displacements1" mesh="SOLIDZ1-Mesh" />
+    <read-data name="Forces1" mesh="SOLIDZ1-Mesh" />
+    <mapping:nearest-neighbor
+    direction="write"
+    from="SOLIDZ1-Mesh"
+    to="NASTIN-SOLIDZ1-Mesh"
+    constraint="conservative"
+  />
+  </participant>
+  <participant name="SOLIDZ2">
+    <provide-mesh name="SOLIDZ2-Mesh" />
+    <receive-mesh name="NASTIN-SOLIDZ2-Mesh" from="SOLIDZ2" />
+    <write-data name="Displacements2" mesh="SOLIDZ2-Mesh" />
+    <read-data name="Forces2" mesh="SOLIDZ2-Mesh" />
+    <mapping:nearest-neighbor
+    direction="write"
+    from="SOLIDZ2-Mesh"
+    to="NASTIN-SOLIDZ2-Mesh"
+    constraint="conservative"
+  />
+  </participant>
+  <participant name="SOLIDZ3">
+    <provide-mesh name="SOLIDZ3-Mesh" />
+    <receive-mesh name="NASTIN-SOLIDZ3-Mesh" from="SOLIDZ3" />
+    <write-data name="Displacements3" mesh="SOLIDZ3-Mesh" />
+    <read-data name="Forces3" mesh="SOLIDZ3-Mesh" />
+    <mapping:nearest-neighbor
+    direction="write"
+    from="SOLIDZ3-Mesh"
+    to="NASTIN-SOLIDZ3-Mesh"
+    constraint="conservative"
+  />
+  </participant>
+
+  <coupling-scheme:multi>
+    <max-time-windows value="10" />
+    <time-window-size value="0.1" />
+    <participant name="SOLIDZ3" />
+    <participant name="SOLIDZ2" />
+    <participant name="NASTIN" control="yes" />
+    <participant name="SOLIDZ1" />
+    <exchange data="Forces1" mesh="SOLIDZ1-Mesh" from="NASTIN" to="SOLIDZ1" />
+    <exchange data="Forces2" mesh="SOLIDZ2-Mesh" from="NASTIN" to="SOLIDZ2" />
+    <exchange data="Forces3" mesh="SOLIDZ3-Mesh" from="NASTIN" to="SOLIDZ3" />
+    <exchange data="Displacements1" mesh="NASTIN-SOLIDZ1-Mesh" from="SOLIDZ1" to="NASTIN" />
+    <exchange data="Displacements2" mesh="NASTIN-SOLIDZ2-Mesh" from="SOLIDZ2" to="NASTIN" />
+    <exchange data="Displacements3" mesh="NASTIN-SOLIDZ3-Mesh" from="SOLIDZ3" to="NASTIN" />
+    <acceleration:IQN-ILS>
+    <data name="Forces1" mesh="SOLIDZ1-Mesh" />
+    <data name="Forces2" mesh="SOLIDZ2-Mesh" />
+    <data name="Forces3" mesh="SOLIDZ3-Mesh" />
+    <data name="Displacements1" mesh="NASTIN-SOLIDZ1-Mesh" />
+    <data name="Displacements2" mesh="NASTIN-SOLIDZ2-Mesh" />
+    <data name="Displacements3" mesh="NASTIN-SOLIDZ3-Mesh" />
+  </acceleration:IQN-ILS>
+    <relative-convergence-measure data="Forces1" mesh="SOLIDZ1-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Forces2" mesh="SOLIDZ2-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Forces3" mesh="SOLIDZ3-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Displacements1" mesh="NASTIN-SOLIDZ1-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Displacements2" mesh="NASTIN-SOLIDZ2-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Displacements3" mesh="NASTIN-SOLIDZ3-Mesh" limit="0.1" />
+  </coupling-scheme:multi>
+
+  <m2n:sockets acceptor="NASTIN" connector="SOLIDZ1" directory="."/>
+  <m2n:sockets acceptor="NASTIN" connector="SOLIDZ2" directory="."/>
+  <m2n:sockets acceptor="NASTIN" connector="SOLIDZ3" directory="."/>
+
+</precice-configuration>
