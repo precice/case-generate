@@ -1,4 +1,7 @@
+import json
+import jsonschema
 import logging
+from importlib.resources import files
 
 from precice_config_graph import nodes as n
 
@@ -131,6 +134,23 @@ class AdapterConfigCreator:
         patch_str += f"],\n"
         return patch_str
 
+    def _validate_adapter_config_file(self, directory: str = "./", filename: str = "adapter-config.json"):
+        schema_path = files("precicecasegenerate.schemas") / "adapter-config-schema.json"
+
+        # Load your schema (from a file or directly as a dict)
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+
+        # Load the JSON file you want to validate
+        with open(directory + filename) as f:
+            adapter_config = json.load(f)
+
+        try:
+            jsonschema.validate(adapter_config, schema)
+            logger.debug(f"Adapter config file {directory + filename} adheres to the schema.")
+        except jsonschema.ValidationError as e:
+            logger.error(f"Adapter config file {directory + filename} does not adhere to the schema "
+                         f"as specified in {schema_path}: {e.message}. This is likely an error within the program.")
+
     def _create_adapter_config_file(self, participant: n.ParticipantNode,
                                     patch_map: dict[n.MeshNode, set[str]],
                                     directory: str = "./", filename: str = "adapter-config.json"):
@@ -147,7 +167,7 @@ class AdapterConfigCreator:
 
     def create_adapter_configs(self, parent_directory: str = "./"):
         """
-        Create adapter-config.json files for all participants.
+        Create adapter-config.json files for all participants and directly validate them afterwards.
         The files are saved from the given parent-directory, in subdirectories of the form "participant-solver/".
         """
         for participant in self.participant_solver_map:
@@ -156,3 +176,4 @@ class AdapterConfigCreator:
             directory: str = (parent_directory.lower() + participant.name.lower() + "-"
                               + self.participant_solver_map[participant].lower() + "/")
             self._create_adapter_config_file(participant, self.patch_map, directory=directory)
+            self._validate_adapter_config_file(directory=directory)
