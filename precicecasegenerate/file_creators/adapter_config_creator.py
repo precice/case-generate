@@ -5,6 +5,8 @@ from importlib.resources import files
 
 from precice_config_graph import nodes as n
 
+import precicecasegenerate.helper as helper
+
 logger = logging.getLogger(__name__)
 
 
@@ -173,7 +175,7 @@ class AdapterConfigCreator:
         for participant in self.participant_solver_map:
             logger.debug(f"Creating adapter configuration file for participant {participant.name}.")
             # Use lowercase
-            directory: str = (parent_directory.lower() + participant.name.lower() + "-"
-                              + self.participant_solver_map[participant].lower() + "/")
+            directory: str = helper.get_participant_solver_directory(parent_directory, participant.name,
+                                                                     self.participant_solver_map[participant])
             self._create_adapter_config_file(participant, self.patch_map, directory=directory)
             self._validate_adapter_config_file(directory=directory)
