@@ -38,6 +38,18 @@ DATA_UNIQUIFIERS: list[str] = [
 ]
 
 
+def get_participant_solver_directory(parent_directory: str, participant_name: str, solver_name: str) -> str:
+    """
+    Return the name of the directory for a participant of the simulation.
+    The adapter-config.json and run.sh files for this participant will be saved in this directory.
+    :param parent_directory: The parent directory of the participant's directory.
+    :param participant_name: The name of the participant.
+    :param solver_name: The name of the solver.
+    :return: A string representing the directory name.
+    """
+    return parent_directory.lower() + "/" + participant_name.lower() + "-" + solver_name.lower() + "/"
+
+
 class PatchState(Enum):
     EXTENSIVE = "extensive"
     INTENSIVE = "intensive"
