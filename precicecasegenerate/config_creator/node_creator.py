@@ -1,6 +1,6 @@
 import random
-
 import logging
+
 from precice_config_graph import nodes as n
 from precice_config_graph import enums as e
 import precicecasegenerate.config_creator.helper as helper
@@ -17,6 +17,8 @@ class NodeCreator:
         self.meshes: list[n.MeshNode] = []
         self.coupling_schemes: list[n.CouplingSchemeNode | n.MultiCouplingSchemeNode] = []
         self.m2ns: list[n.M2NNode] = []
+        # Patches are important for adapter configs
+        self.patches: list[helper.PatchNode] = []
 
         # Containers for temporary values
         # Dimensionality is needed for meshes
@@ -25,6 +27,34 @@ class NodeCreator:
         self.exchange_types: dict[n.ExchangeNode, str] = {}
 
         self._create_nodes()
+
+    def get_mesh_patch_map(self) -> dict[n.MeshNode, set[str]]:
+        """
+        Create a dict mapping mesh nodes to sets of patches that they use / contain.
+        :return: A dict mapping mesh nodes to sets of patches.
+        """
+        mesh_patch_map: dict[n.MeshNode, set[str]] = {}
+        for patch in self.patches:
+            mesh: n.MeshNode = patch.mesh
+            # Create a a new entry if necessary
+            if mesh not in mesh_patch_map:
+                mesh_patch_map[mesh] = set()
+            mesh_patch_map[mesh].add(patch.name)
+
+        return mesh_patch_map
+
+    def get_participant_solver_map(self) -> dict[n.ParticipantNode, str]:
+        """
+        Create a dict mapping participant nodes to their solver.
+        :return: A dict mapping participant nodes to their solver.
+        """
+        participant_solver_map: dict[n.ParticipantNode, str] = {}
+        for participant_dict in self.topology["participants"]:
+            # Get the participant node corresponding to the participant mentioned in the topology
+            participant: n.ParticipantNode = next(p for p in self.participants if p.name == participant_dict["name"])
+            # Assign the solver to the participant node
+            participant_solver_map[participant] = participant_dict["solver"]
+        return participant_solver_map
 
     def get_nodes(self) -> dict:
         """
@@ -542,7 +572,9 @@ class NodeCreator:
                 # Check if the from-participant communicates with more than one participant
                 if frequency_map[from_participant] > 1:
                     # In this case, we name meshes "FROM-TO-Extensive/Intensive-Mesh"
-                    mesh_name: str = f"{from_participant.name.capitalize()}-{to_participant.name.capitalize()}"
+                    # Capitalize only the first letter. This allows all-caps names
+                    mesh_name: str = (f"{from_participant.name[:1].upper() + from_participant.name[1:]}"
+                                      f"-{to_participant.name[:1].upper() + to_participant.name[1:]}")
                     extensive_mesh: n.MeshNode = n.MeshNode(name=mesh_name + "-Extensive-Mesh", use_data=[],
                                                             dimensions=participant_dim)
                     intensive_mesh: n.MeshNode = n.MeshNode(name=mesh_name + "-Intensive-Mesh", use_data=[],
@@ -551,7 +583,7 @@ class NodeCreator:
                 else:
                     # The participant communicates only with one other participant.
                     # The mesh is named "FROM-Extensive/Intensive-Mesh"
-                    mesh_name: str = f"{from_participant.name.capitalize()}"
+                    mesh_name: str = f"{from_participant.name[:1].upper() + from_participant.name[1:]}"
                     extensive_mesh: n.MeshNode = n.MeshNode(name=mesh_name + "-Extensive-Mesh", use_data=[],
                                                             dimensions=participant_dim)
                     intensive_mesh: n.MeshNode = n.MeshNode(name=mesh_name + "-Intensive-Mesh", use_data=[],
@@ -565,18 +597,32 @@ class NodeCreator:
                 participant_label_mesh_map[(from_participant, to_participant, "intensive")] = intensive_mesh
                 logger.debug(f"Created extensive and intensive mesh for communication between "
                              f"{from_participant.name} and {to_participant.name}.")
+                # Create new patch nodes for from_participant
+                # Since only the patches of "from" are contained in
+                # participant_patch_map[(from_participant, to_participant)], we must not create any patches for "to"
+                for extensive_patch in participant_patch_map[(from_participant, to_participant)]["extensive"]:
+                    patch_node: helper.PatchNode = helper.PatchNode(name=extensive_patch, participant=from_participant,
+                                                                    mesh=extensive_mesh,
+                                                                    label=helper.PatchState.EXTENSIVE)
+                    self.patches.append(patch_node)
+                for intensive_patch in participant_patch_map[(from_participant, to_participant)]["intensive"]:
+                    patch_node: helper.PatchNode = helper.PatchNode(name=intensive_patch, participant=from_participant,
+                                                                    mesh=intensive_mesh,
+                                                                    label=helper.PatchState.INTENSIVE)
+                    self.patches.append(patch_node)
             # The participant pair only communicates one kind of data
             else:
                 # Check if the from-participant communicates with more than one participant
                 if frequency_map[from_participant] > 1:
                     # In this case, we name meshes "FROM-TO-Mesh"
-                    mesh_name: str = f"{from_participant.name.capitalize()}-{to_participant.name.capitalize()}"
+                    mesh_name: str = (f"{from_participant.name[:1].upper() + from_participant.name[1:]}"
+                                      f"-{to_participant.name[:1].upper() + to_participant.name[1:]}")
                     mesh: n.MeshNode = n.MeshNode(name=mesh_name + "-Mesh", use_data=[],
                                                   dimensions=participant_dim)
                 else:
                     # The participant communicates only with one other participant.
                     # The mesh is named "FROM-Mesh"
-                    mesh_name: str = f"{from_participant.name.capitalize()}"
+                    mesh_name: str = f"{from_participant.name[:1].upper() + from_participant.name[1:]}"
                     mesh: n.MeshNode = n.MeshNode(name=mesh_name + "-Mesh", use_data=[], dimensions=participant_dim)
                 # Add the mesh to the respective container
                 from_participant.provide_meshes.append(mesh)
@@ -586,6 +632,11 @@ class NodeCreator:
                 participant_label_mesh_map[(from_participant, to_participant, label)] = mesh
                 logger.debug(f"Created mesh for communication between {from_participant.name} "
                              f"and {to_participant.name}.")
+                # Create new patch nodes of only this label
+                for patch in participant_patch_map[(from_participant, to_participant)][label]:
+                    patch_node: helper.PatchNode = helper.PatchNode(name=patch, participant=from_participant,
+                                                                    mesh=mesh, label=helper.PatchState(label))
+                    self.patches.append(patch_node)
 
         return participant_label_mesh_map
 
@@ -643,7 +694,7 @@ class NodeCreator:
             participant_patch_label_map[(from_participant, from_patch)].add(data_label)
             participant_patch_label_map[(to_participant, to_patch)].add(data_label)
 
-        # Map split up patches to new patches
+        # Map split-up patches to new patches
         participant_patch_new_patch_map: dict[tuple[n.ParticipantNode, str], dict[str, str]] = {}
         # Now, check if a patch has more than one label (i.e., both intensive and extensive)
         for exchange in self.topology["exchanges"]:
