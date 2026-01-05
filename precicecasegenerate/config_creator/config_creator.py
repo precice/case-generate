@@ -1,14 +1,24 @@
 import logging
+from precice_config_graph import nodes as n
 
 logger = logging.getLogger(__name__)
 
 
 class ConfigCreator:
+    """
+    A class that handles creating preCICE configuration files.
+    """
 
-    def __init__(self, config_topology: dict):
+    def __init__(self, config_topology: dict[str, list[n.ParticipantNode] | list[n.DataNode] | list[n.MeshNode]
+                                                  | list[n.CouplingSchemeNode] | list[n.MultiCouplingSchemeNode]
+                                                  | list[n.M2NNode]]):
+        """
+        Initialize a ConfigCreator object with a dict that specifies how the preCICE configuration should be created.
+        :param config_topology: A dict that contains participants, data nodes, meshes, coupling-schemes and M2N nodes.
+        """
         self.config_topology = config_topology
 
-    def create_config_str(self) -> str:
+    def _create_config_str(self) -> str:
         """
         Create a string representing a preCICE configuration file.
         This is done by iterating over the given topology dict and creating a string for each element.
@@ -56,14 +66,13 @@ class ConfigCreator:
         config_str += f"\n</precice-configuration>"
         return config_str
 
-    def create_config_file(self, config_str: str, directory: str = "./", filename: str = "precice-config.xml") -> None:
+    def create_config_file(self, directory: str = "./", filename: str = "precice-config.xml") -> None:
         """
-        Create a configuration file from the given configuration string.
+        Create a configuration file.
         The file is saved in the given directory with the given filename.
-        :param config_str: A string representing the configuration.
         :param directory: The directory to save the file in.
         :param filename: The filename of the file.
         """
         with open(directory + filename, "w") as f:
-            f.write(config_str)
+            f.write(self._create_config_str())
         logger.info(f"preCICE configuration file written to {directory + filename}")
