@@ -16,7 +16,7 @@ class TopologyReader:
     def __init__(self, path_to_topology_file: str):
         self.topology_file_path = path_to_topology_file
         self.topology = self._read_topology()
-        self._check_topology()
+        self._validate_topology()
 
     def _read_topology(self) -> dict:
         """
@@ -29,7 +29,7 @@ class TopologyReader:
             topology = yaml.safe_load(topology_file)
         return topology
 
-    def _check_topology(self) -> None:
+    def _validate_topology(self) -> None:
         """
         Check if the topology adheres to the defined schema in schemas/topology-schema.json
         """
