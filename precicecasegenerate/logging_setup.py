@@ -33,7 +33,7 @@ class ColorFormatter(logging.Formatter):
 def setup_logging() -> Logger:
     timestamp: str = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    path: str = "logs/"
+    path: str = ".logs/"
     os.makedirs(path, exist_ok=True)
 
     # Delete old log files if there are more than 10 to avoid clutter
