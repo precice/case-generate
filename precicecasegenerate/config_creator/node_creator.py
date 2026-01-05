@@ -91,7 +91,7 @@ class NodeCreator:
         logger.debug(f"Created {len(set(data_map.values()))} data nodes.")
 
         # Initialize meshes from the exchanges tag (defined implicitly)
-        mesh_map: dict[tuple[n.ParticipantNode, n.ParticipantNode, str], n.MeshNode] = self._initialize_meshes(
+        mesh_map: dict[tuple[n.ParticipantNode, n.ParticipantNode, str], n.MeshNode] = self._initialize_meshes_and_patches(
             participant_patch_label_map)
         logger.debug(f"Created {len(set(mesh_map.values()))} mesh nodes.")
 
@@ -544,13 +544,14 @@ class NodeCreator:
         logger.debug(f"Created read-mapping between {from_mesh.name} and {to_mesh.name} "
                      f"for participant {to_participant.name}.")
 
-    def _initialize_meshes(self, participant_patch_map: dict[tuple[n.ParticipantNode, n.ParticipantNode],
+    def _initialize_meshes_and_patches(self, participant_patch_map: dict[tuple[n.ParticipantNode, n.ParticipantNode],
     dict[str, set[str]]]) -> dict[tuple[n.ParticipantNode, n.ParticipantNode, str], n.MeshNode]:
         """
         Initialize meshes based on the communication of participants and the involved patches.
         First, communication between participants is counted to be able to determine the number of meshes needed and
         thus allow for better naming.
         Next, for each communication pair, mesh(es) are created based on the involved patches.
+        During the mesh creation, while iterating over the patches, corresponding patch nodes are created.
         :param participant_patch_map: A dict mapping (a-participant, b-participant) to a dict of extensive and intensive patches.
         :return: A dict mapping (a-participant, b-participant, extensive/intensive) to mesh nodes.
         """
@@ -632,7 +633,7 @@ class NodeCreator:
                 participant_label_mesh_map[(from_participant, to_participant, label)] = mesh
                 logger.debug(f"Created mesh for communication between {from_participant.name} "
                              f"and {to_participant.name}.")
-                # Create new patch nodes of only this label
+                # Create new patch nodes for only this label
                 for patch in participant_patch_map[(from_participant, to_participant)][label]:
                     patch_node: helper.PatchNode = helper.PatchNode(name=patch, participant=from_participant,
                                                                     mesh=mesh, label=helper.PatchState(label))
