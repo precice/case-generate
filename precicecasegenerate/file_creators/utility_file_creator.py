@@ -55,7 +55,7 @@ class UtilityFileCreator:
         # Use as_file to get a real path
         with as_file(src) as real_src_path:
             shutil.copy2(real_src_path, dst_file)
-        logging.debug(f"File clean.sh written to {directory + dst_file.name}")
+        logger.debug(f"File clean.sh written to {directory + dst_file.name}")
 
     def _create_run_file(self, directory: str = "./") -> None:
         """
@@ -74,7 +74,7 @@ class UtilityFileCreator:
         # Use as_file to get a real path
         with as_file(src) as real_src_path:
             shutil.copy2(real_src_path, dst_file)
-        logging.debug(f"File run.sh written to {directory + dst_file.name}")
+        logger.debug(f"File run.sh written to {directory + dst_file.name}")
 
     def _create_readme_file(self, directory: str = "./", filename: str = "README.md") -> None:
         """
