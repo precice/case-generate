@@ -1,5 +1,8 @@
 import logging
+import subprocess
 from precice_config_graph import nodes as n
+
+import precicecasegenerate.helper as helper
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +69,36 @@ class ConfigCreator:
         config_str += f"\n</precice-configuration>"
         return config_str
 
+    def _validate_config_file(self, filepath: str = "./precice-config.xml") -> None:
+        """
+        Validate the preCICE configuration file at the given filepath using precice-config-check.
+        The subprocess precice-config-check only checks for logical errors and will crash if there are syntactic errors.
+        This means, however, that to pass this check, the configuration file must be syntactically and logically correct :)
+        :param filepath: The path to the preCICE configuration file.
+        """
+        result = subprocess.run(
+            ["precice-config-check", filepath],
+            capture_output=True,  # capture stdout/stderr
+            text=True  # return strings instead of bytes
+        )
+        # Output = 0 means everything went fine
+        if result.returncode == 0:
+            logger.debug("preCICE configuration file has been validated with precice-config-check.")
+        # Output = 1 means the file was not parsed correctly
+        elif result.returncode == 1:
+            logger.error(
+                f"The generated preCICE configuration file failed to validate with precice-config-check due to syntactic errors:\n"
+                f"{"".join("> " + line for line in result.stderr.splitlines(keepends=True))}\n"
+                f"This is likely an error within this program. Please visit {helper.case_generate_repository_url} for more help.")
+        # Output = 2 means the file was parsed correctly but contains logical errors
+        elif result.returncode == 2:
+            logger.error(
+                f"The generated preCICE configuration file failed to validate with precice-config-check due to logical errors:\n"
+                f"{"".join("> " + line for line in result.stdout.splitlines(keepends=True))}\n"
+                f"This is likely an error within this program. "
+                f"You can either try to fix the configuration file yourself or visit "
+                f"{helper.case_generate_repository_url} for more help.")
+
     def create_config_file(self, directory: str = "./", filename: str = "precice-config.xml") -> None:
         """
         Create a configuration file.
@@ -76,3 +109,4 @@ class ConfigCreator:
         with open(directory + filename, "w") as f:
             f.write(self._create_config_str())
         logger.info(f"preCICE configuration file written to {directory + filename}")
+        self._validate_config_file(filepath=directory + filename)
