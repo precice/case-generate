@@ -13,9 +13,6 @@ from precicecasegenerate.file_creators.utility_file_creator import UtilityFileCr
 
 
 def main():
-    logger = setup_logging()
-    logger.info("Program started.")
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
@@ -23,20 +20,26 @@ def main():
         type=str,
         help="Path to the input YAML file."
     )
-    logger.debug("Parsing arguments.")
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Enable verbose output."
+    )
     args = parser.parse_args()
+
+    logger = setup_logging(verbose=args.verbose)
+    logger.info("Program started.")
+
     logger.debug(f"Arguments parsed. Arguments: {vars(args)}. Checking if given file exists.")
 
     # Check if the file exists
     if not os.path.isfile(args.file_path):
         logger.critical(f"File {os.path.abspath(args.file_path)} does not exist. Aborting program.")
         sys.exit(1)
-    logger.debug("File exists.")
+    logger.debug(f"File {args.file_path} exists.")
 
     # Check if the file is a YAML file
     _, ext = os.path.splitext(args.file_path)
     if ext.lower() in [".yaml", ".yml"]:
-        logger.debug("File is a YAML file.")
+        logger.debug(f"File {args.file_path} is a YAML file.")
     else:
         logger.critical(f"File {os.path.abspath(args.file_path)} is not a YAML file. Aborting program.")
 
@@ -62,6 +65,7 @@ def main():
     config_creator.create_config_file(directory=path_to_generated, filename="precice-config.xml")
     logger.debug("Config creator finished.")
 
+    logger.debug("Creating participant directories.")
     participant_solver_map: dict = node_creator.get_participant_solver_map()
     for participant in participant_solver_map:
         participant_directory: str = helper.get_participant_solver_directory(path_to_generated, participant.name,
@@ -69,6 +73,7 @@ def main():
         # The directory will be overwritten if it already exists and is of the form "_generated/name-solver/"
         shutil.rmtree(participant_directory, ignore_errors=True)
         os.makedirs(participant_directory, exist_ok=True)
+        logger.debug(f"Created participant directory at {participant_directory}")
 
     logger.debug("Starting adapter config creator.")
     mesh_patch_map: dict = node_creator.get_mesh_patch_map()

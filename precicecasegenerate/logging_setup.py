@@ -30,7 +30,7 @@ class ColorFormatter(logging.Formatter):
         return formatted
 
 
-def setup_logging() -> Logger:
+def setup_logging(verbose: bool = False) -> Logger:
     timestamp: str = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     path: str = ".logs/"
@@ -53,7 +53,10 @@ def setup_logging() -> Logger:
     file_handler.setLevel(logging.DEBUG)
     # Only write warnings and errors to the console
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
+    if not verbose:
+        console_handler.setLevel(logging.INFO)
+    else:
+        console_handler.setLevel(logging.DEBUG)
 
     file_formatter = logging.Formatter(
         "[%(asctime)s] [%(levelname)s] [%(name)s]: %(message)s",
@@ -69,5 +72,7 @@ def setup_logging() -> Logger:
 
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
+
+    logger.debug("Logs can be found in .logs/")
 
     return logger
