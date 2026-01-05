@@ -3,10 +3,10 @@ import sys
 import argparse
 import shutil
 
-from precicecasegenerate.adapter_config_creator.adapter_config_creator import AdapterConfigCreator
+from precicecasegenerate.file_creators.adapter_config_creator import AdapterConfigCreator
 from precicecasegenerate.logging_setup import setup_logging
-from precicecasegenerate.config_creator.node_creator import NodeCreator
-from precicecasegenerate.config_creator.config_creator import ConfigCreator
+from precicecasegenerate.node_creator import NodeCreator
+from precicecasegenerate.file_creators.config_creator import ConfigCreator
 from precicecasegenerate.input_handler.topology_reader import TopologyReader
 
 
