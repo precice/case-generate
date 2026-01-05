@@ -5,6 +5,8 @@ from precice_config_graph import enums as e
 """
 Helper items and classes for the NodeCreator. 
 """
+# Link to the precice/case-generate repository
+case_generate_repository_url: str = "https://github.com/precice/case-generate"
 
 # Set defaults here to be able to change them easily
 DEFAULT_DATA_TYPE: e.DataType = e.DataType.SCALAR
