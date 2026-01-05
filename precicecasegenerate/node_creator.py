@@ -3,7 +3,7 @@ import logging
 
 from precice_config_graph import nodes as n
 from precice_config_graph import enums as e
-import precicecasegenerate.config_creator.helper as helper
+import precicecasegenerate.helper as helper
 
 logger = logging.getLogger(__name__)
 
