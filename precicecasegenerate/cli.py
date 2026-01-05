@@ -3,6 +3,7 @@ import sys
 import argparse
 import shutil
 
+from precicecasegenerate.adapter_config_creator.adapter_config_creator import AdapterConfigCreator
 from precicecasegenerate.logging_setup import setup_logging
 from precicecasegenerate.config_creator.node_creator import NodeCreator
 from precicecasegenerate.config_creator.config_creator import ConfigCreator
@@ -56,11 +57,27 @@ def main():
 
     logger.debug("Starting config creator.")
     config_creator: ConfigCreator = ConfigCreator(nodes)
-    config_str: str = config_creator.create_config_str()
-    config_creator.create_config_file(config_str, directory=path_to_generated, filename="precice-config.xml")
+    config_creator.create_config_file(directory=path_to_generated, filename="precice-config.xml")
     logger.debug("Config creator finished.")
 
-    # TODO other generation steps
+    # TODO create subdirectories for solvers here
+    participant_solver_map: dict = node_creator.get_participant_solver_map()
+    for participant in participant_solver_map:
+        participant_directory: str = (path_to_generated.lower() + participant.name.lower() + "-"
+                                      + participant_solver_map[participant].lower() + "/")
+        # The directory will be overwritten if it already exists and is of the form "_generated/name-solver/"
+        shutil.rmtree(participant_directory, ignore_errors=True)
+        os.makedirs(participant_directory, exist_ok=True)
+
+    logger.debug("Starting adapter config creator.")
+    mesh_patch_map: dict = node_creator.get_mesh_patch_map()
+    adapter_config_creator: AdapterConfigCreator = AdapterConfigCreator(participant_solver_map, mesh_patch_map)
+    adapter_config_creator.create_adapter_configs(parent_directory=path_to_generated)
+
+    # TODO create run.sh for solvers here
+
+    # TODO create clean.sh here
+
     logger.info("Program finished.")
     sys.exit(0)
 
