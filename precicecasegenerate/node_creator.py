@@ -87,7 +87,7 @@ class NodeCreator:
 
         # Initialize data from exchanges tag (defined implicitly)
         # This uses the topology dict as keys, so it needs to be done after the patch preprocessing.
-        data_map: dict[frozenset, n.DataNode] = self._initialize_data()
+        data_map: dict[frozenset, n.DataNode] = self._initialize_data(participant_map)
         logger.debug(f"Created {len(set(data_map.values()))} data nodes.")
 
         # Initialize meshes from the exchanges tag (defined implicitly)
@@ -811,7 +811,7 @@ class NodeCreator:
                      f"with frequency {frequency_map[control_participant]}.")
         return control_participant
 
-    def _initialize_data(self) -> dict[frozenset, n.DataNode]:
+    def _initialize_data(self, participant_map: dict[str, n.ParticipantNode]) -> dict[frozenset, n.DataNode]:
         """
         Initialize data nodes based on the participants and exchanges in the topology.
         If a participant tries to exchange both a scalar and a vector variant of data of the same name,
@@ -821,26 +821,59 @@ class NodeCreator:
         """
         # Map exchanges to data nodes. Use a frozenset since it is hashable and can be used as a key in a dict
         exchange_data_map: dict[frozenset, n.DataNode] = {}
+        # Map data names to their respective data nodes
         data_name_map: dict[str, n.DataNode] = {}
+        # Map pairs of participants to data they exchange
+        participant_data_map: dict[tuple[n.ParticipantNode, n.ParticipantNode], list[n.DataNode]] = {
+            (p1, p2): [] for p1 in participant_map.values() for p2 in participant_map.values()
+        }
+        # Map pairs of participants and data names to data nodes
+        participant_data_name_map: dict[tuple[n.ParticipantNode, n.ParticipantNode, str], n.DataNode] = {}
 
         for exchange in self.topology["exchanges"]:
             data_name: str = exchange["data"]
             data_type: e.DataType = exchange.get("data-type")
             data_type = e.DataType(data_type) if data_type else helper.DEFAULT_DATA_TYPE
+            from_participant: n.ParticipantNode = participant_map[exchange["from"]]
+            to_participant: n.ParticipantNode = participant_map[exchange["to"]]
+
             # Check if this data is known
             if data_name in data_name_map:
                 data_node: n.DataNode = data_name_map[data_name]
-                if data_type != data_node.data_type:
+                # Check if data is already exchanged between these participants in the other direction
+                if ((to_participant, from_participant) in participant_data_map
+                        and data_node in participant_data_map[(to_participant, from_participant)]):
+                    # If so, the data name needs to be uniquified (and a new data node needs to be created),
+                    # to avoid both participants writing and reading this data
+                    uniquifier: str = helper.get_uniquifier()
+                    new_data_name: str = f"{uniquifier.capitalize()}-{helper.capitalize_name(data_name)}"
+                    logger.warning(f"Data name \"{data_name}\" is exchanged by participants {from_participant.name} "
+                                   f"and {to_participant.name} in both directions. Using \"{new_data_name}\" "
+                                   f"for one direction.")
+                    data_node = n.DataNode(name=new_data_name, data_type=data_type)
+                    data_name_map[new_data_name] = data_node
+                    self.data.append(data_node)
+                    logger.debug(f"Data {data_name} is already exchanged between participants {to_participant.name} "
+                                 f"and {from_participant.name}. Created new data node {data_node.name} for the direction "
+                                 f"{from_participant} to {to_participant} with uniquified data name.")
+                # Otherwise, check if the already-exchanged-data has a different type than the current data
+                elif data_type != data_node.data_type:
                     # Since the data types do not agree, we know that one uses vector data and the other scalar data
                     # The default is vector, so we choose the vector variant
                     logger.warning(f"Data {data_name} is used by multiple exchanges with different data types. "
                                    f"Using data-type=\"{e.DataType.VECTOR.value}\" for all exchanges.")
                     data_node.data_type = e.DataType.VECTOR
+
             # This data is unknown, so we create a new data node
             else:
-                data_node: n.DataNode = n.DataNode(name=data_name, data_type=data_type)
+                data_node: n.DataNode = n.DataNode(name=helper.capitalize_name(data_name), data_type=data_type)
                 data_name_map[data_name] = data_node
+                logger.debug(f"Created new data node {data_node.name} for data {data_name} "
+                             f"between participants {from_participant.name} and {to_participant.name}")
                 self.data.append(data_node)
+
+            participant_data_map[(from_participant, to_participant)].append(data_node)
+            participant_data_name_map[(from_participant, to_participant, data_name)] = data_node
             exchange_data_map[frozenset(exchange.items())] = data_node
 
         return exchange_data_map
