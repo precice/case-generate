@@ -1,3 +1,4 @@
+import random
 from enum import Enum
 from precice_config_graph import nodes as n
 from precice_config_graph import enums as e
@@ -38,6 +39,24 @@ DATA_UNIQUIFIERS: list[str] = [
     "humungous",
     "informative",
 ]
+
+
+def capitalize_name(name: str) -> str:
+    """
+    Capitalize the first letter of each word in a string.
+    :param name: The string to capitalize.
+    :return: A capitalized string.
+    """
+    return "-".join(part[:1].upper() + part[1:] for part in name.split("-"))
+
+
+def get_uniquifier() -> str:
+    """
+    Return a random string from the DATA_UNIQUIFIERS list and remove it from the list.
+    :return: A string to be used as a unique identifier for data names.
+    """
+    unique_number = random.randint(0, len(DATA_UNIQUIFIERS) - 1)
+    return DATA_UNIQUIFIERS.pop(unique_number)
 
 
 def get_participant_solver_directory(parent_directory: str, participant_name: str, solver_name: str) -> str:
