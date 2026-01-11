@@ -87,11 +87,12 @@ class NodeCreator:
 
         # Initialize data from exchanges tag (defined implicitly)
         # This uses the topology dict as keys, so it needs to be done after the patch preprocessing.
-        data_map: dict[frozenset, n.DataNode] = self._initialize_data(participant_map)
+        data_map: dict[frozenset, n.DataNode] = self._initialize_data()
         logger.debug(f"Created {len(set(data_map.values()))} data nodes.")
 
         # Initialize meshes from the exchanges tag (defined implicitly)
-        mesh_map: dict[tuple[n.ParticipantNode, n.ParticipantNode, str], n.MeshNode] = self._initialize_meshes_and_patches(
+        mesh_map: dict[
+            tuple[n.ParticipantNode, n.ParticipantNode, str], n.MeshNode] = self._initialize_meshes_and_patches(
             participant_patch_label_map)
         logger.debug(f"Created {len(set(mesh_map.values()))} mesh nodes.")
 
@@ -810,57 +811,37 @@ class NodeCreator:
                      f"with frequency {frequency_map[control_participant]}.")
         return control_participant
 
-    def _initialize_data(self, participant_map: dict[str, n.ParticipantNode]) -> dict[frozenset, n.DataNode]:
+    def _initialize_data(self) -> dict[frozenset, n.DataNode]:
         """
-        Initialize data nodes based on the participants and the exchanges of the topology.
-        If different participants try to exchange the same data, the data-name will be "uniquified".
+        Initialize data nodes based on the participants and exchanges in the topology.
+        If a participant tries to exchange both a scalar and a vector variant of data of the same name,
+        the vector variant is preferred.
         :param participant_map: A dict mapping participant names to participant nodes.
         :return: A dict mapping exchanges to data nodes.
         """
         # Map exchanges to data nodes. Use a frozenset since it is hashable and can be used as a key in a dict
         exchange_data_map: dict[frozenset, n.DataNode] = {}
-        # Map participant and their defined data to new data nodes that were created
-        participant_data_new_data_map: dict[tuple[n.ParticipantNode, str], n.DataNode] = {}
-        # List of known data
-        known_data: list[str] = []
-        for exchange in self.topology["exchanges"]:
-            participant: n.ParticipantNode = participant_map[exchange["from"]]
-            data_name: str = exchange["data"]
+        data_name_map: dict[str, n.DataNode] = {}
 
+        for exchange in self.topology["exchanges"]:
+            data_name: str = exchange["data"]
+            data_type: e.DataType = exchange.get("data-type")
+            data_type = e.DataType(data_type) if data_type else helper.DEFAULT_DATA_TYPE
             # Check if this data is known
-            if data_name in known_data:
-                # Check if the same participant has already defined this data
-                if (participant, data_name) in participant_data_new_data_map:
-                    # The same participant has already defined this data, so we use the existing data node
-                    data_node: n.DataNode = participant_data_new_data_map[(participant, data_name)]
-                    exchange_data_map[frozenset(exchange.items())] = data_node
-                # Another participant has defined this data. It needs to be uniquified
-                else:
-                    uniquifier: str = random.choice(helper.DATA_UNIQUIFIERS)
-                    helper.DATA_UNIQUIFIERS.remove(uniquifier)
-                    new_data_name = uniquifier.capitalize() + "-" + data_name.capitalize()
-                    data_type: e.DataType = exchange.get("data-type")
-                    data_type = e.DataType(data_type) if data_type else helper.DEFAULT_DATA_TYPE
-                    data_node: n.DataNode = n.DataNode(name=new_data_name, data_type=data_type)
-                    self.data.append(data_node)
-                    known_data.append(new_data_name)
-                    exchange_data_map[frozenset(exchange.items())] = data_node
-                    # Important: Map from old data_name, so that future exchanges recognize the data
-                    participant_data_new_data_map[(participant, data_name)] = data_node
-                    logger.warning(f"Uniquified data name from \"{exchange['data']}\" to \"{new_data_name}\" in the "
-                                   f"exchange from participant {participant.name} and patch {exchange['to-patch']} to "
-                                   f"participant {exchange['to']} and patch {exchange['to-patch']}.")
+            if data_name in data_name_map:
+                data_node: n.DataNode = data_name_map[data_name]
+                if data_type != data_node.data_type:
+                    # Since the data types do not agree, we know that one uses vector data and the other scalar data
+                    # The default is vector, so we choose the vector variant
+                    logger.warning(f"Data {data_name} is used by multiple exchanges with different data types. "
+                                   f"Using data-type=\"{e.DataType.VECTOR.value}\" for all exchanges.")
+                    data_node.data_type = e.DataType.VECTOR
+            # This data is unknown, so we create a new data node
             else:
-                # This data has never been observed before, so create a new data node
-                data_type: e.DataType = exchange.get("data-type")
-                data_type = e.DataType(data_type) if data_type else helper.DEFAULT_DATA_TYPE
                 data_node: n.DataNode = n.DataNode(name=data_name, data_type=data_type)
+                data_name_map[data_name] = data_node
                 self.data.append(data_node)
-                known_data.append(data_name)
-                exchange_data_map[frozenset(exchange.items())] = data_node
-                participant_data_new_data_map[(participant, data_name)] = data_node
-                logger.debug(f"Created data node {data_node.name} for participant {participant.name} and patch "
-                             f"{exchange['from-patch']}.")
+            exchange_data_map[frozenset(exchange.items())] = data_node
 
         return exchange_data_map
 
