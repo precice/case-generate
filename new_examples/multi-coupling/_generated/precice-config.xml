@@ -111,10 +111,10 @@
   <coupling-scheme:multi>
     <max-time-windows value="10" />
     <time-window-size value="0.1" />
-    <participant name="SOLIDZ3" />
-    <participant name="SOLIDZ2" />
     <participant name="NASTIN" control="yes" />
     <participant name="SOLIDZ1" />
+    <participant name="SOLIDZ3" />
+    <participant name="SOLIDZ2" />
     <exchange data="Forces1" mesh="SOLIDZ1-Mesh" from="NASTIN" to="SOLIDZ1" />
     <exchange data="Forces2" mesh="SOLIDZ2-Mesh" from="NASTIN" to="SOLIDZ2" />
     <exchange data="Forces3" mesh="SOLIDZ3-Mesh" from="NASTIN" to="SOLIDZ3" />
