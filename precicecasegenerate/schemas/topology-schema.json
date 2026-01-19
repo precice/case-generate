@@ -84,7 +84,9 @@
         "optional": [
           "data-type"
         ]
-      }
+      },
+      "minItems": 1,
+      "uniqueItems": true
     }
   },
   "required": [
