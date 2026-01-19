@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <log>
+	<log>
     <sink
       filter="%Severity% > debug"
       format="---[precice] %ColorizedSeverity% %Message%"
@@ -32,13 +32,13 @@
   />
   </participant>
 
+  <m2n:sockets acceptor="A" connector="B" exchange-directory=".."/>
+
   <coupling-scheme:parallel-explicit>
     <participants first="A" second="B" />
     <max-time-windows value="10" />
     <time-window-size value="0.1" />
     <exchange data="Data" mesh="A-Mesh" from="A" to="B" />
   </coupling-scheme:parallel-explicit>
-
-  <m2n:sockets acceptor="A" connector="B" directory="."/>
 
 </precice-configuration>

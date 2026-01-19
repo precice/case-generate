@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <log>
+	<log>
     <sink
       filter="%Severity% > debug"
       format="---[precice] %ColorizedSeverity% %Message%"
@@ -108,13 +108,17 @@
   />
   </participant>
 
+  <m2n:sockets acceptor="NASTIN" connector="SOLIDZ1" exchange-directory=".."/>
+  <m2n:sockets acceptor="NASTIN" connector="SOLIDZ2" exchange-directory=".."/>
+  <m2n:sockets acceptor="NASTIN" connector="SOLIDZ3" exchange-directory=".."/>
+
   <coupling-scheme:multi>
     <max-time-windows value="10" />
     <time-window-size value="0.1" />
-    <participant name="NASTIN" control="yes" />
     <participant name="SOLIDZ1" />
-    <participant name="SOLIDZ3" />
     <participant name="SOLIDZ2" />
+    <participant name="NASTIN" control="yes" />
+    <participant name="SOLIDZ3" />
     <exchange data="Forces1" mesh="SOLIDZ1-Mesh" from="NASTIN" to="SOLIDZ1" />
     <exchange data="Forces2" mesh="SOLIDZ2-Mesh" from="NASTIN" to="SOLIDZ2" />
     <exchange data="Forces3" mesh="SOLIDZ3-Mesh" from="NASTIN" to="SOLIDZ3" />
@@ -136,9 +140,5 @@
     <relative-convergence-measure data="Displacements2" mesh="NASTIN-SOLIDZ2-Mesh" limit="0.1" />
     <relative-convergence-measure data="Displacements3" mesh="NASTIN-SOLIDZ3-Mesh" limit="0.1" />
   </coupling-scheme:multi>
-
-  <m2n:sockets acceptor="NASTIN" connector="SOLIDZ1" directory="."/>
-  <m2n:sockets acceptor="NASTIN" connector="SOLIDZ2" directory="."/>
-  <m2n:sockets acceptor="NASTIN" connector="SOLIDZ3" directory="."/>
 
 </precice-configuration>

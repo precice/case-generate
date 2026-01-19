@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <log>
+	<log>
     <sink
       filter="%Severity% > debug"
       format="---[precice] %ColorizedSeverity% %Message%"
@@ -44,8 +44,10 @@
   />
   </participant>
 
+  <m2n:sockets acceptor="Solid" connector="Fluid" exchange-directory=".."/>
+
   <coupling-scheme:parallel-implicit>
-    <participants first="Fluid" second="Solid" />
+    <participants first="Solid" second="Fluid" />
     <max-time-windows value="10" />
     <time-window-size value="0.1" />
     <exchange data="Temperature" mesh="Fluid-Mesh" from="Fluid" to="Solid" />
@@ -57,7 +59,5 @@
     <relative-convergence-measure data="Temperature" mesh="Fluid-Mesh" limit="0.1" />
     <relative-convergence-measure data="Heat-Flux" mesh="Solid-Mesh" limit="0.1" />
   </coupling-scheme:parallel-implicit>
-
-  <m2n:sockets acceptor="Fluid" connector="Solid" directory="."/>
 
 </precice-configuration>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <log>
+	<log>
     <sink
       filter="%Severity% > debug"
       format="---[precice] %ColorizedSeverity% %Message%"
@@ -51,6 +51,9 @@
   />
   </participant>
 
+  <m2n:sockets acceptor="Generator-Left" connector="Propagator" exchange-directory=".."/>
+  <m2n:sockets acceptor="Generator-Right" connector="Propagator" exchange-directory=".."/>
+
   <coupling-scheme:parallel-explicit>
     <participants first="Generator-Left" second="Propagator" />
     <max-time-windows value="10" />
@@ -63,8 +66,5 @@
     <time-window-size value="0.1" />
     <exchange data="Color" mesh="Generator-Right-Mesh" from="Generator-Right" to="Propagator" />
   </coupling-scheme:parallel-explicit>
-
-  <m2n:sockets acceptor="Generator-Left" connector="Propagator" directory="."/>
-  <m2n:sockets acceptor="Generator-Right" connector="Propagator" directory="."/>
 
 </precice-configuration>
