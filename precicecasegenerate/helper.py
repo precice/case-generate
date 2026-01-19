@@ -10,7 +10,7 @@ Helper items and classes for the NodeCreator.
 case_generate_repository_url: str = "https://github.com/precice/case-generate"
 
 # Set defaults here to be able to change them easily
-DEFAULT_DATA_TYPE: e.DataType = e.DataType.SCALAR
+DEFAULT_DATA_TYPE: e.DataType = e.DataType.VECTOR
 DEFAULT_PARTICIPANT_DIMENSIONALITY: int = 3
 DEFAULT_MAPPING_METHOD: e.MappingMethod = e.MappingMethod.NEAREST_NEIGHBOR
 DEFAULT_ACCELERATION_TYPE: e.AccelerationType = e.AccelerationType.IQN_ILS
@@ -31,7 +31,6 @@ DATA_UNIQUIFIERS: list[str] = [
     "wonderful",
     "suspicious",
     "mischievous",
-    "clever",
     "pretty",
     "scary",
     "adventurous",
@@ -39,6 +38,16 @@ DATA_UNIQUIFIERS: list[str] = [
     "humungous",
     "informative",
 ]
+
+# A default data type if none is given
+DEFAULT_DATA_TYPES: dict[str, e.DataType] = {
+    "force": e.DataType.VECTOR,
+    "displacement": e.DataType.VECTOR,
+    "temperature": e.DataType.SCALAR,
+    "pressure": e.DataType.SCALAR,
+    "velocity": e.DataType.VECTOR,
+    "heat-flux": e.DataType.VECTOR,
+}
 
 
 def capitalize_name(name: str) -> str:
