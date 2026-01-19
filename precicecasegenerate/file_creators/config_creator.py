@@ -54,17 +54,17 @@ class ConfigCreator:
             participant_str += f"{participant.to_xml()}"
         config_str += "".join("  " + line for line in participant_str.splitlines(keepends=True))
 
-        config_str += "\n"  # separate participants from coupling-schemes
+        config_str += "\n"  # separate participants from m2ns
+
+        for m2n in self.config_topology["m2n"]:
+            config_str += f"  {m2n.to_xml()}"
+
+        config_str += "\n"  # separate m2ns from coupling-schemes
 
         coupling_scheme_str: str = ""
         for coupling_scheme in self.config_topology["coupling-schemes"]:
             coupling_scheme_str += f"{coupling_scheme.to_xml()}"
         config_str += "".join("  " + line for line in coupling_scheme_str.splitlines(keepends=True))
-
-        config_str += "\n"  # separate coupling-schemes from m2ns
-
-        for m2n in self.config_topology["m2n"]:
-            config_str += f"  {m2n.to_xml()}"
 
         config_str += f"\n</precice-configuration>"
         return config_str
