@@ -69,9 +69,7 @@ class TopologyReader:
             participant_names.add(participant["name"])
         logger.debug("Topology does not contain duplicate participant names.")
 
-        exchanges: list[dict] = []
         # Check if exchanges only contain known "to" and "from" participants
-        # Check if exchanges are unique, when ignoring "to-patch", "from-patch" and "type" tags
         for exchange in self.topology["exchanges"]:
             to_participant: str = exchange["to"]
             from_participant: str = exchange["from"]
@@ -84,19 +82,11 @@ class TopologyReader:
                                 f"{self.topology_file_path}.")
                 return 1
             data: str = exchange["data"]
-            data_type: str = exchange.get("type", None)
             # Remove uniquifiers from the list if they are present in a data name
             for uniquifier in helper.DATA_UNIQUIFIERS.copy():
                 if uniquifier in data:
                     helper.DATA_UNIQUIFIERS.remove(uniquifier)
                     logger.debug(f"Removed uniquifier {uniquifier} from the list of uniquifiers.")
-
-            unique_exchange: dict[str, str] = {"to": to_participant, "from": from_participant, "data": data,
-                                               "data-type": data_type}
-            if unique_exchange in exchanges:
-                logger.critical(f"Duplicate exchange {unique_exchange} in topology file {self.topology_file_path}.")
-                return 1
-            exchanges.append(unique_exchange)
 
         logger.debug("Topology does not contain any errors.")
         return 0
