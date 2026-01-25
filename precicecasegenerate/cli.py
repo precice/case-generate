@@ -15,30 +15,35 @@ from precicecasegenerate.file_creators.utility_file_creator import UtilityFileCr
 logger = logging.getLogger(__name__)
 
 
-def main():
+def main() -> int:
     args = cli_helper.get_args()
 
     setup_logging(verbose=args.verbose)
     logger.info("Program started.")
 
-    cli_helper.validate_args(args)
+    return_value: int = cli_helper.validate_args(args)
+    if return_value != 0:
+        return return_value
 
     input_file: Path = Path(args.file_path)
     output_root: Path = Path(args.output_path)
 
-    generate_case(input_file, output_root)
+    return_value: int = generate_case(input_file, output_root)
+    if return_value != 0:
+        return return_value
 
     logger.info("Program finished.")
-    sys.exit(0)
+    return 0
 
 
-def generate_case(input_file: Path, output_root: Path):
+def generate_case(input_file: Path, output_root: Path) -> int:
     """
     Generate all files for a preCICE case
     This method creates the required directories and calls the respective methods to create the nodes from the topology,
     the preCICE configuration file, the adapter configuration files, and the utility files.
     :param input_file: The path to the input file containing the topology.
     :param output_root: The root directory for the generated files.
+    :return: 0 if successful, 1 otherwise.
     """
     # Create a new directory for the generated files
     generated_dir: Path = output_root / cli_helper.GENERATED_DIR_NAME
@@ -50,6 +55,12 @@ def generate_case(input_file: Path, output_root: Path):
 
     logger.debug("Starting topology reader.")
     topology_reader: TopologyReader = TopologyReader(input_file.resolve())
+    return_value: int = topology_reader.validate_topology()
+    if return_value != 0:
+        return return_value
+    return_value: int = topology_reader.check_topology()
+    if return_value != 0:
+        return return_value
     topology: dict = topology_reader.get_topology()
     logger.debug("Topology reader finished.")
 
@@ -84,7 +95,8 @@ def generate_case(input_file: Path, output_root: Path):
     logger.debug("Starting utility file creator.")
     utility_file_creator: UtilityFileCreator = UtilityFileCreator(participant_solver_map)
     utility_file_creator.create_utility_files(parent_directory=generated_dir)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

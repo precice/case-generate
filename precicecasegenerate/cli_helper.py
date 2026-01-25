@@ -4,7 +4,6 @@ This file contains helper methods and variables for the cli.py file and its main
 
 import argparse
 import logging
-import sys
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -38,11 +37,12 @@ def get_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def validate_args(args: argparse.Namespace):
+def validate_args(args: argparse.Namespace) -> int:
     """
     Validate the arguments passed to the CLI.
     This checks if the input file exists and is a YAML file.
     :param args: The parsed arguments.
+    :return: 0 if the arguments are valid, 1 otherwise.
     """
     logger.debug(f"Arguments parsed. Arguments: {vars(args)}. Checking if given file exists.")
 
@@ -51,7 +51,7 @@ def validate_args(args: argparse.Namespace):
     # Check if the file exists
     if not input_file.is_file():
         logger.critical(f"File {input_file.resolve()} does not exist. Aborting program.")
-        sys.exit(1)
+        return 1
     logger.debug(f"File {input_file.resolve()} exists.")
 
     # Check if the file is a YAML file
@@ -59,3 +59,5 @@ def validate_args(args: argparse.Namespace):
         logger.debug(f"File {input_file.resolve()} is a YAML file.")
     else:
         logger.critical(f"File {input_file.resolve()} is not a YAML file. Aborting program.")
+        return 1
+    return 0
