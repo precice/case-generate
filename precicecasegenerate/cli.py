@@ -1,61 +1,48 @@
-import os
 import sys
-import argparse
 import shutil
+import logging
+from logging import Logger
 from pathlib import Path
 
-from precicecasegenerate.logging_setup import setup_logging
 from precicecasegenerate import helper
+from precicecasegenerate import cli_helper
+from precicecasegenerate.logging_setup import setup_logging
 from precicecasegenerate.input_handler.topology_reader import TopologyReader
 from precicecasegenerate.node_creator import NodeCreator
 from precicecasegenerate.file_creators.config_creator import ConfigCreator
 from precicecasegenerate.file_creators.adapter_config_creator import AdapterConfigCreator
 from precicecasegenerate.file_creators.utility_file_creator import UtilityFileCreator
 
+logger = logging.getLogger(__name__)
+
 
 def main():
-    parser = argparse.ArgumentParser()
+    args = cli_helper.get_args()
 
-    parser.add_argument(
-        "file_path",
-        type=str,
-        help="Path to the input YAML file."
-    )
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Enable verbose output."
-    )
-    parser.add_argument(
-        "-o", "--output_path",
-        type=str,
-        default="./",
-        help="A custom output path for the generated files."
-    )
-    args = parser.parse_args()
-
-    logger = setup_logging(verbose=args.verbose)
+    setup_logging(verbose=args.verbose)
     logger.info("Program started.")
 
-    logger.debug(f"Arguments parsed. Arguments: {vars(args)}. Checking if given file exists.")
-
-    PRECICE_CONFIG_FILE_NAME: str = "precice-config.xml"
+    cli_helper.validate_args(args)
 
     input_file: Path = Path(args.file_path)
     output_root: Path = Path(args.output_path)
 
-    # Check if the file exists
-    if not input_file.is_file():
-        logger.critical(f"File {input_file.resolve()} does not exist. Aborting program.")
-        sys.exit(1)
-    logger.debug(f"File {input_file.resolve()} exists.")
+    generate_case(input_file, output_root)
 
-    # Check if the file is a YAML file
-    if input_file.suffix.lower() in [".yaml", ".yml"]:
-        logger.debug(f"File {input_file.resolve()} is a YAML file.")
-    else:
-        logger.critical(f"File {input_file.resolve()} is not a YAML file. Aborting program.")
+    logger.info("Program finished.")
+    sys.exit(0)
 
+
+def generate_case(input_file: Path, output_root: Path):
+    """
+    Generate all files for a preCICE case
+    This method creates the required directories and calls the respective methods to create the nodes from the topology,
+    the preCICE configuration file, the adapter configuration files, and the utility files.
+    :param input_file: The path to the input file containing the topology.
+    :param output_root: The root directory for the generated files.
+    """
     # Create a new directory for the generated files
-    generated_dir: Path = output_root / "_generated"
+    generated_dir: Path = output_root / cli_helper.GENERATED_DIR_NAME
     logger.debug(f"Resetting generated files at {generated_dir.resolve()}.")
     # Remove the directory if it already exists
     if generated_dir.exists():
@@ -74,7 +61,7 @@ def main():
 
     logger.debug("Starting config creator.")
     config_creator: ConfigCreator = ConfigCreator(nodes)
-    config_creator.create_config_file(directory=generated_dir, filename=PRECICE_CONFIG_FILE_NAME)
+    config_creator.create_config_file(directory=generated_dir, filename=cli_helper.PRECICE_CONFIG_FILE_NAME)
     logger.debug("Config creator finished.")
 
     logger.debug("Creating participant directories.")
@@ -92,15 +79,12 @@ def main():
     mesh_patch_map: dict = node_creator.get_mesh_patch_map()
     adapter_config_creator: AdapterConfigCreator = AdapterConfigCreator(participant_solver_map,
                                                                         mesh_patch_map,
-                                                                        precice_config_filename=PRECICE_CONFIG_FILE_NAME)
+                                                                        precice_config_filename=cli_helper.PRECICE_CONFIG_FILE_NAME)
     adapter_config_creator.create_adapter_configs(parent_directory=generated_dir)
 
     logger.debug("Starting utility file creator.")
     utility_file_creator: UtilityFileCreator = UtilityFileCreator(participant_solver_map)
     utility_file_creator.create_utility_files(parent_directory=generated_dir)
-
-    logger.info("Program finished.")
-    sys.exit(0)
 
 
 if __name__ == "__main__":
