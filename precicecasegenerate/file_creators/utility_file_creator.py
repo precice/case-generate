@@ -23,13 +23,15 @@ class UtilityFileCreator:
         """
         self.participant_solver_map = participant_solver_map
 
-    def create_utility_files(self, parent_directory: str = "./") -> None:
+    def create_utility_files(self, parent_directory: Path = "./") -> None:
         """
         Create all utility files for the generated project:
         clean.sh, README.md and run.sh for each participant-solver pair.
         :param parent_directory: The directory from which to save the files.
         :return: None
         """
+        # Convert to Path object just in case
+        parent_directory = Path(parent_directory)
         self._create_clean_file(parent_directory)
         # Create a run file for each participant
         for participant in self.participant_solver_map:
@@ -38,53 +40,63 @@ class UtilityFileCreator:
             self._create_run_file(participant_directory)
         self._create_readme_file(parent_directory)
 
-    def _create_clean_file(self, directory: str = "./") -> None:
+    def _create_clean_file(self, directory: Path = "./") -> None:
         """
         Create a clean-file for the simulation in the given directory.
         This copies the template file `precicecasegenerate/templates/clean.sh` to the specified directory.
         :param directory: The directory to save the file in.
         :return: None
         """
+        # Convert to Path object just in case
+        directory = Path(directory)
+        # Get the file to copy
         src = files("precicecasegenerate.templates") / "clean.sh"
+        # Create directory if it does not exist
+        directory.mkdir(parents=True, exist_ok=True)
 
-        dst_dir = Path(directory)
-        dst_dir.mkdir(parents=True, exist_ok=True)
-        # directory + filename
-        dst_file = dst_dir / src.name
+        file_path: Path = directory / src.name
 
-        # Use as_file to get a real path
+        # Use as_file to get a real path even if the file is zipped
         with as_file(src) as real_src_path:
-            shutil.copy2(real_src_path, dst_file)
-        logger.debug(f"File clean.sh written to {directory + dst_file.name}")
+            shutil.copy2(real_src_path, file_path)
+        logger.debug(f"File clean.sh written to {file_path.resolve()}")
 
-    def _create_run_file(self, directory: str = "./") -> None:
+    def _create_run_file(self, directory: Path = "./") -> None:
         """
         Create a run file for a participant in the given directory.
         This copies the template file `precicecasegenerate/templates/run.sh` to the specified directory.
         :param directory: The directory to save the file in.
         :return: None
         """
+        # Convert to Path object just in case
+        directory = Path(directory)
+        # Get the file to copy
         src = files("precicecasegenerate.templates") / "run.sh"
+        # Create directory if it does not exist
+        directory.mkdir(parents=True, exist_ok=True)
 
-        dst_dir = Path(directory)
-        dst_dir.mkdir(parents=True, exist_ok=True)
-        # directory + filename
-        dst_file = dst_dir / src.name
+        file_path: Path = directory / src.name
 
         # Use as_file to get a real path
         with as_file(src) as real_src_path:
-            shutil.copy2(real_src_path, dst_file)
-        logger.debug(f"File run.sh written to {directory + dst_file.name}")
+            shutil.copy2(real_src_path, file_path)
+        logger.debug(f"File run.sh written to {file_path.resolve()}")
 
-    def _create_readme_file(self, directory: str = "./", filename: str = "README.md") -> None:
+    def _create_readme_file(self, directory: Path = "./", filename: str = "README.md") -> None:
         """
         Create a README file in the given directory.
         :param directory: The directory to save the file in.
         :return: None
         """
-        with open(directory + filename, "w") as f:
+        # Convert to Path object just in case
+        directory = Path(directory)
+        # Create directory if it does not exist
+        directory.mkdir(parents=True, exist_ok=True)
+
+        file_path: Path = directory / filename
+        with open(file_path, "w") as f:
             f.write(self._create_readme_str())
-        logger.info(f"README file written to {directory + filename}")
+        logger.info(f"README file written to {file_path.resolve()}")
 
     def _create_readme_str(self) -> str:
         """
