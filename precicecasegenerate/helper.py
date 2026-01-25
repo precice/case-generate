@@ -1,5 +1,6 @@
 import random
 from enum import Enum
+from pathlib import Path
 from precice_config_graph import nodes as n
 from precice_config_graph import enums as e
 
@@ -68,18 +69,17 @@ def get_uniquifier() -> str:
     return DATA_UNIQUIFIERS.pop(unique_number)
 
 
-def get_participant_solver_directory(parent_directory: str, participant_name: str, solver_name: str) -> str:
+def get_participant_solver_directory(parent_directory: Path, participant_name: str, solver_name: str) -> Path:
     """
     Return the name of the directory for a participant of the simulation.
     The adapter-config.json and run.sh files for this participant will be saved in this directory.
     :param parent_directory: The parent directory of the participant's directory.
     :param participant_name: The name of the participant.
     :param solver_name: The name of the solver.
-    :return: A string representing the directory name.
+    :return: A Path representing the directory name.
     """
-    # Append a / if needed
-    parent_directory = parent_directory if parent_directory.endswith("/") else parent_directory + "/"
-    return parent_directory.lower() + participant_name.lower() + "-" + solver_name.lower() + "/"
+    participant_directory: Path = parent_directory / (participant_name.lower() + "-" + solver_name.lower())
+    return participant_directory
 
 
 class PatchState(Enum):
