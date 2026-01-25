@@ -1,0 +1,25 @@
+participants:
+  - name: A
+    solver: Solver
+    dimensionality: 3
+
+  - name: B
+    solver: Solver
+    dimensionality: 3
+
+exchanges:
+  - from: A
+    from-patch: interface
+    to: B
+    to-patch: interface
+    data: Mighty-Force
+    data-type: vector
+    type: weak
+
+  - from: B
+    from-patch: interface
+    to: A
+    to-patch: interface
+    data: Force
+    data-type: vector
+    type: weak
