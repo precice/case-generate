@@ -1,5 +1,6 @@
 import logging
 import subprocess
+from pathlib import Path
 from precice_config_graph import nodes as n
 
 import precicecasegenerate.helper as helper
@@ -69,7 +70,7 @@ class ConfigCreator:
         config_str += f"\n</precice-configuration>"
         return config_str
 
-    def _validate_config_file(self, filepath: str = "./precice-config.xml") -> None:
+    def validate_config_file(self, filepath: Path = "./precice-config.xml") -> None:
         """
         Validate the preCICE configuration file at the given filepath using precice-config-check.
         The subprocess precice-config-check only checks for logical errors and will crash if there are syntactic errors.
@@ -99,14 +100,16 @@ class ConfigCreator:
                 f"You can either try to fix the configuration file yourself or visit "
                 f"{helper.case_generate_repository_url} for more help.")
 
-    def create_config_file(self, directory: str = "./", filename: str = "precice-config.xml") -> None:
+    def create_config_file(self, directory: Path = "./", filename: str = "precice-config.xml") -> None:
         """
         Create a configuration file.
         The file is saved in the given directory with the given filename.
         :param directory: The directory to save the file in.
         :param filename: The filename of the file.
         """
-        with open(directory + filename, "w") as f:
+        # Convert to Path object just in case
+        directory = Path(directory)
+        file_path: Path = directory / filename
+        with open(file_path, "w") as f:
             f.write(self._create_config_str())
-        logger.info(f"preCICE configuration file written to {directory + filename}")
-        self._validate_config_file(filepath=directory + filename)
+        logger.info(f"preCICE configuration file written to {file_path}")
