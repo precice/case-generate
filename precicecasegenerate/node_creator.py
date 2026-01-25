@@ -1,4 +1,3 @@
-import random
 import logging
 
 from precice_config_graph import nodes as n

@@ -1,6 +1,4 @@
-import os
 import datetime
-import glob
 import logging
 from logging import LogRecord, Logger
 from pathlib import Path
