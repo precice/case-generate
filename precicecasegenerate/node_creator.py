@@ -70,9 +70,6 @@ class NodeCreator:
         """
         Create ConfigGraph nodes based on the topology.
         """
-        # TODO check if topology does not contain duplicate participants;
-        # TODO check that no data name contains one of the uniquifiers
-
         # Topology will only have tags "participants" and "exchanges"
 
         # Initialize participants from participants tag
@@ -82,6 +79,7 @@ class NodeCreator:
         # Update patches
         # IMPORTANT: This updates the topology dict.
         #  Anything using a "frozenset" of topology items needs to be done after this method!
+        #  (such as "initialize_data")
         participant_patch_label_map: dict[tuple[n.ParticipantNode, n.ParticipantNode], dict[str, set[str]]] = (
             self._patch_preprocessing(participant_map))
 
@@ -181,7 +179,7 @@ class NodeCreator:
         coupling-scheme is created.
         Otherwise, no implicit coupling-scheme is created and all "strong" couplings are added to the "weak" couplings
         list to be handled by the ``_create_weak_coupling_schemes()`` method.
-        Next, all potential couplings (both strong and weak) are searched for couplings with participants involved in
+        Next, all potential couplings (both strong and weak) are inspected for couplings with participants involved in
         bidirectional strong couplings. Such participants are added to the implicit coupling-scheme.
         Finally, acceleration and convergence measures are added to every exchange of the implicit coupling-scheme.
         A dict mapping tuples of participants to coupling-schemes is returned.
@@ -859,9 +857,9 @@ class NodeCreator:
             # 3. The data is known and exchanged from A->B. Now there are two more possibilities:
             # 3.1 Known data has type t; current data has type t (great); we do nothing
             # 3.2 Known data has type t; current data has type s; we need to create a new unique data node.
-            # Variations of these cases can occur; the more participants are involved,
-            # the less unique these cases become, and the resulting precice-config.xml might depend on the
-            # ordering of exchanges.
+            # Variations of these cases can occur
+            # The more participants are involved, the less unique these cases become,
+            # and the resulting precice-config.xml might depend on the ordering of exchanges.
             # However, these are all very special cases that only occur in the very rare case that many exchanges have
             # the same data name.
 
@@ -976,7 +974,7 @@ class NodeCreator:
                                 f"and {to_participant.name} in both directions. Using \"{new_data_name}\" "
                                 f"for one direction.")
                             new_data_node = n.DataNode(name=new_data_name, data_type=data_type)
-
+                        # Add information to the maps
                         if (from_participant, to_participant, data_name) not in participant_data_name_map:
                             participant_data_name_map[(from_participant, to_participant, data_name)] = {
                                 data_type: new_data_node}
@@ -995,6 +993,7 @@ class NodeCreator:
                         exchange_data_map[frozenset(exchange.items())] = new_data_node
                     else:
                         # Otherwise, we use a data node already exchanged by the from-participant
+                        data_node: n.DataNode = None
                         for key, value in participant_data_name_map.items():
                             # key[0] is the from-participant, key[1] is the to-participant, key[2] is the data name
                             if key[0] == from_participant and key[2] == data_name and data_type in value:
@@ -1016,7 +1015,7 @@ class NodeCreator:
                         data_node.name = helper.capitalize_name(data_node.name + "-" + data_node.data_type.value)
                         new_data_node_name: str = helper.capitalize_name(data_name + "-" + data_type.value)
                         new_data_node: n.DataNode = n.DataNode(name=new_data_node_name, data_type=data_type)
-
+                        # Add information to the maps
                         if (from_participant, to_participant, data_name) not in participant_data_name_map:
                             participant_data_name_map[(from_participant, to_participant, data_name)] = {
                                 data_type: new_data_node}
@@ -1045,6 +1044,7 @@ class NodeCreator:
                             f"and {to_participant.name} in both directions. Using \"{new_data_name}\" "
                             f"for one direction.")
                         new_data_node = n.DataNode(name=new_data_name, data_type=data_type)
+                        # Add information to the maps
                         if (from_participant, to_participant, data_name) not in participant_data_name_map:
                             participant_data_name_map[(from_participant, to_participant, data_name)] = {
                                 data_type: new_data_node}
