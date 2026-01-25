@@ -94,5 +94,5 @@
     "exchanges"
   ],
   "title": "preCICE Topology Configuration",
-  "description": "JSON schema defining the topology configuration for precice-generator. Specifies participants, exchanges, and their coupling relationships."
+  "description": "JSON schema defining the topology configuration for precice-case-generate. Specifies participants, exchanges, and their coupling relationships."
 }
