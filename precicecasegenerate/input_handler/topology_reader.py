@@ -1,8 +1,8 @@
-import sys
 import yaml
 import json
 import jsonschema
 import logging
+from pathlib import Path
 from importlib.resources import files
 from precicecasegenerate import helper
 
@@ -14,25 +14,25 @@ class TopologyReader:
     Read a given topology.yaml file and save it as a dict.
     """
 
-    def __init__(self, path_to_topology_file: str):
-        self.topology_file_path = path_to_topology_file
+    def __init__(self, path_to_topology_file: Path):
+        # Convert to Path object just in case
+        self.topology_file_path = Path(path_to_topology_file)
         self.topology = self._read_topology()
-        self._validate_topology()
-        self._check_topology()
 
     def _read_topology(self) -> dict:
         """
         Read the topology file and convert it to a dict.
         :return: The topology dict.
         """
-        logger.debug(f"Reading topology file at {self.topology_file_path}")
+        logger.debug(f"Reading topology file at {self.topology_file_path.resolve()}")
         with open(self.topology_file_path, "r") as topology_file:
             topology = yaml.safe_load(topology_file)
         return topology
 
-    def _validate_topology(self) -> None:
+    def validate_topology(self) -> int:
         """
         Check if the topology adheres to the defined schema in schemas/topology-schema.json
+        :return: 0 if topology is valid, 1 otherwise
         """
         schema_path = files("precicecasegenerate.schemas") / "topology-schema.json"
 
@@ -41,20 +41,23 @@ class TopologyReader:
             jsonschema.validate(self.topology, schema)
             logger.debug("Topology file adheres to the schema.")
         except jsonschema.ValidationError as e:
-            logger.critical(f"Topology file {self.topology_file_path} does not adhere to the schema "
+            logger.critical(f"Topology file {self.topology_file_path.resolve()} does not adhere to the schema "
                             f"as specified in {schema_path}: {e.message}. Aborting program.")
-            sys.exit(1)
+            return 1
+        return 0
 
-    def _check_topology(self) -> None:
+    def check_topology(self) -> int:
         """
         Check if the topology is valid.
         This check includes:
+
         - Checking if participant names are unique.
         - Checking if exchanges only contain known "to" and "from" participants.
         - Checking if exchanges are unique, when ignoring "to-patch", "from-patch" and "type" tags.
         If any of these checks fail, an error message is printed and the program is aborted.
         Additionally, it is checked if any of the data names contains one of the uniquifiers defined in
         helper.DATA_UNIQUIFIERS. If so, this uniquifier is removed from the list of uniquifiers.
+        :return: 0 if topology is valid, 1 otherwise
         """
         participant_names: set[str] = set()
         # Check if participant names are unique
@@ -62,7 +65,7 @@ class TopologyReader:
             if participant["name"] in participant_names:
                 logger.critical(
                     f"Duplicate participant name {participant['name']} in topology file {self.topology_file_path}.")
-                sys.exit(1)
+                return 1
             participant_names.add(participant["name"])
         logger.debug("Topology does not contain duplicate participant names.")
 
@@ -75,11 +78,11 @@ class TopologyReader:
             if to_participant not in participant_names:
                 logger.critical(f"Unknown participant {to_participant} in topology file "
                                 f"{self.topology_file_path}.")
-                sys.exit(1)
+                return 1
             if from_participant not in participant_names:
                 logger.critical(f"Unknown participant {from_participant} in topology file "
                                 f"{self.topology_file_path}.")
-                sys.exit(1)
+                return 1
             data: str = exchange["data"]
             data_type: str = exchange.get("type", None)
             # Remove uniquifiers from the list if they are present in a data name
@@ -87,14 +90,16 @@ class TopologyReader:
                 if uniquifier in data:
                     helper.DATA_UNIQUIFIERS.remove(uniquifier)
                     logger.debug(f"Removed uniquifier {uniquifier} from the list of uniquifiers.")
+
             unique_exchange: dict[str, str] = {"to": to_participant, "from": from_participant, "data": data,
                                                "data-type": data_type}
             if unique_exchange in exchanges:
                 logger.critical(f"Duplicate exchange {unique_exchange} in topology file {self.topology_file_path}.")
-                sys.exit(1)
+                return 1
             exchanges.append(unique_exchange)
 
         logger.debug("Topology does not contain any errors.")
+        return 0
 
     def get_topology(self) -> dict:
         """
