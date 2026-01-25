@@ -1,7 +1,6 @@
 import sys
 import shutil
 import logging
-from logging import Logger
 from pathlib import Path
 
 from precicecasegenerate import helper
@@ -50,7 +49,7 @@ def generate_case(input_file: Path, output_root: Path):
     generated_dir.mkdir(parents=True, exist_ok=True)
 
     logger.debug("Starting topology reader.")
-    topology_reader: TopologyReader = TopologyReader(str(input_file.resolve()))
+    topology_reader: TopologyReader = TopologyReader(input_file.resolve())
     topology: dict = topology_reader.get_topology()
     logger.debug("Topology reader finished.")
 

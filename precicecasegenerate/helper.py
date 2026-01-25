@@ -23,7 +23,7 @@ DEFAULT_DATA_KIND: str = "intensive"
 DEFAULT_MAPPING_KIND: str = "read"
 
 EXTENSIVE_DATA: list[str] = ["force", "displacement"]
-INTENSIVE_DATA: list[str] = ["temperature", "pressure", "velocity", "heat-flux", ]
+INTENSIVE_DATA: list[str] = ["temperature", "pressure", "velocity", "heat-flux"]
 
 # To make duplicate data names unique
 DATA_UNIQUIFIERS: list[str] = [
