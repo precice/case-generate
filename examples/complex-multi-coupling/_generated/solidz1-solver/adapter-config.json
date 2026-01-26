@@ -1,0 +1,18 @@
+{
+    "participant_name": "SOLIDZ1",
+    "precice_config_file_name": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "SOLIDZ1-Mesh",
+            "patches": [
+                "interface"
+            ],
+            "read_data_names": [
+                "Forces1"
+            ],
+            "write_data_names": [
+                "Displacements1"
+            ]
+        }
+    ]
+}

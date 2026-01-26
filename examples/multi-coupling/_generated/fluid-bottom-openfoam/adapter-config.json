@@ -1,0 +1,24 @@
+{
+    "participant_name": "Fluid-Bottom",
+    "precice_config_file_name": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "Fluid-Bottom-Extensive-Mesh",
+            "patches": [
+                "surface-extensive"
+            ],
+            "read_data_names": [
+                "HeatTransfer-Bottom"
+            ]
+        },
+        {
+            "mesh_name": "Fluid-Bottom-Intensive-Mesh",
+            "patches": [
+                "surface-intensive"
+            ],
+            "write_data_names": [
+                "Temperature-Bottom"
+            ]
+        }
+    ]
+}

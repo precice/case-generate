@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink
+      filter="%Severity% > debug"
+      format="---[precice] %ColorizedSeverity% %Message%"
+      enabled="true" />
+  </log>
+
+  <data:vector name="Force" />
+  <data:vector name="Displacement" />
+
+  <mesh name="Fluid-Mesh" dimensions="3">
+    <use-data name="Force" />
+    <use-data name="Displacement" />
+  </mesh>
+  <mesh name="Solid-Mesh" dimensions="3">
+    <use-data name="Force" />
+    <use-data name="Displacement" />
+  </mesh>
+
+  <participant name="Fluid">
+    <provide-mesh name="Fluid-Mesh" />
+    <receive-mesh name="Solid-Mesh" from="Solid" />
+    <write-data name="Force" mesh="Fluid-Mesh" />
+    <read-data name="Displacement" mesh="Fluid-Mesh" />
+    <mapping:nearest-neighbor
+    direction="write"
+    from="Fluid-Mesh"
+    to="Solid-Mesh"
+    constraint="conservative"
+  />
+  </participant>
+  <participant name="Solid">
+    <provide-mesh name="Solid-Mesh" />
+    <receive-mesh name="Fluid-Mesh" from="Fluid" />
+    <write-data name="Displacement" mesh="Solid-Mesh" />
+    <read-data name="Force" mesh="Solid-Mesh" />
+    <mapping:nearest-neighbor
+    direction="write"
+    from="Solid-Mesh"
+    to="Fluid-Mesh"
+    constraint="conservative"
+  />
+  </participant>
+
+  <m2n:sockets acceptor="Fluid" connector="Solid" exchange-directory=".."/>
+
+  <coupling-scheme:parallel-implicit>
+    <participants first="Fluid" second="Solid" />
+    <max-time-windows value="10" />
+    <time-window-size value="0.1" />
+    <exchange data="Force" mesh="Solid-Mesh" from="Fluid" to="Solid" />
+    <exchange data="Displacement" mesh="Fluid-Mesh" from="Solid" to="Fluid" />
+    <acceleration:IQN-ILS>
+    <data name="Force" mesh="Solid-Mesh" />
+    <data name="Displacement" mesh="Fluid-Mesh" />
+  </acceleration:IQN-ILS>
+    <relative-convergence-measure data="Force" mesh="Solid-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Displacement" mesh="Fluid-Mesh" limit="0.1" />
+  </coupling-scheme:parallel-implicit>
+
+</precice-configuration>
