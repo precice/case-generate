@@ -950,7 +950,7 @@ class NodeCreator:
                         # If so, the data name needs to be uniquified (and a new data node has to be created),
                         # to avoid both participants writing and reading this data
                         logger.debug(f"{from_participant.name}->{to_participant.name}: {data_name}({data_type.value})")
-                        # Here, we also want to check that A->B does not yet exchange this data;
+                        # Here, we also want to check that A -> B does not yet exchange this data;
                         # in that case we should not uniquify but split
                         if (from_participant, to_participant, data_name) in participant_data_name_map:
                             print(participant_data_name_map[(from_participant, to_participant, data_name)])
@@ -1065,9 +1065,15 @@ class NodeCreator:
                         else:
                             data_name_map[data_name][data_type] = [new_data_node]
                         exchange_data_map[frozenset(exchange.items())] = new_data_node
-                    # Otherwise, do nothing
+                    # Otherwise, record that we observed this data exchange in one direction
                     else:
                         exchange_data_map[frozenset(exchange.items())] = data_node
+                        if (from_participant, to_participant, data_name) not in participant_data_name_map:
+                            participant_data_name_map[(from_participant, to_participant, data_name)] = {
+                                data_type: data_node}
+                        else:
+                            participant_data_name_map[(from_participant, to_participant, data_name)][
+                                data_type] = data_node
 
             # This data is unknown, so we create a new data node
             else:
