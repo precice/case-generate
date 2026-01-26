@@ -3,6 +3,7 @@ venv/
 dist/
 build/
 *.egg-info/
+.tox/
 
 # macOS
 .DS_Store
