@@ -837,9 +837,12 @@ class NodeCreator:
             data_name: str = exchange["data"]
             data_type: e.DataType = exchange.get("data-type")
             if data_type is None:
-                # Check if the data has a default type
-                data_type = helper.DEFAULT_DATA_TYPES[data_name] \
-                    if data_name in helper.DEFAULT_DATA_TYPES else helper.DEFAULT_DATA_TYPE
+                data_type = helper.DEFAULT_DATA_TYPE
+                # Check if the data has a default type. Sort by key length to have a deterministic order
+                for key in sorted(helper.DEFAULT_DATA_TYPES.keys(), key=len, reverse=True):
+                    if key.lower() in data_name.lower():
+                        data_type = helper.DEFAULT_DATA_TYPES[key]
+                        break
                 logger.warning(f"No data type provided for data \"{data_name}\". "
                                f"Choosing default type \"{data_type.value}\".")
             else:
