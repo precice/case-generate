@@ -502,11 +502,12 @@ class NodeCreator:
         mapping_map[(from_mesh, to_mesh)] = mapping
         from_participant.mappings.append(mapping)
         # In a write-mapping, the writer has to receive the to-mesh to be able to map to it
-        receive_mesh: n.ReceiveMeshNode = n.ReceiveMeshNode(participant=to_participant,
+        receive_mesh: n.ReceiveMeshNode = n.ReceiveMeshNode(participant=from_participant,
                                                             mesh=to_mesh,
-                                                            from_participant=from_participant,
+                                                            from_participant=to_participant,
                                                             api_access=False)
         from_participant.receive_meshes.append(receive_mesh)
+        logger.debug(f"Added receive-mesh {receive_mesh.mesh.name} to participant {from_participant.name}.")
         logger.debug(f"Created write-mapping between {from_mesh.name} and {to_mesh.name} "
                      f"for participant {from_participant.name}.")
 
@@ -539,6 +540,7 @@ class NodeCreator:
                                                             from_participant=from_participant,
                                                             api_access=False)
         to_participant.receive_meshes.append(receive_mesh)
+        logger.debug(f"Added receive-mesh {receive_mesh.mesh.name} to participant {to_participant.name}.")
         logger.debug(f"Created read-mapping between {from_mesh.name} and {to_mesh.name} "
                      f"for participant {to_participant.name}.")
 
