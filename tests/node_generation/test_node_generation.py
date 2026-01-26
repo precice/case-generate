@@ -114,8 +114,13 @@ def test_participant_nodes():
         assert not to_participant.mappings, f"To-participant {to_name} specifies mapping."
         assert len(from_participant.mappings) == 1, f"From-participant {from_name} specifies more than one mapping."
         # Then the from-participant also receives a mesh from the to-participant
-        assert from_participant.receive_meshes, f"From-participant {from_name} does not receive a mesh."
+        assert len(from_participant.receive_meshes) == 1, (f"From-participant {from_name} receives "
+                                                           f"{len(from_participant.receive_meshes)} meshes, expected 1.")
         assert not to_participant.receive_meshes, f"To-participant {to_name} receives a mesh."
+        receive_mesh_node: n.ReceiveMeshNode = from_participant.receive_meshes[0]
+        assert receive_mesh_node.mesh == to_participant.provide_meshes[0], (
+            f"From-participant {from_name} receives mesh {receive_mesh_node.mesh.name}."
+        )
 
         mapping: n.MappingNode = from_participant.mappings[0]
         # Write-mappings are always conservative
@@ -130,8 +135,13 @@ def test_participant_nodes():
         assert not from_participant.mappings, f"From-participant {from_name} specifies mapping."
         assert len(to_participant.mappings) == 1, f"To-participant {to_name} specifies more than one mapping."
         # Then the to-participant also receives a mesh from the from-participant
-        assert to_participant.receive_meshes, f"To-participant {to_name} does not receive a mesh."
+        assert len(to_participant.receive_meshes) == 1, (f"To-participant {to_name} does not receives "
+                                                         f"{len(to_participant.receive_meshes)} meshes, expected 1.")
         assert not from_participant.receive_meshes, f"From-participant {from_name} receives a mesh."
+        receive_mesh_node: n.ReceiveMeshNode = to_participant.receive_meshes[0]
+        assert receive_mesh_node.mesh == from_participant.provide_meshes[0], (
+            f"To-participant {to_name} receives mesh {receive_mesh_node.mesh.name}."
+        )
 
         mapping: n.MappingNode = to_participant.mappings[0]
         # Read-mappings are always consistent
