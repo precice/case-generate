@@ -23,7 +23,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "precice-config-check @ git+https://github.com/precice/config-check.git"
+    "precice-config-check"
 ]
 
 [project.scripts]
@@ -33,10 +33,9 @@ precice-case-generate = "precicecasegenerate.cli:main"
 Repository = "https://github.com/precice/case-generate"
 Documentation = "https://github.com/precice/case-generate/blob/main/README.md"
 
-[tool.setuptools]
-packages = [
-    "precicecasegenerate",
-]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["precicecasegenerate*"]
 
 [tool.setuptools-git-versioning]
 enabled = true
