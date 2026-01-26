@@ -384,6 +384,16 @@ class NodeCreator:
             from_mesh: n.MeshNode = mesh_map[(from_participant, to_participant, data_label)]
             to_mesh: n.MeshNode = mesh_map[(to_participant, from_participant, data_label)]
 
+            # This will prevent exchanges between meshes of different dimensions from being created.
+            # If this ever becomes allowed, this block can be removed.
+            if from_mesh.dimensions != to_mesh.dimensions:
+                max_dim: int = max(from_mesh.dimensions, to_mesh.dimensions)
+                min_dim_mesh: n.MeshNode = from_mesh if from_mesh.dimensions != max_dim else to_mesh
+                min_dim_mesh.dimensions = max_dim
+                logger.warning(f"Mesh {from_mesh.name} and {to_mesh.name} have different dimensions. "
+                               f"Mapping to meshes of different dimensions is not allowed. "
+                               f"Setting {min_dim_mesh.name}'s dimensions to {max_dim} dimensions.")
+
             # Check type of mapping to determine which mesh is exchanged
             if mapping_map[(from_mesh, to_mesh)].direction == e.Direction.WRITE:
                 # In a write-mapping, the exchanged mesh is the "to"-mesh
