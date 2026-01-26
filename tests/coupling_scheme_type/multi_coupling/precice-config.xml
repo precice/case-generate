@@ -8,29 +8,52 @@
   </log>
 
   <data:scalar name="Color" />
+  <data:scalar name="Another-Color" />
+  <data:scalar name="More-Color" />
 
   <mesh name="A-B-Mesh" dimensions="2">
     <use-data name="Color" />
+    <use-data name="Another-Color" />
   </mesh>
   <mesh name="B-Mesh" dimensions="2">
     <use-data name="Color" />
-  </mesh>
-  <mesh name="A-C-Mesh" dimensions="2">
-    <use-data name="Color" />
+    <use-data name="Another-Color" />
   </mesh>
   <mesh name="C-Mesh" dimensions="2">
     <use-data name="Color" />
+    <use-data name="More-Color" />
+  </mesh>
+  <mesh name="A-C-Mesh" dimensions="2">
+    <use-data name="Color" />
+    <use-data name="More-Color" />
   </mesh>
 
   <participant name="A">
     <provide-mesh name="A-B-Mesh" />
     <provide-mesh name="A-C-Mesh" />
+    <receive-mesh name="B-Mesh" from="B" />
+    <receive-mesh name="C-Mesh" from="C" />
     <write-data name="Color" mesh="A-B-Mesh" />
-    <write-data name="Color" mesh="A-C-Mesh" />
+    <write-data name="More-Color" mesh="A-C-Mesh" />
+    <read-data name="Another-Color" mesh="A-B-Mesh" />
+    <read-data name="Color" mesh="A-C-Mesh" />
+    <mapping:nearest-neighbor
+    direction="read"
+    from="B-Mesh"
+    to="A-B-Mesh"
+    constraint="consistent"
+  />
+    <mapping:nearest-neighbor
+    direction="read"
+    from="C-Mesh"
+    to="A-C-Mesh"
+    constraint="consistent"
+  />
   </participant>
   <participant name="B">
     <provide-mesh name="B-Mesh" />
     <receive-mesh name="A-B-Mesh" from="A" />
+    <write-data name="Another-Color" mesh="B-Mesh" />
     <read-data name="Color" mesh="B-Mesh" />
     <mapping:nearest-neighbor
     direction="read"
@@ -42,7 +65,8 @@
   <participant name="C">
     <provide-mesh name="C-Mesh" />
     <receive-mesh name="A-C-Mesh" from="A" />
-    <read-data name="Color" mesh="C-Mesh" />
+    <write-data name="Color" mesh="C-Mesh" />
+    <read-data name="More-Color" mesh="C-Mesh" />
     <mapping:nearest-neighbor
     direction="read"
     from="A-C-Mesh"
@@ -52,19 +76,28 @@
   </participant>
 
   <m2n:sockets acceptor="A" connector="B" exchange-directory=".."/>
-  <m2n:sockets acceptor="A" connector="C" exchange-directory=".."/>
+  <m2n:sockets acceptor="C" connector="A" exchange-directory=".."/>
 
-  <coupling-scheme:parallel-explicit>
-    <participants first="A" second="B" />
+  <coupling-scheme:multi>
     <max-time-windows value="10" />
     <time-window-size value="0.1" />
+    <participant name="C" />
+    <participant name="A" control="yes" />
+    <participant name="B" />
     <exchange data="Color" mesh="A-B-Mesh" from="A" to="B" />
-  </coupling-scheme:parallel-explicit>
-  <coupling-scheme:parallel-explicit>
-    <participants first="A" second="C" />
-    <max-time-windows value="10" />
-    <time-window-size value="0.1" />
-    <exchange data="Color" mesh="A-C-Mesh" from="A" to="C" />
-  </coupling-scheme:parallel-explicit>
+    <exchange data="Another-Color" mesh="B-Mesh" from="B" to="A" />
+    <exchange data="Color" mesh="C-Mesh" from="C" to="A" />
+    <exchange data="More-Color" mesh="A-C-Mesh" from="A" to="C" />
+    <acceleration:IQN-ILS>
+    <data name="Color" mesh="A-B-Mesh" />
+    <data name="Another-Color" mesh="B-Mesh" />
+    <data name="Color" mesh="C-Mesh" />
+    <data name="More-Color" mesh="A-C-Mesh" />
+  </acceleration:IQN-ILS>
+    <relative-convergence-measure data="Color" mesh="A-B-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Another-Color" mesh="B-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Color" mesh="C-Mesh" limit="0.1" />
+    <relative-convergence-measure data="More-Color" mesh="A-C-Mesh" limit="0.1" />
+  </coupling-scheme:multi>
 
 </precice-configuration>
