@@ -385,8 +385,30 @@ def test_mesh_nodes():
         # Check the dimensions of the mesh
         dimensionality: int = next(p.get("dimensionality", helper.DEFAULT_PARTICIPANT_DIMENSIONALITY)
                                    for p in topology["participants"] if p["name"] == provider.name)
-        assert mesh.dimensions == dimensionality, (f"Mesh {mesh.name} has dimensions {mesh.dimensions}, "
-                                                   f"expected {dimensionality}.")
+        # It can happen in a "legal" way that the dimensions do not match:
+        # If A maps something to B and one has a higher dimensionality than the other,
+        # the highest dimensionality of the two is used.
+        increase_dim: bool = False
+        if not mesh.dimensions == dimensionality:
+            # We need to check if there exists a mapping involving this mesh that has a higher dimensionality
+            # Since the mapping of this topology is a read-mapping, the "provider" participant defined the mapping
+            for mapping in provider.mappings:
+                if mapping.from_mesh == mesh:
+                    assert mapping.to_mesh.dimensions >= dimensionality, (
+                        f"Mesh {mesh.name} has dimensions {mesh.dimensions}, "
+                        f"expected at least {mapping.to_mesh.dimensions}."
+                    )
+                    increase_dim = True
+                    break
+                elif mapping.to_mesh == mesh:
+                    assert mapping.from_mesh.dimensions >= dimensionality, (
+                        f"Mesh {mesh.name} has dimensions {mesh.dimensions}, "
+                        f"expected at least {mapping.from_mesh.dimensions}."
+                    )
+                    increase_dim = True
+                    break
+            assert increase_dim, (f"Mesh {mesh.name} has dimensions {mesh.dimensions}, "
+                           f"expected {dimensionality}.")
 
     # Check that each mesh is in the mesh-patch map
     for mesh in mesh_nodes:

@@ -17,7 +17,7 @@ def test_validity():
     """
     for case_directory in test_directory.iterdir():
         # Ignore files and folders like __pycache__/
-        if not case_directory.is_dir() or case_directory.name.startswith("__"):
+        if not case_directory.is_dir() or case_directory.name.startswith("__") or case_directory.name.startswith("."):
             continue
 
         input_file: Path = case_directory / "topology.yaml"
