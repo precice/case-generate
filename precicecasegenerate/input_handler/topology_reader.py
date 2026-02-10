@@ -69,10 +69,16 @@ class TopologyReader:
             participant_names.add(participant["name"])
         logger.debug("Topology does not contain duplicate participant names.")
 
+        # Check if participants actually appear in exchanges
+        participants_in_exchanges: set[str] = set()
+
         # Check if exchanges only contain known "to" and "from" participants
         for exchange in self.topology["exchanges"]:
             to_participant: str = exchange["to"]
             from_participant: str = exchange["from"]
+            participants_in_exchanges.add(to_participant)
+            participants_in_exchanges.add(from_participant)
+
             if to_participant not in participant_names:
                 logger.critical(f"Unknown participant {to_participant} in topology file "
                                 f"{self.topology_file_path}.")
@@ -87,6 +93,11 @@ class TopologyReader:
                 if uniquifier in data:
                     helper.DATA_UNIQUIFIERS.remove(uniquifier)
                     logger.debug(f"Removed uniquifier {uniquifier} from the list of uniquifiers.")
+
+        for participant in self.topology["participants"]:
+            if participant["name"] not in participants_in_exchanges:
+                logger.warning(f"Removing participant {participant['name']} as it is defined but never used.")
+                self.topology["participants"].remove(participant)
 
         logger.debug("Topology does not contain any errors.")
         return 0
