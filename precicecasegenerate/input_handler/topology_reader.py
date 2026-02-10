@@ -76,6 +76,7 @@ class TopologyReader:
         for exchange in self.topology["exchanges"]:
             to_participant: str = exchange["to"]
             from_participant: str = exchange["from"]
+
             participants_in_exchanges.add(to_participant)
             participants_in_exchanges.add(from_participant)
 
@@ -88,6 +89,11 @@ class TopologyReader:
                                 f"{self.topology_file_path}.")
                 return 1
             data: str = exchange["data"]
+
+            if from_participant == to_participant:
+                logger.error(f"Participant {from_participant} exchanges {data} with itself.")
+                return 1
+
             # Remove uniquifiers from the list if they are present in a data name
             for uniquifier in helper.DATA_UNIQUIFIERS.copy():
                 if uniquifier in data:
