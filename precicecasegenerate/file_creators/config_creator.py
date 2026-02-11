@@ -95,7 +95,7 @@ class ConfigCreator:
         elif result.returncode == 2:
             logger.error(
                 f"The generated preCICE configuration file failed to validate with precice-config-check due to logical errors:\n"
-                f"{"".join("> " + line for line in result.stdout.splitlines(keepends=True))}\n"
+                f"{''.join('> ' + line for line in result.stdout.splitlines(keepends=True))}\n"
                 f"This is likely an error within this program. "
                 f"You can either try to fix the configuration file yourself or visit "
                 f"{helper.case_generate_repository_url} for more help.")
