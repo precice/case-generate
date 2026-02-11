@@ -89,7 +89,7 @@ class ConfigCreator:
         elif result.returncode == 1:
             logger.error(
                 f"The generated preCICE configuration file failed to validate with precice-config-check due to syntactic errors:\n"
-                f"{"".join("> " + line for line in result.stderr.splitlines(keepends=True))}\n"
+                f"{''.join('> ' + line for line in result.stderr.splitlines(keepends=True))}\n"
                 f"This is likely an error within this program. Please visit {helper.case_generate_repository_url} for more help.")
         # Output = 2 means the file was parsed correctly but contains logical errors
         elif result.returncode == 2:
