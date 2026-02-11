@@ -10,7 +10,7 @@
       "type": "string",
       "description": "Name of the participant"
     },
-    "precice_config_file_name": {
+    "precice_config_file_path": {
       "type": "string",
       "description": "Path to the precice configuration file"
     },
