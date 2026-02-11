@@ -21,12 +21,19 @@ An overview over the `topology.yaml` file can be found in `precicecasegenerate/s
 
 ### Prerequisites
 
+Required dependencies are:
+
 - Python ≥ 3.10 
 - pip
 - git for cloning the repository :) 
 - [preCICE Config Graph](https://github.com/precice/config-graph)  (will be installed during the setup)
 - pyyaml
 - jsonschema
+
+Optional dependencies are:
+
+- pytest
+- [preCICE Config Check](https://github.com/precice/config-check)
 
 ### Manual Installation
 
@@ -58,6 +65,11 @@ pip install build
 
 # Install the project in editable mode
 pip install -e .
+```
+
+Optional dependencies for testing can be installed via 
+```bash
+pip install -e ".[dev]"
 ```
 
 ### Using Setup Scripts
