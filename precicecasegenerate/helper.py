@@ -24,11 +24,12 @@ DEFAULT_MAPPING_KIND: str = "read"
 
 EXTENSIVE_DATA: list[str] = [
     "force",
-    "displacement",
     "heat-transfer",
     "heattransfer",
 ]
+
 INTENSIVE_DATA: list[str] = [
+    "displacement",
     "temperature",
     "pressure",
     "velocity",
