@@ -22,7 +22,6 @@ class NodeCreator:
         # Containers for temporary values
         # Dimensionality is needed for meshes
         self.participant_dimensionality: dict[n.ParticipantNode, int] = {}
-        # self.data_types: dict[n.DataNode, e.DataType] = {}
         self.exchange_types: dict[n.ExchangeNode, str] = {}
 
         self._create_nodes()
@@ -82,8 +81,12 @@ class NodeCreator:
         participant_patch_label_map: dict[tuple[n.ParticipantNode, n.ParticipantNode], dict[str, set[str]]] = (
             self._patch_preprocessing(participant_map))
 
+        # Update non-unique data names depending on from-/to-patches of the involved participants
+        # IMPORTANT: This updates the topology dict (see warning above)
+        self._data_preprocessing(participant_map)
+
         # Initialize data from exchanges tag (defined implicitly)
-        # This uses the topology dict as keys, so it needs to be done after the patch preprocessing.
+        # IMPORTANT: This uses the topology dict as keys, so it needs to be done after the patch preprocessing.
         data_map: dict[frozenset, n.DataNode] = self._initialize_data(participant_map)
         logger.debug(f"Created {len(set(data_map.values()))} data nodes.")
 
@@ -672,6 +675,82 @@ class NodeCreator:
             logger.debug(f"Initialized participant {parzival.name} with dimensionality {dim}.")
         return participant_map
 
+    def _data_preprocessing(self, participant_map: dict[str, n.ParticipantNode]):
+        """
+        Update data names in the topology dict, if they fulfill these conditions:
+         - Data is sent from participant A to participant B with the same name multiple times
+         - The exchanges are of the same type (strong/weak)
+        Then, these exchanges lead to errors, as they are only "unique" in the patch names,
+        which are not included in the precice-config; i.e., they would lead to duplicate exchanges.
+        Such a data name is then "uniquified", directly in the topology dict.
+        :param participant_map: A dict mapping participant names to participant nodes.
+        :return: None
+        """
+        # Map tuples of from-/to-participants, data-name, data-type and exchange-type to the from-/to-patches
+        # that are used in exchanges
+        exchange_patch_map: dict[
+            tuple[n.ParticipantNode, n.ParticipantNode, str, e.DataType, str], dict[str, list[str]]] = {}
+        for exchange in self.topology["exchanges"]:
+            from_participant: n.ParticipantNode = participant_map[exchange["from"]]
+            to_participant: n.ParticipantNode = participant_map[exchange["to"]]
+            data: str = exchange["data"]
+            data_type = self._get_data_type(exchange)
+            type: str = exchange["type"]
+            from_patch: str = exchange["from-patch"]
+            to_patch: str = exchange["to-patch"]
+            if (from_participant, to_participant, data, data_type, type) in exchange_patch_map:
+                exchange_patch_map[from_participant, to_participant, data, data_type, type]["from-patch"].append(
+                    from_patch)
+                exchange_patch_map[from_participant, to_participant, data, data_type, type]["to-patch"].append(to_patch)
+            else:
+                exchange_patch_map[from_participant, to_participant, data, data_type, type] = \
+                    {"from-patch": [from_patch], "to-patch": [to_patch]}
+
+        # Check every collected tuple for violations
+        for key, patches in exchange_patch_map.items():
+            from_participant, to_participant, data, data_type, type = key
+            from_patches = patches["from-patch"]
+            to_patches = patches["to-patch"]
+            # Check if it is the first occurrence since we want to preserve the original data name 
+            initial: bool = True
+            # If a tuple is not unique, its dict will have sets of length greater than 1
+            if len(from_patches) > 1 or len(to_patches) > 1:
+                for from_patch, to_patch in zip(from_patches, to_patches):
+                    # Iterate over all exchanges to check if they correspond to this tuple
+                    for exchange in self.topology["exchanges"]:
+                        # Check that all values match
+                        if (from_participant.name == exchange["from"] and to_participant.name == exchange["to"]
+                                and data == exchange["data"] and type.lower() == exchange["type"].lower()
+                                and data_type == self._get_data_type(exchange)
+                                and from_patch == exchange["from-patch"] and to_patch == exchange["to-patch"]):
+                            # Do not modify the first occurrence in order to not uniquify all data names
+                            if initial:
+                                initial = False
+                                continue
+                            # All values match, and it is not the first violation
+                            # Thus, uniquify the data name
+                            # Choose a new uniquifier for each violation
+                            uniquifier: str = helper.get_uniquifier()
+                            new_data_name: str = f"{uniquifier.capitalize()}-{helper.capitalize_name(data)}"
+                            exchange["data"] = new_data_name
+
+    def _get_data_type(self, exchange) -> e.DataType:
+        """
+        Get the data type for the given exchange or choose a default if none is given.
+        :param exchange:
+        :return:
+        """
+        data: str = exchange["data"]
+        data_type: e.DataType = exchange.get("data-type")
+        if data_type is None:
+            data_type = helper.DEFAULT_DATA_TYPE
+            # Check if the data has a default type. Sort by key length to have a deterministic order
+            for key in sorted(helper.DEFAULT_DATA_TYPES.keys(), key=len, reverse=True):
+                if key.lower() in data.lower():
+                    data_type = helper.DEFAULT_DATA_TYPES[key]
+                    break
+        return data_type
+
     def _patch_preprocessing(self, participant_map: dict[str, n.ParticipantNode]):
         """
         Preprocess patch labels in the topology.
@@ -683,6 +762,7 @@ class NodeCreator:
         :return: A dict mapping participant pairs to patches used in communication between them.
         """
         participant_patch_label_map: dict[tuple[n.ParticipantNode, str], set[str]] = {}
+
         for exchange in self.topology["exchanges"]:
             from_participant: n.ParticipantNode = participant_map[exchange["from"]]
             to_participant: n.ParticipantNode = participant_map[exchange["to"]]
