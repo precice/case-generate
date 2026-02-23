@@ -2,7 +2,7 @@
   "type": "object",
   "required": [
     "participant_name",
-    "precice_config_file_name",
+    "precice_config_file_path",
     "interfaces"
   ],
   "properties": {

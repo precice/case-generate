@@ -76,7 +76,7 @@ class AdapterConfigCreator:
         # the path to the precice-config.xml file and the list of interfaces
         return {
             "participant_name": participant.name,
-            "precice_config_file_name": f"../{self.precice_config_filename}",
+            "precice_config_file_path": f"../{self.precice_config_filename}",
             "interfaces": interfaces
         }
 
