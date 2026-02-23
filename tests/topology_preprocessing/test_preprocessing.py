@@ -38,6 +38,7 @@ def test_duplicate_exchanges():
 
     assert 0 != generate_case(input_file, case_directory), "The case generation didn't fail."
 
+
 def test_exchange_loop():
     """
     Test that an error is raised when an exchange is a loop, i.e., the `from`-participant is also the `to`-participant.
