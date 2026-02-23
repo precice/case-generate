@@ -1,6 +1,6 @@
 {
 	"participant_name": "Generator-Left",
-	"precice_config_file_name": "../precice-config.xml",
+	"precice_config_file_path": "../precice-config.xml",
 	"interfaces": [
 		{
 			"mesh_name": "Generator-Left-Mesh",
