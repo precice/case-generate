@@ -1,0 +1,29 @@
+participants:
+  - name: Alligator
+    solver: ASolver
+    dimensionality: 3
+  - name: Crocodile
+    solver: BSolver
+    dimensionality: 3
+exchanges:
+  - from: Alligator
+    to: Crocodile
+    from-patch: Face
+    to-patch: Face
+    type: weak
+    data: Information
+    data-type: scalar
+  - from: Alligator
+    to: Crocodile
+    from-patch: Body
+    to-patch: Body
+    type: weak
+    data: Information
+    data-type: scalar
+  - from: Alligator
+    to: Crocodile
+    from-patch: Eye
+    to-patch: Eye
+    type: weak
+    data: Information
+    data-type: scalar

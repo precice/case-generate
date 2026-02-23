@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink
+      filter="%Severity% > debug"
+      format="---[precice] %ColorizedSeverity% %Message%"
+      enabled="true" />
+  </log>
+
+  <data:scalar name="Information" />
+  <data:scalar name="Another-Information" />
+  <data:scalar name="More-Information" />
+
+  <mesh name="Alligator-Mesh" dimensions="3">
+    <use-data name="Information" />
+    <use-data name="Another-Information" />
+    <use-data name="More-Information" />
+  </mesh>
+  <mesh name="Crocodile-Mesh" dimensions="3">
+    <use-data name="Information" />
+    <use-data name="Another-Information" />
+    <use-data name="More-Information" />
+  </mesh>
+
+  <participant name="Alligator">
+    <provide-mesh name="Alligator-Mesh" />
+    <write-data name="Information" mesh="Alligator-Mesh" />
+    <write-data name="Another-Information" mesh="Alligator-Mesh" />
+    <write-data name="More-Information" mesh="Alligator-Mesh" />
+  </participant>
+  <participant name="Crocodile">
+    <provide-mesh name="Crocodile-Mesh" />
+    <receive-mesh name="Alligator-Mesh" from="Alligator" />
+    <read-data name="Information" mesh="Crocodile-Mesh" />
+    <read-data name="Another-Information" mesh="Crocodile-Mesh" />
+    <read-data name="More-Information" mesh="Crocodile-Mesh" />
+    <mapping:nearest-neighbor
+    direction="read"
+    from="Alligator-Mesh"
+    to="Crocodile-Mesh"
+    constraint="consistent"
+  />
+  </participant>
+
+  <m2n:sockets acceptor="Alligator" connector="Crocodile" exchange-directory=".."/>
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="Alligator" second="Crocodile" />
+    <max-time-windows value="10" />
+    <time-window-size value="0.1" />
+    <exchange data="Information" mesh="Alligator-Mesh" from="Alligator" to="Crocodile" />
+    <exchange data="Another-Information" mesh="Alligator-Mesh" from="Alligator" to="Crocodile" />
+    <exchange data="More-Information" mesh="Alligator-Mesh" from="Alligator" to="Crocodile" />
+  </coupling-scheme:parallel-explicit>
+
+</precice-configuration>
