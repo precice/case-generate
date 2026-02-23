@@ -94,9 +94,9 @@
   <coupling-scheme:multi>
     <max-time-windows value="10" />
     <time-window-size value="0.1" />
+    <participant name="Fluid-Bottom" />
     <participant name="Solid" control="yes" />
     <participant name="Fluid-Top" />
-    <participant name="Fluid-Bottom" />
     <exchange data="Temperature-Top" mesh="Fluid-Top-Intensive-Mesh" from="Fluid-Top" to="Solid" />
     <exchange data="HeatTransfer-Top" mesh="Fluid-Top-Extensive-Mesh" from="Solid" to="Fluid-Top" />
     <exchange data="Temperature-Bottom" mesh="Fluid-Bottom-Intensive-Mesh" from="Fluid-Bottom" to="Solid" />

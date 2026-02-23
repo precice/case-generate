@@ -3,39 +3,57 @@
     "precice_config_file_path": "../precice-config.xml",
     "interfaces": [
         {
-            "mesh_name": "NASTIN-SOLIDZ1-Mesh",
+            "mesh_name": "NASTIN-SOLIDZ1-Extensive-Mesh",
             "patches": [
-                "interface"
-            ],
-            "read_data_names": [
-                "Displacements1"
+                "interface-extensive"
             ],
             "write_data_names": [
                 "Forces1"
             ]
         },
         {
-            "mesh_name": "NASTIN-SOLIDZ2-Mesh",
+            "mesh_name": "NASTIN-SOLIDZ1-Intensive-Mesh",
             "patches": [
-                "interface"
+                "interface-intensive"
             ],
             "read_data_names": [
-                "Displacements2"
+                "Displacements1"
+            ]
+        },
+        {
+            "mesh_name": "NASTIN-SOLIDZ2-Extensive-Mesh",
+            "patches": [
+                "interface-extensive"
             ],
             "write_data_names": [
                 "Forces2"
             ]
         },
         {
-            "mesh_name": "NASTIN-SOLIDZ3-Mesh",
+            "mesh_name": "NASTIN-SOLIDZ2-Intensive-Mesh",
             "patches": [
-                "interface"
+                "interface-intensive"
             ],
             "read_data_names": [
-                "Displacements3"
+                "Displacements2"
+            ]
+        },
+        {
+            "mesh_name": "NASTIN-SOLIDZ3-Extensive-Mesh",
+            "patches": [
+                "interface-extensive"
             ],
             "write_data_names": [
                 "Forces3"
+            ]
+        },
+        {
+            "mesh_name": "NASTIN-SOLIDZ3-Intensive-Mesh",
+            "patches": [
+                "interface-intensive"
+            ],
+            "read_data_names": [
+                "Displacements3"
             ]
         }
     ]

@@ -1,15 +1,15 @@
 {
-	"participant_name": "Generator-Left",
-	"precice_config_file_path": "../precice-config.xml",
-	"interfaces": [
-		{
-			"mesh_name": "Generator-Left-Mesh",
-			"patches": [
-			  "interface"
-			],
-			"write_data_names": [
-			  "Color"
-			]
-		}
-	]
+    "participant_name": "Generator-Left",
+    "precice_config_file_path": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "Generator-Left-Mesh",
+            "patches": [
+                "interface"
+            ],
+            "write_data_names": [
+                "Color"
+            ]
+        }
+    ]
 }

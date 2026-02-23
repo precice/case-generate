@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-	<log>
+  <log>
     <sink
       filter="%Severity% > debug"
       format="---[precice] %ColorizedSeverity% %Message%"

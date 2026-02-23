@@ -3,12 +3,18 @@
     "precice_config_file_path": "../precice-config.xml",
     "interfaces": [
         {
-            "mesh_name": "Solid-Mesh",
+            "mesh_name": "Solid-Extensive-Mesh",
             "patches": [
-                "surface"
+                "surface-extensive"
             ],
             "read_data_names": [
                 "Force"
+            ]
+        },
+        {
+            "mesh_name": "Solid-Intensive-Mesh",
+            "patches": [
+                "surface-intensive"
             ],
             "write_data_names": [
                 "Displacement"
