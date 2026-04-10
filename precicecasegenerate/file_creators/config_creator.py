@@ -1,4 +1,5 @@
 import logging
+import textwrap
 import subprocess
 from pathlib import Path
 from precice_config_graph import nodes as n
@@ -31,41 +32,41 @@ class ConfigCreator:
         # "Header" information
         config_str: str = (f"<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
                            f"<precice-configuration>\n"
-                           f"  <log>\n"
-                           f"    <sink\n"
-                           f"      filter=\"%Severity% > debug\"\n"
-                           f"      format=\"---[precice] %ColorizedSeverity% %Message%\"\n"
-                           f"      enabled=\"true\" />\n"
-                           f"  </log>\n\n")  # two newlines to separate the header from the content
+                           f"{helper.INDENT}<log>\n"
+                           f"{helper.INDENT}{helper.INDENT}<sink\n"
+                           f"{helper.INDENT}{helper.INDENT}{helper.INDENT}filter=\"%Severity% > debug\"\n"
+                           f"{helper.INDENT}{helper.INDENT}{helper.INDENT}format=\"---[precice] %ColorizedSeverity% %Message%\"\n"
+                           f"{helper.INDENT}{helper.INDENT}{helper.INDENT}enabled=\"true\" />\n"
+                           f"{helper.INDENT}</log>\n\n")  # two newlines to separate the header from the content
 
         for data in self.config_topology["data"]:
-            config_str += f"  " + data.to_xml() + "\n"
+            config_str += f"{helper.INDENT}" + data.to_xml() + "\n"
 
         config_str += "\n"  # separate mesh from data
 
         mesh_str: str = ""
         for mesh in self.config_topology["meshes"]:
             mesh_str += f"{mesh.to_xml()}"
-        config_str += "".join("  " + line for line in mesh_str.splitlines(keepends=True))
+        config_str += textwrap.indent(mesh_str, helper.INDENT)
 
         config_str += "\n"  # separate mesh from participants
 
         participant_str: str = ""
         for participant in self.config_topology["participants"]:
             participant_str += f"{participant.to_xml()}"
-        config_str += "".join("  " + line for line in participant_str.splitlines(keepends=True))
+        config_str += textwrap.indent(participant_str, helper.INDENT)
 
         config_str += "\n"  # separate participants from m2ns
 
         for m2n in self.config_topology["m2n"]:
-            config_str += f"  {m2n.to_xml()}"
+            config_str += f"{helper.INDENT}{m2n.to_xml()}"
 
         config_str += "\n"  # separate m2ns from coupling-schemes
 
         coupling_scheme_str: str = ""
         for coupling_scheme in self.config_topology["coupling-schemes"]:
             coupling_scheme_str += f"{coupling_scheme.to_xml()}"
-        config_str += "".join("  " + line for line in coupling_scheme_str.splitlines(keepends=True))
+        config_str += textwrap.indent(coupling_scheme_str, helper.INDENT)
 
         config_str += f"\n</precice-configuration>"
         return config_str

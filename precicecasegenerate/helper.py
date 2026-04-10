@@ -7,6 +7,9 @@ from precice_config_graph import enums as e
 """
 Helper items and classes for the NodeCreator. 
 """
+# Indent for config
+INDENT: str = " " * 4
+
 # Link to the precice/case-generate repository
 case_generate_repository_url: str = "https://github.com/precice/case-generate"
 
