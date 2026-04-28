@@ -377,12 +377,7 @@ class NodeCreator:
             to_participant: n.ParticipantNode = participant_map[exchange["to"]]
             data: n.DataNode = data_map[frozenset(exchange.items())]
 
-            if any(data.name.lower().__contains__(extensive_data) for extensive_data in helper.EXTENSIVE_DATA):
-                data_label: str = "extensive"
-            elif any(data.name.lower().__contains__(intensive_data) for intensive_data in helper.INTENSIVE_DATA):
-                data_label: str = "intensive"
-            else:
-                data_label: str = helper.DEFAULT_DATA_KIND
+            data_label: str = helper.get_data_label(data.name.lower()).value
 
             from_mesh: n.MeshNode = mesh_map[(from_participant, to_participant, data_label)]
             to_mesh: n.MeshNode = mesh_map[(to_participant, from_participant, data_label)]
@@ -439,17 +434,13 @@ class NodeCreator:
             to_participant: n.ParticipantNode = participant_map[exchange["to"]]
             data: n.DataNode = data_map[frozenset(exchange.items())]
 
-            if any(data.name.lower().__contains__(extensive_data) for extensive_data in helper.EXTENSIVE_DATA):
-                data_label: str = "extensive"
-            elif any(data.name.lower().__contains__(intensive_data) for intensive_data in helper.INTENSIVE_DATA):
-                data_label: str = "intensive"
-            else:
-                logger.warning(f"Data \"{data.name}\" is neither extensive nor intensive. Choosing default "
+            data_label: helper.DataKind = helper.get_data_label(data.name.lower())
+            if data_label == helper.DataKind.DEFAULT:
+                logger.info(f"Data \"{data.name}\" is neither extensive nor intensive. Choosing default "
                                f"{helper.DEFAULT_DATA_KIND} with corresponding {helper.DEFAULT_MAPPING_KIND}-mapping.")
-                data_label: str = helper.DEFAULT_DATA_KIND
 
-            from_mesh: n.MeshNode = mesh_map[(from_participant, to_participant, data_label)]
-            to_mesh: n.MeshNode = mesh_map[(to_participant, from_participant, data_label)]
+            from_mesh: n.MeshNode = mesh_map[(from_participant, to_participant, data_label.value)]
+            to_mesh: n.MeshNode = mesh_map[(to_participant, from_participant, data_label.value)]
 
             if data not in from_mesh.use_data:
                 logger.debug(f"Adding use-data {data.name} to mesh {from_mesh.name}.")
@@ -460,7 +451,7 @@ class NodeCreator:
 
             # Extensive data needs a conservative mapping,
             # so create a write-conservative mapping to allow for parallel participants
-            if data_label == "extensive":
+            if data_label == helper.DataKind.EXTENSIVE:
                 logger.debug(f"Data {data.name} is extensive. Creating write-conservative mapping.")
                 # If no mapping between from-mesh and to-mesh exists, create one
                 if (from_mesh, to_mesh) not in mapping_map:
@@ -470,8 +461,14 @@ class NodeCreator:
 
             # Intensive data needs a consistent mapping,
             # so create a read-consistent mapping to allow for parallel participants
-            else:
+            elif data_label == helper.DataKind.INTENSIVE:
                 logger.debug(f"Data {data.name} is intensive. Creating read-consistent mapping.")
+                if (from_mesh, to_mesh) not in mapping_map:
+                    logger.debug(
+                        f"No mapping between {from_mesh.name} and {to_mesh.name} exists. Creating new mapping.")
+                    self._create_read_mapping(from_participant, to_participant, from_mesh, to_mesh, mapping_map)
+            else:
+                logger.debug(f"Data {data.name} is {helper.DEFAULT_DATA_KIND}. Creating read-consistent mapping.")
                 if (from_mesh, to_mesh) not in mapping_map:
                     logger.debug(
                         f"No mapping between {from_mesh.name} and {to_mesh.name} exists. Creating new mapping.")
@@ -734,11 +731,12 @@ class NodeCreator:
                             new_data_name: str = f"{uniquifier.capitalize()}-{helper.capitalize_name(data)}"
                             exchange["data"] = new_data_name
 
-    def _get_data_type(self, exchange) -> e.DataType:
+    def _get_data_type(self, exchange: dict) -> e.DataType:
         """
-        Get the data type for the given exchange or choose a default if none is given.
-        :param exchange:
-        :return:
+        Get the data-type for the data in the given exchange or choose a default if none is given.
+        E.g., temperature defaults to DataType.SCALAR, whereas force defaults to DataType.VECTOR.
+        :param exchange: The exchange for which the data-type is needed.
+        :return: A data-type for the given exchange, which defaults to the helper.DEFAULT_DATA_TYPE.
         """
         data: str = exchange["data"]
         data_type: e.DataType = exchange.get("data-type")
@@ -770,12 +768,7 @@ class NodeCreator:
             to_patch: str = exchange["to-patch"]
             data_name: str = exchange["data"]
             # Get data label
-            if any(data_name.lower().__contains__(extensive_data) for extensive_data in helper.EXTENSIVE_DATA):
-                data_label: str = "extensive"
-            elif any(data_name.lower().__contains__(intensive_data) for intensive_data in helper.INTENSIVE_DATA):
-                data_label: str = "intensive"
-            else:
-                data_label: str = "intensive"
+            data_label: str = helper.get_data_label(data_name).value
             # Create new entries if necessary
             if (from_participant, from_patch) not in participant_patch_label_map:
                 participant_patch_label_map[(from_participant, from_patch)] = set()
@@ -794,12 +787,8 @@ class NodeCreator:
             from_patch: str = exchange["from-patch"]
             to_patch: str = exchange["to-patch"]
             data_name: str = exchange["data"]
-            if any(data_name.lower().__contains__(extensive_data) for extensive_data in helper.EXTENSIVE_DATA):
-                data_label: str = "extensive"
-            elif any(data_name.lower().__contains__(intensive_data) for intensive_data in helper.INTENSIVE_DATA):
-                data_label: str = "intensive"
-            else:
-                data_label: str = "intensive"
+            # Extensive or intensive
+            data_label: str = helper.get_data_label(data_name).value
 
             # Check if this patch has been split up before
             if (from_participant, from_patch) in participant_patch_new_patch_map:
@@ -842,12 +831,7 @@ class NodeCreator:
             from_patch: str = exchange["from-patch"]
             to_patch: str = exchange["to-patch"]
             data_name: str = exchange["data"]
-            if any(data_name.lower().__contains__(extensive_data) for extensive_data in helper.EXTENSIVE_DATA):
-                data_label: str = "extensive"
-            elif any(data_name.lower().__contains__(intensive_data) for intensive_data in helper.INTENSIVE_DATA):
-                data_label: str = "intensive"
-            else:
-                data_label: str = "intensive"
+            data_label: str = helper.get_data_label(data_name).value
             # Initialize entries if necessary
             if (from_participant, to_participant) not in participant_patch_map:
                 participant_patch_map[(from_participant, to_participant)] = {"extensive": set(), "intensive": set()}
@@ -1205,3 +1189,5 @@ class NodeCreator:
                              f"mesh {suspect.mesh.name} and data {suspect.data.name}.")
                 return True
         return False
+
+

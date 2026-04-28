@@ -40,6 +40,41 @@ INTENSIVE_DATA: list[str] = [
     "heatflux"
 ]
 
+class DataKind(Enum):
+    EXTENSIVE = "extensive"
+    INTENSIVE = "intensive"
+    DEFAULT = DEFAULT_DATA_KIND
+
+def get_data_label(data_name: str) -> DataKind:
+    """
+    Return the kind / label of data based on the name of the data:
+    either "extensive" or "intensive"; with default "intensive".
+    :param data_name: The name of the data.
+    :return: "extensive" or "intensive".
+    """
+    if _is_extensive(data_name):
+        return DataKind.EXTENSIVE
+    elif _is_intensive(data_name):
+        return DataKind.INTENSIVE
+    else:
+        return DataKind.DEFAULT
+
+def _is_extensive(data_name: str) -> bool:
+    """
+    Checks if the given data name is associated with an extensive data.
+    :param data_name: The name of the data to check.
+    :return: True, if the data extensive. False otherwise.
+    """
+    return any(data_name.lower().__contains__(extensive_data) for extensive_data in EXTENSIVE_DATA)
+
+def _is_intensive(data_name: str) -> bool:
+    """
+    Checks if the given data name is associated with an intensive data.
+    :param data_name: The name of the data to check.
+    :return: True, if the data intensive. False otherwise.
+    """
+    return any(data_name.lower().__contains__(intensive_data) for intensive_data in INTENSIVE_DATA)
+
 # To make duplicate data names unique
 DATA_UNIQUIFIERS: list[str] = [
     "magnificent",
