@@ -2,18 +2,20 @@ import datetime
 import logging
 from logging import LogRecord, Logger
 from pathlib import Path
+from colored import Style, Fore
+
 from precicecasegenerate import cli_helper
 
 
 class ColorFormatter(logging.Formatter):
     COLORS = {
-        logging.INFO: "\033[32m",  # green
-        logging.DEBUG: "\033[34m",  # blue
-        logging.WARNING: "\033[33m",  # yellow
-        logging.ERROR: "\033[31m",  # red
-        logging.CRITICAL: "\033[1;31m"  # bold red
+        logging.INFO: Fore.green,  # green
+        logging.DEBUG: Fore.blue,  # blue
+        logging.WARNING: Fore.yellow,  # yellow
+        logging.ERROR: Fore.red,  # red
+        logging.CRITICAL: f"{Style.bold}{Fore.red}"  # bold red
     }
-    RESET = "\033[0m"
+    RESET = Style.reset
 
     def format(self, record: LogRecord) -> str:
         """
@@ -53,7 +55,7 @@ def setup_logging(verbose: bool = False) -> Logger:
                 # This deletes the file
                 old_file.unlink()
             except OSError as e:
-                logger.warning(f"Error deleting old log file {old_file}: {e}")
+                logger.error(f"Error deleting old log file {old_file}: {e}")
 
     timestamp: str = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     log_file_path: Path = log_directory / f"precice-case-generate-{timestamp}.log"
