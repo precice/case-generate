@@ -23,7 +23,9 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "file_path",
         type=str,
-        help="Path to the input YAML topology file."
+        nargs="?",
+        help="Path to the input YAML topology file.",
+        default="./topology.yaml"
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Enable verbose logging output."
