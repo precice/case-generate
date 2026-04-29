@@ -19,7 +19,9 @@ dependencies = [
     "precice-config-graph",
     "pyyaml",
     "jsonschema",
+    "colored",
 ]
+
 [project.optional-dependencies]
 dev = [
     "pytest",
