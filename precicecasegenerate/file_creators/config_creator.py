@@ -1,8 +1,8 @@
 import logging
-import textwrap
 import subprocess
 from pathlib import Path
 from precice_config_graph import nodes as n
+import precice_config_graph.graph.operations as operations
 
 import precicecasegenerate.helper as helper
 
@@ -22,54 +22,6 @@ class ConfigCreator:
         :param config_topology: A dict that contains participants, data nodes, meshes, coupling-schemes and M2N nodes.
         """
         self.config_topology = config_topology
-
-    def _create_config_str(self) -> str:
-        """
-        Create a string representing a preCICE configuration file.
-        This is done by iterating over the given topology dict and creating a string for each element.
-        :return: A string representing a preCICE configuration file.
-        """
-        # "Header" information
-        config_str: str = (f"<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
-                           f"<precice-configuration>\n"
-                           f"{helper.INDENT}<log>\n"
-                           f"{helper.INDENT}{helper.INDENT}<sink\n"
-                           f"{helper.INDENT}{helper.INDENT}{helper.INDENT}filter=\"%Severity% > debug\"\n"
-                           f"{helper.INDENT}{helper.INDENT}{helper.INDENT}format=\"---[precice] %ColorizedSeverity% %Message%\"\n"
-                           f"{helper.INDENT}{helper.INDENT}{helper.INDENT}enabled=\"true\" />\n"
-                           f"{helper.INDENT}</log>\n\n")  # two newlines to separate the header from the content
-
-        for data in self.config_topology["data"]:
-            config_str += f"{helper.INDENT}" + data.to_xml() + "\n"
-
-        config_str += "\n"  # separate mesh from data
-
-        mesh_str: str = ""
-        for mesh in self.config_topology["meshes"]:
-            mesh_str += f"{mesh.to_xml()}"
-        config_str += textwrap.indent(mesh_str, helper.INDENT)
-
-        config_str += "\n"  # separate mesh from participants
-
-        participant_str: str = ""
-        for participant in self.config_topology["participants"]:
-            participant_str += f"{participant.to_xml()}"
-        config_str += textwrap.indent(participant_str, helper.INDENT)
-
-        config_str += "\n"  # separate participants from m2ns
-
-        for m2n in self.config_topology["m2n"]:
-            config_str += f"{helper.INDENT}{m2n.to_xml()}"
-
-        config_str += "\n"  # separate m2ns from coupling-schemes
-
-        coupling_scheme_str: str = ""
-        for coupling_scheme in self.config_topology["coupling-schemes"]:
-            coupling_scheme_str += f"{coupling_scheme.to_xml()}"
-        config_str += textwrap.indent(coupling_scheme_str, helper.INDENT)
-
-        config_str += f"\n</precice-configuration>"
-        return config_str
 
     def validate_config_file(self, filepath: Path = "./precice-config.xml") -> None:
         """
@@ -101,7 +53,7 @@ class ConfigCreator:
                 f"You can either try to fix the configuration file yourself or visit "
                 f"{helper.case_generate_repository_url} for more help.")
 
-    def create_config_file(self, directory: Path = "./", filename: str = "precice-config.xml") -> None:
+    def create_config_file(self, directory: Path = ".", filename: str = "precice-config.xml") -> None:
         """
         Create a configuration file.
         The file is saved in the given directory with the given filename.
@@ -111,6 +63,5 @@ class ConfigCreator:
         # Convert to Path object just in case
         directory = Path(directory)
         file_path: Path = directory / filename
-        with open(file_path, "w") as f:
-            f.write(self._create_config_str())
+        operations.create_config_file_from_dict(self.config_topology, path=directory, filename=filename)
         logger.info(f"preCICE configuration file written to {file_path}")
