@@ -50,7 +50,7 @@ def get_data_label(data_name: str) -> DataKind:
     Return the kind / label of data based on the name of the data:
     either "extensive" or "intensive"; with default "intensive".
     :param data_name: The name of the data.
-    :return: "extensive" or "intensive".
+    :return: Enum type of the data kind.
     """
     if _is_extensive(data_name):
         return DataKind.EXTENSIVE
@@ -77,17 +77,17 @@ def _is_intensive(data_name: str) -> bool:
 
 # To make duplicate data names unique
 DATA_UNIQUIFIERS: list[str] = [
-    "magnificent",
+    "adventurous",
+    "alien",
     "grand",
-    "wonderful",
-    "suspicious",
+    "humungous",
+    "informative",
+    "magnificent",
     "mischievous",
     "pretty",
     "scary",
-    "adventurous",
-    "alien",
-    "humungous",
-    "informative",
+    "suspicious",
+    "wonderful",
 ]
 
 # A default data type if none is given
