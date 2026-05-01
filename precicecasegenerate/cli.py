@@ -1,6 +1,7 @@
 import sys
 import shutil
 import logging
+import argparse
 from pathlib import Path
 
 from precicecasegenerate import helper
@@ -15,9 +16,7 @@ from precicecasegenerate.file_creators.utility_file_creator import UtilityFileCr
 logger = logging.getLogger(__name__)
 
 
-def main() -> int:
-    args = cli_helper.get_args()
-
+def runGenerate(args: argparse.Namespace) -> int:
     setup_logging(verbose=args.verbose)
     logger.info("Program started.")
 
@@ -25,15 +24,13 @@ def main() -> int:
     if return_value != 0:
         return return_value
 
-    input_file: Path = Path(args.file_path)
+    input_file: Path = Path(args.input_file)
     output_root: Path = Path(args.output_path)
 
-    return_value: int = generate_case(input_file, output_root)
-    if return_value != 0:
-        return return_value
+    return_value = generate_case(input_file, output_root)
 
     logger.info("Program finished.")
-    return 0
+    return return_value
 
 
 def generate_case(input_file: Path, output_root: Path) -> int:
@@ -94,7 +91,12 @@ def generate_case(input_file: Path, output_root: Path) -> int:
     return 0
 
 
+def main() -> int:
+    # Parse the command line arguments
+    parser = cli_helper.makeGenerateParser()
+    args = parser.parse_args()
+    return runGenerate(args)
+
+
 if __name__ == "__main__":
-    # args = makeGenerateParser().parse_args()
-    # return runGenerate(args)
     sys.exit(main())

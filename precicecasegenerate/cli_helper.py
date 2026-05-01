@@ -13,13 +13,11 @@ GENERATED_DIR_NAME: str = "_generated"
 LOG_DIR_NAME: str = ".logs"
 
 
-def get_args() -> argparse.Namespace:
-    """
-    Get the arguments passed to the CLI.
-    :return: An argparse namespace.
-    """
-    parser = argparse.ArgumentParser()
-
+def makeGenerateParser(add_help: bool = True) -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Initialize a preCICE case given a topology file",
+        add_help=add_help,
+    )
     parser.add_argument(
         "input_file",
         type=Path,
@@ -33,10 +31,10 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "-o", "--output_path",
         type=Path,
-        default=Path.cwd() / "_generated",
+        default=Path.cwd() / GENERATED_DIR_NAME,
         help="A custom output path for the generated folder. Already existing folders and files will be overwritten."
     )
-    return parser.parse_args()
+    return parser
 
 
 def validate_args(args: argparse.Namespace) -> int:
@@ -48,7 +46,7 @@ def validate_args(args: argparse.Namespace) -> int:
     """
     logger.debug(f"Arguments parsed. Arguments: {vars(args)}. Checking if given file exists.")
 
-    input_file: Path = Path(args.file_path)
+    input_file: Path = Path(args.input_file).resolve()
 
     # Check if the file exists
     if not input_file.is_file():
