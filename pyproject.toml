@@ -16,7 +16,7 @@ authors = [
 
 requires-python = ">= 3.10"
 dependencies = [
-    "precice-config-graph",
+    "precice-config-graph @ git+https://github.com/precice/config-graph.git@refs/pull/3/head",
     "precice-adapter-schema",
     "pyyaml",
     "jsonschema",
