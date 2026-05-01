@@ -5,7 +5,7 @@ Additionally, the config is validated using precice-config-check.
 """
 
 from pathlib import Path
-from precice_config_graph.graph import check_config_equivalence
+import precice_config_graph.graph.operations as operations
 from preciceconfigcheck.cli import runCheck
 
 from precicecasegenerate.cli import generate_case
@@ -27,7 +27,7 @@ def test_same_type_one_direction():
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
-    assert check_config_equivalence(expected, actual), "Configs are not equivalent."
+    assert operations.check_config_equivalence(expected, actual), "Configs are not equivalent."
     assert runCheck(actual, True) == 0, "The config failed to validate."
 
 
@@ -44,7 +44,7 @@ def test_different_type_one_direction():
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
-    assert check_config_equivalence(expected, actual), "Configs are not equivalent up to naming."
+    assert operations.check_config_equivalence(expected, actual), "Configs are not equivalent up to naming."
     assert runCheck(actual, True) == 0, "The config failed to validate."
 
 
@@ -61,8 +61,8 @@ def test_same_type_both_directions():
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
-    assert not check_config_equivalence(expected, actual), "Configs are equivalent with different names."
-    assert check_config_equivalence(expected, actual, ignore_names=True), "Configs not are equivalent up to naming."
+    assert not operations.check_config_equivalence(expected, actual), "Configs are equivalent with different names."
+    assert operations.check_config_equivalence(expected, actual, ignore_names=True), "Configs not are equivalent up to naming."
     assert runCheck(actual, True) == 0, "The config failed to validate."
 
 
@@ -79,7 +79,7 @@ def test_different_type_both_directions():
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
-    assert check_config_equivalence(expected, actual), "Configs are not equivalent up to naming."
+    assert operations.check_config_equivalence(expected, actual), "Configs are not equivalent up to naming."
     assert runCheck(actual, True) == 0, "The config failed to validate."
 
 
@@ -98,6 +98,6 @@ def test_both_types_both_directions():
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
-    assert not check_config_equivalence(expected, actual), "Configs are equivalent with different names."
-    assert check_config_equivalence(expected, actual, ignore_names=True), "Configs are not equivalent up to naming."
+    assert not operations.check_config_equivalence(expected, actual), "Configs are equivalent with different names."
+    assert operations.check_config_equivalence(expected, actual, ignore_names=True), "Configs are not equivalent up to naming."
     assert runCheck(actual, True) == 0, "The config failed to validate."

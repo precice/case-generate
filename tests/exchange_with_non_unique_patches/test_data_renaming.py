@@ -3,7 +3,7 @@ Test that exchanges between participants correctly lead to data renaming if only
 """
 
 from pathlib import Path
-from precice_config_graph.graph import check_config_equivalence
+from precice_config_graph.graph import operations
 from preciceconfigcheck.cli import runCheck
 
 from precicecasegenerate.cli import generate_case
@@ -23,6 +23,6 @@ def test_data_renaming():
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
-    assert not check_config_equivalence(expected, actual), "Configs are equivalent with different names."
-    assert check_config_equivalence(expected, actual, ignore_names=True), "Configs not are equivalent up to naming."
+    assert not operations.check_config_equivalence(expected, actual), "Configs are equivalent with different names."
+    assert operations.check_config_equivalence(expected, actual, ignore_names=True), "Configs not are equivalent up to naming."
     assert runCheck(actual, True) == 0, "The config failed to validate."
