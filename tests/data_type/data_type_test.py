@@ -23,7 +23,7 @@ def test_same_type_one_direction():
     case_directory: Path = test_directory / "same_type_one_direction"
     input_file: Path = case_directory / "topology.yaml"
 
-    generate_case(input_file, case_directory)
+    generate_case(input_file, case_directory / "_generated")
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
@@ -40,7 +40,7 @@ def test_different_type_one_direction():
     case_directory: Path = test_directory / "different_type_one_direction"
     input_file: Path = case_directory / "topology.yaml"
 
-    generate_case(input_file, case_directory)
+    generate_case(input_file, case_directory / "_generated")
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
@@ -57,7 +57,7 @@ def test_same_type_both_directions():
     case_directory: Path = test_directory / "same_type_both_directions"
     input_file: Path = case_directory / "topology.yaml"
 
-    generate_case(input_file, case_directory)
+    generate_case(input_file, case_directory / "_generated")
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
@@ -75,7 +75,7 @@ def test_different_type_both_directions():
     case_directory: Path = test_directory / "different_type_both_directions"
     input_file: Path = case_directory / "topology.yaml"
 
-    generate_case(input_file, case_directory)
+    generate_case(input_file, case_directory / "_generated")
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
@@ -94,7 +94,7 @@ def test_both_types_both_directions():
     case_directory: Path = test_directory / "both_types_both_directions"
     input_file: Path = case_directory / "topology.yaml"
 
-    generate_case(input_file, case_directory)
+    generate_case(input_file, case_directory / "_generated")
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"

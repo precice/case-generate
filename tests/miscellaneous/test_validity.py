@@ -22,7 +22,7 @@ def test_validity():
 
         input_file: Path = case_directory / "topology.yaml"
 
-        assert 0 == generate_case(input_file, case_directory), "Case generation failed."
+        assert 0 == generate_case(input_file, case_directory / "_generated"), "Case generation failed."
 
         config_file: Path = case_directory / "_generated/precice-config.xml"
         assert runCheck(config_file, True) == 0, "The config failed to validate."

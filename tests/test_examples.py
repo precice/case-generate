@@ -29,7 +29,7 @@ def test_application_with_example(example: Path):
         print(f"Output {output}")
         assert output, "Nothing generated."
 
-        config = Path(temp_dir) / "_generated/precice-config.xml"
+        config = Path(temp_dir) / "precice-config.xml"
         assert config.exists(), "No config generated."
         ret = runCheck(config, True)
         if ret != 0:

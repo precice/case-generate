@@ -19,7 +19,7 @@ def test_data_renaming():
     case_directory: Path = test_directory
     input_file: Path = case_directory / "topology.yaml"
 
-    generate_case(input_file, case_directory)
+    generate_case(input_file, case_directory / "_generated")
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
