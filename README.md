@@ -147,7 +147,7 @@ We provide a preloaded schema to help you get started:
 
 3. Once complete, export your topology as a YAML file
     - Save the generated YAML file
-    - Use `precice-case-generte` to create your preCICE application case and configuration files
+    - Use `precice-case-generate` to create your preCICE application case and configuration files
     - Validate the generated preCICE config with [config-checker](https://github.com/precice/config-check)
 
 ## Documentation
