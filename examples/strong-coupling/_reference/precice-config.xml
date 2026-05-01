@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
   <log>
-    <sink
-      filter="%Severity% > debug"
-      format="---[precice] %ColorizedSeverity% %Message%"
-      enabled="true" />
+    <sink format="---[precice] %ColorizedSeverity% %Message%" />
   </log>
 
   <data:vector name="Force" />
@@ -13,12 +10,15 @@
   <mesh name="Fluid-Extensive-Mesh" dimensions="3">
     <use-data name="Force" />
   </mesh>
+
   <mesh name="Fluid-Intensive-Mesh" dimensions="3">
     <use-data name="Displacement" />
   </mesh>
+
   <mesh name="Solid-Extensive-Mesh" dimensions="3">
     <use-data name="Force" />
   </mesh>
+
   <mesh name="Solid-Intensive-Mesh" dimensions="3">
     <use-data name="Displacement" />
   </mesh>
@@ -28,42 +28,40 @@
     <provide-mesh name="Fluid-Intensive-Mesh" />
     <receive-mesh name="Solid-Extensive-Mesh" from="Solid" />
     <receive-mesh name="Solid-Intensive-Mesh" from="Solid" />
-    <write-data name="Force" mesh="Fluid-Extensive-Mesh" />
     <read-data name="Displacement" mesh="Fluid-Intensive-Mesh" />
+    <write-data name="Force" mesh="Fluid-Extensive-Mesh" />
     <mapping:nearest-neighbor
-    direction="write"
-    from="Fluid-Extensive-Mesh"
-    to="Solid-Extensive-Mesh"
-    constraint="conservative"
-  />
+      direction="write"
+      from="Fluid-Extensive-Mesh"
+      to="Solid-Extensive-Mesh"
+      constraint="conservative" />
     <mapping:nearest-neighbor
-    direction="read"
-    from="Solid-Intensive-Mesh"
-    to="Fluid-Intensive-Mesh"
-    constraint="consistent"
-  />
+      direction="read"
+      from="Solid-Intensive-Mesh"
+      to="Fluid-Intensive-Mesh"
+      constraint="consistent" />
   </participant>
+
   <participant name="Solid">
     <provide-mesh name="Solid-Extensive-Mesh" />
     <provide-mesh name="Solid-Intensive-Mesh" />
-    <write-data name="Displacement" mesh="Solid-Intensive-Mesh" />
     <read-data name="Force" mesh="Solid-Extensive-Mesh" />
+    <write-data name="Displacement" mesh="Solid-Intensive-Mesh" />
   </participant>
 
-  <m2n:sockets acceptor="Solid" connector="Fluid" exchange-directory=".."/>
+  <m2n:sockets acceptor="Solid" connector="Fluid" exchange-directory=".." />
 
   <coupling-scheme:parallel-implicit>
     <participants first="Solid" second="Fluid" />
-    <max-time-windows value="10" />
-    <time-window-size value="0.1" />
     <exchange data="Force" mesh="Solid-Extensive-Mesh" from="Fluid" to="Solid" />
     <exchange data="Displacement" mesh="Solid-Intensive-Mesh" from="Solid" to="Fluid" />
-    <acceleration:IQN-ILS>
-    <data name="Force" mesh="Solid-Extensive-Mesh" />
-    <data name="Displacement" mesh="Solid-Intensive-Mesh" />
-  </acceleration:IQN-ILS>
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
     <relative-convergence-measure data="Force" mesh="Solid-Extensive-Mesh" limit="0.1" />
     <relative-convergence-measure data="Displacement" mesh="Solid-Intensive-Mesh" limit="0.1" />
+    <acceleration:IQN-ILS>
+      <data name="Force" mesh="Solid-Extensive-Mesh" />
+      <data name="Displacement" mesh="Solid-Intensive-Mesh" />
+    </acceleration:IQN-ILS>
   </coupling-scheme:parallel-implicit>
-
 </precice-configuration>
