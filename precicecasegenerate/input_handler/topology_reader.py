@@ -1,4 +1,4 @@
-import yaml
+from ruamel.yaml import YAML
 import json
 import jsonschema
 import logging
@@ -25,8 +25,9 @@ class TopologyReader:
         :return: The topology dict.
         """
         logger.debug(f"Reading topology file at {self.topology_file_path.resolve()}")
+        yaml = YAML(typ="safe")
         with open(self.topology_file_path, "r") as topology_file:
-            topology = yaml.safe_load(topology_file)
+            topology = yaml.load(topology_file)
         return topology
 
     def validate_topology(self) -> int:
