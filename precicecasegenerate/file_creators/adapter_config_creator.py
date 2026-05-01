@@ -1,8 +1,7 @@
 import json
-import jsonschema
 import logging
 from pathlib import Path
-from importlib.resources import files
+import preciceadapterschema
 
 from precice_config_graph import nodes as n
 
@@ -80,47 +79,20 @@ class AdapterConfigCreator:
             "interfaces": interfaces
         }
 
-    def _validate_adapter_config_file(self, directory: Path = "./", filename: str = "adapter-config.json"):
-        """
-        Validate the adapter-config.json file in the given directory against the schema.
-        :param directory: The directory containing the adapter-config.json file.
-        :param filename: The name of the adapter-config file.
-        :return: None
-        """
-        # Convert to Path object just in case
-        directory = Path(directory)
-        schema_path = files("precicecasegenerate.schemas") / "adapter-config-schema.json"
-        file_path: Path = directory / filename
-
-        schema = json.loads(schema_path.read_text(encoding="utf-8"))
-
-        with open(file_path, "r") as f:
-            adapter_config = json.load(f)
-
-        try:
-            jsonschema.validate(adapter_config, schema)
-            logger.debug(f"Adapter config file {file_path} adheres to the schema.")
-        except jsonschema.ValidationError as e:
-            logger.error(f"Adapter config file {file_path} does not adhere to the schema "
-                         f"as specified in {schema_path}: {e.message}. This is likely an error within the program.")
-
-    def _create_adapter_config_file(self, participant: n.ParticipantNode,
-                                    patch_map: dict[n.MeshNode, set[str]],
+    def _create_adapter_config_file(self, adapter_config_dict: dict[str, str | list[str]],
                                     directory: Path = "./", filename: str = "adapter-config.json"):
         """
         Write an adapter-config.json file for the given participant to the given directory.
-        :param participant: The participant for which the adapter-config.json file is created.
-        :param patch_map: A dict mapping meshes to sets of patches.
+        :param adapter_config_dict: The dict representing the adapter configuration file.
         :param directory: The directory to save the file in.
         :param filename: The name of the file.
         """
         # Convert to Path object just in case
         directory = Path(directory)
         file_path: Path = directory / filename
-        adapter_config: dict[str, str | list[str]] = self._create_adapter_config_dict(participant, patch_map)
         with open(file_path, "w") as f:
-            json.dump(adapter_config, f, indent=4)
-        logger.info(f"Adapter configuration file for participant {participant.name} written to {file_path}")
+            json.dump(adapter_config_dict, f, indent=4)
+        logger.info(f"Adapter configuration file written to {file_path}")
 
     def create_adapter_configs(self, parent_directory: Path = "./"):
         """
@@ -133,5 +105,12 @@ class AdapterConfigCreator:
             logger.debug(f"Creating adapter configuration file for participant {participant.name}.")
             directory: Path = helper.get_participant_solver_directory(parent_directory, participant.name,
                                                                       self.participant_solver_map[participant])
-            self._create_adapter_config_file(participant, self.patch_map, directory=directory)
-            self._validate_adapter_config_file(directory=directory)
+            adapter_config_dict: dict[str, str | list[str]] = self._create_adapter_config_dict(participant,
+                                                                                               self.patch_map)
+            try:
+                preciceadapterschema.validate(adapter_config_dict)
+                logger.debug(f"Adapter config file {directory} adheres to the schema.")
+            except Exception as e:
+                logger.error(f"Adapter config file {directory} does not adhere to the schema "
+                             f"as specified by the precice-adapter-schema: {e}. This is likely an error within the program.")
+            self._create_adapter_config_file(adapter_config_dict, directory=directory)
