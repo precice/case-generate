@@ -46,12 +46,8 @@ def generate_case(input_file: Path, output_root: Path) -> int:
     :return: 0 if successful, 1 otherwise.
     """
     # Create a new directory for the generated files
-    generated_dir: Path = output_root / cli_helper.GENERATED_DIR_NAME
-    logger.debug(f"Resetting generated files at {generated_dir.resolve()}.")
-    # Remove the directory if it already exists
-    if generated_dir.exists():
-        shutil.rmtree(generated_dir, ignore_errors=True)
-    generated_dir.mkdir(parents=True, exist_ok=True)
+    output_root.mkdir(parents=True, exist_ok=True)
+    logger.debug(f"Created output directory at {output_root}")
 
     logger.debug("Starting topology reader.")
     topology_reader: TopologyReader = TopologyReader(input_file.resolve())
@@ -71,13 +67,13 @@ def generate_case(input_file: Path, output_root: Path) -> int:
 
     logger.debug("Starting config creator.")
     config_creator: ConfigCreator = ConfigCreator(nodes)
-    config_creator.create_config_file(directory=generated_dir, filename=cli_helper.PRECICE_CONFIG_FILE_NAME)
+    config_creator.create_config_file(directory=output_root, filename=cli_helper.PRECICE_CONFIG_FILE_NAME)
     logger.debug("Config creator finished.")
 
     logger.debug("Creating participant directories.")
     participant_solver_map: dict = node_creator.get_participant_solver_map()
     for participant in participant_solver_map:
-        participant_directory: Path = helper.get_participant_solver_directory(generated_dir, participant.name,
+        participant_directory: Path = helper.get_participant_solver_directory(output_root, participant.name,
                                                                               participant_solver_map[participant])
         # The directory will be overwritten if it already exists and is of the form "_generated/name-solver/"
         if participant_directory.exists():
@@ -90,13 +86,15 @@ def generate_case(input_file: Path, output_root: Path) -> int:
     adapter_config_creator: AdapterConfigCreator = AdapterConfigCreator(participant_solver_map,
                                                                         mesh_patch_map,
                                                                         precice_config_filename=cli_helper.PRECICE_CONFIG_FILE_NAME)
-    adapter_config_creator.create_adapter_configs(parent_directory=generated_dir)
+    adapter_config_creator.create_adapter_configs(parent_directory=output_root)
 
     logger.debug("Starting utility file creator.")
     utility_file_creator: UtilityFileCreator = UtilityFileCreator(participant_solver_map)
-    utility_file_creator.create_utility_files(parent_directory=generated_dir)
+    utility_file_creator.create_utility_files(parent_directory=output_root)
     return 0
 
 
 if __name__ == "__main__":
+    # args = makeGenerateParser().parse_args()
+    # return runGenerate(args)
     sys.exit(main())

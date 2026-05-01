@@ -96,7 +96,7 @@ class AdapterConfigCreator:
 
     def create_adapter_configs(self, parent_directory: Path = "./"):
         """
-        Create adapter-config.json files for all participants and directly validate them afterwards.
+        Create adapter-config.json files for all participants and directly validate them afterward.
         The files are saved from the given parent-directory, in subdirectories of the form "participant-solver/".
         """
         # Convert to Path object just in case
