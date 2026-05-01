@@ -26,7 +26,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "precice-config-check @ git+https://github.com/precice/config-check.git@main"
+    "precice-config-check @ git+https://github.com/precice/config-check.git@refs/pull/3/head"
 ]
 
 [project.scripts]
