@@ -22,10 +22,10 @@ def makeGenerateParser(add_help: bool = True) -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "input_file",
-        type=Path,
+        type=cli_helper.yaml_file,
         nargs="?",
         help="Path to the input YAML topology file.",
-        default=Path(cli_helper.DEFAULT_TOPOLOGY_NAME)
+        default=cli_helper.DEFAULT_TOPOLOGY_NAME # Needs to be a string to cover the case no input is given
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Enable verbose logging output."
@@ -41,10 +41,6 @@ def makeGenerateParser(add_help: bool = True) -> argparse.ArgumentParser:
 def runGenerate(args: argparse.Namespace) -> int:
     setup_logging(verbose=args.verbose)
     logger.info("Program started.")
-
-    return_value: int = cli_helper.validate_args(args)
-    if return_value != 0:
-        return return_value
 
     input_file: Path = Path(args.input_file)
     output_root: Path = Path(args.output_path)
@@ -117,6 +113,7 @@ def main() -> int:
     # Parse the command line arguments
     parser = makeGenerateParser()
     args = parser.parse_args()
+    logger.debug(f"Arguments parsed. Arguments: {vars(args)}.")
     return runGenerate(args)
 
 
