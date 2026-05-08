@@ -15,6 +15,28 @@ from precicecasegenerate.file_creators.utility_file_creator import UtilityFileCr
 
 logger = logging.getLogger(__name__)
 
+def makeGenerateParser(add_help: bool = True) -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Initialize a preCICE case given a topology file",
+        add_help=add_help,
+    )
+    parser.add_argument(
+        "input_file",
+        type=Path,
+        nargs="?",
+        help="Path to the input YAML topology file.",
+        default=Path(cli_helper.DEFAULT_TOPOLOGY_NAME)
+    )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Enable verbose logging output."
+    )
+    parser.add_argument(
+        "-o", "--output_path",
+        type=Path,
+        default=Path(cli_helper.GENERATED_DIR_NAME),
+        help="A custom output path for the generated folder. Already existing folders and files will be overwritten."
+    )
+    return parser
 
 def runGenerate(args: argparse.Namespace) -> int:
     setup_logging(verbose=args.verbose)
