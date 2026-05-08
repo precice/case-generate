@@ -23,7 +23,7 @@ def makeGenerateParser(add_help: bool = True) -> argparse.ArgumentParser:
         type=Path,
         nargs="?",
         help="Path to the input YAML topology file.",
-        default=Path.cwd() / "topology.yaml"
+        default=Path("topology.yaml")
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Enable verbose logging output."
