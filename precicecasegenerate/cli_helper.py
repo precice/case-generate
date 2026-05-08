@@ -31,7 +31,7 @@ def makeGenerateParser(add_help: bool = True) -> argparse.ArgumentParser:
     parser.add_argument(
         "-o", "--output_path",
         type=Path,
-        default=Path.cwd() / GENERATED_DIR_NAME,
+        default=Path(GENERATED_DIR_NAME),
         help="A custom output path for the generated folder. Already existing folders and files will be overwritten."
     )
     return parser
