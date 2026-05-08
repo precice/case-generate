@@ -115,7 +115,7 @@ def generate_case(input_file: Path, output_root: Path) -> int:
 
 def main() -> int:
     # Parse the command line arguments
-    parser = cli_helper.makeGenerateParser()
+    parser = makeGenerateParser()
     args = parser.parse_args()
     return runGenerate(args)
 
