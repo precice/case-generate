@@ -1,0 +1,25 @@
+participants:
+  - name: Fluid
+    solver: OpenFOAM
+    dimensionality: 3
+
+  - name: Solid
+    solver: CalculiX
+    dimensionality: 3
+
+exchanges:
+  - from: Fluid
+    from-patch: interface
+    to: Solid
+    to-patch: interface
+    data: Forces
+    data-type: vector
+    type: strong
+
+  - from: Solid
+    from-patch: interface
+    to: Fluid
+    to-patch: interface
+    data: Displacement
+    data-type: vector
+    type: strong

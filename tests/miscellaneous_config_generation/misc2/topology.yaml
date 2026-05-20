@@ -1,0 +1,29 @@
+participants:
+  - name: Heater
+    solver: Python
+    dimensionality: 2
+    
+  - name: Wall
+    solver: C++
+    dimensionality: 2
+    
+  - name: Fluid
+    solver: Java
+    dimensionality: 3
+    
+exchanges:
+  - from: Heater
+    from-patch: top-surface
+    to: Wall
+    to-patch: bottom-surface
+    data: Heat-Flux
+    data-type: scalar
+    type: strong
+    
+  - from: Wall
+    from-patch: inner-surface
+    to: Fluid
+    to-patch: wall
+    data: Temperature
+    data-type: scalar
+    type: strong

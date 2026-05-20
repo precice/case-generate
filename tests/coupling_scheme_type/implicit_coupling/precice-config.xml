@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink
+      filter="%Severity% > debug"
+      format="---[precice] %ColorizedSeverity% %Message%"
+      enabled="true" />
+  </log>
+
+  <data:scalar name="Color" />
+  <data:scalar name="Another-Color" />
+
+  <mesh name="A-Mesh" dimensions="2">
+    <use-data name="Color" />
+    <use-data name="Another-Color" />
+  </mesh>
+  <mesh name="B-Mesh" dimensions="2">
+    <use-data name="Color" />
+    <use-data name="Another-Color" />
+  </mesh>
+
+  <participant name="A">
+    <provide-mesh name="A-Mesh" />
+    <receive-mesh name="B-Mesh" from="B" />
+    <write-data name="Color" mesh="A-Mesh" />
+    <read-data name="Another-Color" mesh="A-Mesh" />
+    <mapping:nearest-neighbor
+    direction="read"
+    from="B-Mesh"
+    to="A-Mesh"
+    constraint="consistent"
+  />
+  </participant>
+  <participant name="B">
+    <provide-mesh name="B-Mesh" />
+    <receive-mesh name="A-Mesh" from="A" />
+    <write-data name="Another-Color" mesh="B-Mesh" />
+    <read-data name="Color" mesh="B-Mesh" />
+    <mapping:nearest-neighbor
+    direction="read"
+    from="A-Mesh"
+    to="B-Mesh"
+    constraint="consistent"
+  />
+  </participant>
+
+  <m2n:sockets acceptor="A" connector="B" exchange-directory=".."/>
+
+  <coupling-scheme:parallel-implicit>
+    <participants first="A" second="B" />
+    <max-time-windows value="10" />
+    <time-window-size value="0.1" />
+    <exchange data="Color" mesh="A-Mesh" from="A" to="B" />
+    <exchange data="Another-Color" mesh="B-Mesh" from="B" to="A" />
+    <acceleration:IQN-ILS>
+    <data name="Color" mesh="A-Mesh" />
+    <data name="Another-Color" mesh="B-Mesh" />
+  </acceleration:IQN-ILS>
+    <relative-convergence-measure data="Color" mesh="A-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Another-Color" mesh="B-Mesh" limit="0.1" />
+  </coupling-scheme:parallel-implicit>
+
+</precice-configuration>

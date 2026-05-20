@@ -1,71 +1,119 @@
-from .generation_utils.file_generator import FileGenerator
-import argparse
 import sys
+import shutil
+import logging
+import argparse
 from pathlib import Path
 
+from precicecasegenerate import helper
+from precicecasegenerate import cli_helper
+from precicecasegenerate.logging_setup import setup_logging
+from precicecasegenerate.input_handler.topology_reader import TopologyReader
+from precicecasegenerate.node_creator import NodeCreator
+from precicecasegenerate.file_creators.config_creator import ConfigCreator
+from precicecasegenerate.file_creators.adapter_config_creator import AdapterConfigCreator
+from precicecasegenerate.file_creators.utility_file_creator import UtilityFileCreator
 
-def makeGenerateParser(add_help: bool = True):
+logger = logging.getLogger(__name__)
+
+def makeGenerateParser(add_help: bool = True) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Initialize a preCICE case given a topology file",
         add_help=add_help,
     )
     parser.add_argument(
-        "-f",
-        "--input-file",
+        "input_file",
+        type=cli_helper.yaml_file,
+        nargs="?",
+        help="Path to the input YAML topology file.",
+        default=cli_helper.DEFAULT_TOPOLOGY_NAME # Needs to be a string to cover the case no input is given
+    )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Enable verbose logging output."
+    )
+    parser.add_argument(
+        "-o", "--output_path",
         type=Path,
-        default=Path.cwd() / "topology.yaml",
-        help="Input topology.yaml file. Defaults to './topology.yaml'.",
-    )
-    parser.add_argument(
-        "-o",
-        "--output-path",
-        type=Path,
-        help="Output path for the generated folder. Defaults to './_generated'.",
-        default=Path.cwd() / "_generated",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="Enable verbose logging output.",
-    )
-    parser.add_argument(
-        "--validate-topology",
-        action="store_true",
-        required=False,
-        default=True,
-        help="Whether to validate the input topology.yaml file against the preCICE topology schema.",
+        default=Path(cli_helper.GENERATED_DIR_NAME),
+        help="A custom output path for the generated folder. Already existing folders and files will be overwritten."
     )
     return parser
 
+def runGenerate(args: argparse.Namespace) -> int:
+    setup_logging(verbose=args.verbose)
+    logger.info("Program started.")
 
-def runGenerate(ns):
-    try:
-        file_generator = FileGenerator(ns.input_file, ns.output_path)
+    input_file: Path = Path(args.input_file)
+    output_root: Path = Path(args.output_path)
 
-        # Clear any previous log state
-        file_generator.logger.clear_log_state()
+    return_value = generate_case(input_file, output_root)
 
-        # Generate precice-config.xml, README.md, clean.sh
-        file_generator.generate_level_0()
-        # Generate configuration for the solvers
-        file_generator.generate_level_1()
-
-        # Format the generated preCICE configuration
-        file_generator.format_precice_config()
-
-        file_generator.handle_output(ns)
-
-        file_generator.validate_topology(ns)
-
-        return 0
-    except Exception as e:
-        print(e, file=sys.stderr)
-        return 1
+    logger.info("Program finished.")
+    return return_value
 
 
-def main():
-    args = makeGenerateParser().parse_args()
+def generate_case(input_file: Path, output_root: Path) -> int:
+    """
+    Generate all files for a preCICE case
+    This method creates the required directories and calls the respective methods to create the nodes from the topology,
+    the preCICE configuration file, the adapter configuration files, and the utility files.
+    :param input_file: The path to the input file containing the topology.
+    :param output_root: The root directory for the generated files.
+    :return: 0 if successful, 1 otherwise.
+    """
+    # Create a new directory for the generated files
+    output_root.mkdir(parents=True, exist_ok=True)
+    logger.debug(f"Created output directory at {output_root}")
+
+    logger.debug("Starting topology reader.")
+    topology_reader: TopologyReader = TopologyReader(input_file.resolve())
+    return_value: int = topology_reader.validate_topology()
+    if return_value != 0:
+        return return_value
+    return_value: int = topology_reader.check_topology()
+    if return_value != 0:
+        return return_value
+    topology: dict = topology_reader.get_topology()
+    logger.debug("Topology reader finished.")
+
+    logger.debug("Starting node creator.")
+    node_creator: NodeCreator = NodeCreator(topology)
+    nodes: dict = node_creator.get_nodes()
+    logger.debug("Node creator finished.")
+
+    logger.debug("Starting config creator.")
+    config_creator: ConfigCreator = ConfigCreator(nodes)
+    config_creator.create_config_file(directory=output_root, filename=cli_helper.PRECICE_CONFIG_FILE_NAME)
+    logger.debug("Config creator finished.")
+
+    logger.debug("Creating participant directories.")
+    participant_solver_map: dict = node_creator.get_participant_solver_map()
+    for participant in participant_solver_map:
+        participant_directory: Path = helper.get_participant_solver_directory(output_root, participant.name,
+                                                                              participant_solver_map[participant])
+        # The directory will be overwritten if it already exists and is of the form "_generated/name-solver/"
+        if participant_directory.exists():
+            shutil.rmtree(participant_directory, ignore_errors=True)
+        participant_directory.mkdir(parents=True, exist_ok=True)
+        logger.debug(f"Created participant directory at {participant_directory}")
+
+    logger.debug("Starting adapter config creator.")
+    mesh_patch_map: dict = node_creator.get_mesh_patch_map()
+    adapter_config_creator: AdapterConfigCreator = AdapterConfigCreator(participant_solver_map,
+                                                                        mesh_patch_map,
+                                                                        precice_config_filename=cli_helper.PRECICE_CONFIG_FILE_NAME)
+    adapter_config_creator.create_adapter_configs(parent_directory=output_root)
+
+    logger.debug("Starting utility file creator.")
+    utility_file_creator: UtilityFileCreator = UtilityFileCreator(participant_solver_map)
+    utility_file_creator.create_utility_files(parent_directory=output_root)
+    return 0
+
+
+def main() -> int:
+    # Parse the command line arguments
+    parser = makeGenerateParser()
+    args = parser.parse_args()
+    logger.debug(f"Arguments parsed. Arguments: {vars(args)}.")
     return runGenerate(args)
 
 

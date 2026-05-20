@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink format="---[precice] %ColorizedSeverity% %Message%" />
+  </log>
+
+  <data:vector name="Forces1" />
+  <data:vector name="Forces2" />
+  <data:vector name="Forces3" />
+  <data:vector name="Displacements1" />
+  <data:vector name="Displacements2" />
+  <data:vector name="Displacements3" />
+
+  <mesh name="NASTIN-SOLIDZ1-Extensive-Mesh" dimensions="3">
+    <use-data name="Forces1" />
+  </mesh>
+
+  <mesh name="NASTIN-SOLIDZ1-Intensive-Mesh" dimensions="3">
+    <use-data name="Displacements1" />
+  </mesh>
+
+  <mesh name="SOLIDZ1-Extensive-Mesh" dimensions="3">
+    <use-data name="Forces1" />
+  </mesh>
+
+  <mesh name="SOLIDZ1-Intensive-Mesh" dimensions="3">
+    <use-data name="Displacements1" />
+  </mesh>
+
+  <mesh name="NASTIN-SOLIDZ2-Extensive-Mesh" dimensions="3">
+    <use-data name="Forces2" />
+  </mesh>
+
+  <mesh name="NASTIN-SOLIDZ2-Intensive-Mesh" dimensions="3">
+    <use-data name="Displacements2" />
+  </mesh>
+
+  <mesh name="SOLIDZ2-Extensive-Mesh" dimensions="3">
+    <use-data name="Forces2" />
+  </mesh>
+
+  <mesh name="SOLIDZ2-Intensive-Mesh" dimensions="3">
+    <use-data name="Displacements2" />
+  </mesh>
+
+  <mesh name="NASTIN-SOLIDZ3-Extensive-Mesh" dimensions="3">
+    <use-data name="Forces3" />
+  </mesh>
+
+  <mesh name="NASTIN-SOLIDZ3-Intensive-Mesh" dimensions="3">
+    <use-data name="Displacements3" />
+  </mesh>
+
+  <mesh name="SOLIDZ3-Extensive-Mesh" dimensions="3">
+    <use-data name="Forces3" />
+  </mesh>
+
+  <mesh name="SOLIDZ3-Intensive-Mesh" dimensions="3">
+    <use-data name="Displacements3" />
+  </mesh>
+
+  <participant name="NASTIN">
+    <provide-mesh name="NASTIN-SOLIDZ1-Extensive-Mesh" />
+    <provide-mesh name="NASTIN-SOLIDZ1-Intensive-Mesh" />
+    <provide-mesh name="NASTIN-SOLIDZ2-Extensive-Mesh" />
+    <provide-mesh name="NASTIN-SOLIDZ2-Intensive-Mesh" />
+    <provide-mesh name="NASTIN-SOLIDZ3-Extensive-Mesh" />
+    <provide-mesh name="NASTIN-SOLIDZ3-Intensive-Mesh" />
+    <receive-mesh name="SOLIDZ1-Extensive-Mesh" from="SOLIDZ1" />
+    <receive-mesh name="SOLIDZ2-Extensive-Mesh" from="SOLIDZ2" />
+    <receive-mesh name="SOLIDZ3-Extensive-Mesh" from="SOLIDZ3" />
+    <receive-mesh name="SOLIDZ1-Intensive-Mesh" from="SOLIDZ1" />
+    <receive-mesh name="SOLIDZ2-Intensive-Mesh" from="SOLIDZ2" />
+    <receive-mesh name="SOLIDZ3-Intensive-Mesh" from="SOLIDZ3" />
+    <read-data name="Displacements1" mesh="NASTIN-SOLIDZ1-Intensive-Mesh" />
+    <read-data name="Displacements2" mesh="NASTIN-SOLIDZ2-Intensive-Mesh" />
+    <read-data name="Displacements3" mesh="NASTIN-SOLIDZ3-Intensive-Mesh" />
+    <write-data name="Forces1" mesh="NASTIN-SOLIDZ1-Extensive-Mesh" />
+    <write-data name="Forces2" mesh="NASTIN-SOLIDZ2-Extensive-Mesh" />
+    <write-data name="Forces3" mesh="NASTIN-SOLIDZ3-Extensive-Mesh" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="NASTIN-SOLIDZ1-Extensive-Mesh"
+      to="SOLIDZ1-Extensive-Mesh"
+      constraint="conservative" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="NASTIN-SOLIDZ2-Extensive-Mesh"
+      to="SOLIDZ2-Extensive-Mesh"
+      constraint="conservative" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="NASTIN-SOLIDZ3-Extensive-Mesh"
+      to="SOLIDZ3-Extensive-Mesh"
+      constraint="conservative" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="SOLIDZ1-Intensive-Mesh"
+      to="NASTIN-SOLIDZ1-Intensive-Mesh"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="SOLIDZ2-Intensive-Mesh"
+      to="NASTIN-SOLIDZ2-Intensive-Mesh"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="SOLIDZ3-Intensive-Mesh"
+      to="NASTIN-SOLIDZ3-Intensive-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <participant name="SOLIDZ1">
+    <provide-mesh name="SOLIDZ1-Extensive-Mesh" />
+    <provide-mesh name="SOLIDZ1-Intensive-Mesh" />
+    <read-data name="Forces1" mesh="SOLIDZ1-Extensive-Mesh" />
+    <write-data name="Displacements1" mesh="SOLIDZ1-Intensive-Mesh" />
+  </participant>
+
+  <participant name="SOLIDZ2">
+    <provide-mesh name="SOLIDZ2-Extensive-Mesh" />
+    <provide-mesh name="SOLIDZ2-Intensive-Mesh" />
+    <read-data name="Forces2" mesh="SOLIDZ2-Extensive-Mesh" />
+    <write-data name="Displacements2" mesh="SOLIDZ2-Intensive-Mesh" />
+  </participant>
+
+  <participant name="SOLIDZ3">
+    <provide-mesh name="SOLIDZ3-Extensive-Mesh" />
+    <provide-mesh name="SOLIDZ3-Intensive-Mesh" />
+    <read-data name="Forces3" mesh="SOLIDZ3-Extensive-Mesh" />
+    <write-data name="Displacements3" mesh="SOLIDZ3-Intensive-Mesh" />
+  </participant>
+
+  <m2n:sockets acceptor="NASTIN" connector="SOLIDZ1" exchange-directory=".." />
+  <m2n:sockets acceptor="NASTIN" connector="SOLIDZ2" exchange-directory=".." />
+  <m2n:sockets acceptor="NASTIN" connector="SOLIDZ3" exchange-directory=".." />
+
+  <coupling-scheme:multi>
+    <participant name="SOLIDZ3" />
+    <participant name="SOLIDZ1" />
+    <participant name="NASTIN" control="yes" />
+    <participant name="SOLIDZ2" />
+    <exchange data="Forces1" mesh="SOLIDZ1-Extensive-Mesh" from="NASTIN" to="SOLIDZ1" />
+    <exchange data="Forces2" mesh="SOLIDZ2-Extensive-Mesh" from="NASTIN" to="SOLIDZ2" />
+    <exchange data="Forces3" mesh="SOLIDZ3-Extensive-Mesh" from="NASTIN" to="SOLIDZ3" />
+    <exchange data="Displacements1" mesh="SOLIDZ1-Intensive-Mesh" from="SOLIDZ1" to="NASTIN" />
+    <exchange data="Displacements2" mesh="SOLIDZ2-Intensive-Mesh" from="SOLIDZ2" to="NASTIN" />
+    <exchange data="Displacements3" mesh="SOLIDZ3-Intensive-Mesh" from="SOLIDZ3" to="NASTIN" />
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
+    <relative-convergence-measure data="Forces1" mesh="SOLIDZ1-Extensive-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Forces2" mesh="SOLIDZ2-Extensive-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Forces3" mesh="SOLIDZ3-Extensive-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Displacements1" mesh="SOLIDZ1-Intensive-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Displacements2" mesh="SOLIDZ2-Intensive-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Displacements3" mesh="SOLIDZ3-Intensive-Mesh" limit="0.1" />
+    <acceleration:IQN-ILS>
+      <data name="Forces1" mesh="SOLIDZ1-Extensive-Mesh" />
+      <data name="Forces2" mesh="SOLIDZ2-Extensive-Mesh" />
+      <data name="Forces3" mesh="SOLIDZ3-Extensive-Mesh" />
+      <data name="Displacements1" mesh="SOLIDZ1-Intensive-Mesh" />
+      <data name="Displacements2" mesh="SOLIDZ2-Intensive-Mesh" />
+      <data name="Displacements3" mesh="SOLIDZ3-Intensive-Mesh" />
+    </acceleration:IQN-ILS>
+  </coupling-scheme:multi>
+</precice-configuration>

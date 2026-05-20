@@ -1,127 +1,85 @@
-# Multi-Physics Simulation Topology Schema
+# The Topology File
 
-## Overview
+A `topology.yaml` file is the only file needed to run this program. 
 
-This JSON schema provides a comprehensive configuration mechanism for defining multi-physics simulation topologies, specifically designed for complex coupling scenarios in scientific computing and engineering simulations.
-
-## Schema Structure
-
-The topology schema consists of four main sections:
-
-### 1. Coupling Scheme Configuration
-- Flexible time window and iteration controls
-- Support for parallel and serial coupling modes
-- Optional display of standard values
-- Configurable maximum time and iterations
-
-#### Key Parameters
-- `max-time`: Maximum simulation time (integer or scientific notation)
-- `time-window-size`: Size of time windows (number or scientific notation)
-- `max-iterations`: Maximum coupling iterations
-- `coupling`: Coupling mode (parallel/serial)
-
-### 2. Acceleration Mechanisms
-Advanced coupling acceleration with multiple configuration options:
-
-#### Acceleration Methods
-- Supported methods: `constant`, `aitken`, `IQN-ILS`, `IQN-IMVJ`
-- Initial relaxation factor
-- Preconditioner configuration
-- Filtering options (QR1/QR2)
-
-#### Advanced Features
-- Iteration and time window reuse
-- IMVJ restart mode configuration
-- Singular value truncation
-- Preconditioner freezing
-
-### 3. Participants Configuration
-Define simulation participants with detailed specifications:
-
-- Mandatory fields: `name`, `solver`
-- Optional fields:
-  - `dimensionality` (default: 3)
-- Minimum of 2 participant required
-
-### 4. Exchanges Configuration
-Each exchange defines a one-way data transfer between participants:
-
-#### Required Fields
-- `from`: Name of the source participant sending data (must match a name in the participants section)
-- `to`: Name of the target participant receiving data (must match a name in the participants section)
-- `data`: Type of data being exchanged (e.g., Force, Displacement, Velocity)
-- `type`: Coupling type defining the exchange interaction
-  - `strong`: Tight coupling with immediate data synchronization
-  - `weak`: Loose coupling with less frequent data exchange
-- `from-patch`: Source Interface Surface
-  - The physical boundary or interface region on the source participant's mesh where data is extracted.
-  - Must correspond to a defined boundary condition in the source solver.
-  - For fluids: Typically the fluid-structure interface (e.g., "interface")
-  - For solids: Typically the surface contacting the fluid (e.g., "surface")
-- `to-patch`: Target Interface Surface
-  - The physical boundary or interface region on the target participant's mesh where data will be applied.
-  - Must correspond to a defined boundary condition in the target solver.
-> [!NOTE]
-> `from-patch` and `to-patch` are only relevant for generating `adapter-config.json` files.
+> [!NOTE] As a YAML file, the topology is case-, indent- and whitespace-sensitive.
 
 
-#### Optional Fields
-- `data-type`: Specifies the data representation
-  - `scalar`: Single numeric value (default)
-  - `vector`: Multi-dimensional numeric data
+The JSON schema of the topology can be found in the `topology-schema.json` file.
 
-#### Data Type Constraints
-- Supported data types: Force, Displacement, Velocity, Pressure, Temperature, HeatTransfer
-- Naming follows the pattern: `[BaseType][OptionalModifier]`
+It consists of two main elements:
 
-#### Example
+- `participants`: The solvers involved in the simulation.
+- `exchanges`: How the solvers interact with one another.
+
+## Participants
+
+The `participants` element describes the main actors of the simulation through given `name`s and the `solver`s they use. 
+It can hold an arbitrary number of elements, which must have pairwise unique names. 
+The optional parameter `dimensionality` defines the dimensions of the meshes used by the participant.
+
+There must be at least one participant defined, however, for a successful communication to be possible, 
+at least two participants must exist.
+A valid entry might look as follows:
+
 ```yaml
-coupling-scheme:
-  display_standard_values: true
 participants:
-  - name: Fluid
-    solver: SU2
-  - name: Solid
-    solver: Calculix
-exchanges:
-  - from: Fluid
-    from-patch: interface      # Fluid side boundary where forces are measured
-    to: Solid
-    to-patch: surface         # Solid surface receiving fluid forces
-    data: Force
-    type: strong
-  - from: Solid
-    from-patch: surface       # Solid surface where displacements occur
-    to: Fluid
-    to-patch: interface      # Fluid boundary that adapts to displacements
-    data: Displacement
-    type: strong
+  - name: Crocodile     # An arbitrary string
+    solver: SeeYouLater # An arbitrary string
+    dimensionality: 3   # Either 2, 3 or not given
+  - name: Alligator
+    solver: InAWhile
+  - ...
 ```
 
-## Schema Validation Rules
+## Exchanges
 
-- Requires `coupling-scheme`, `participants`, and `exchanges`
-- Optional `acceleration` configuration
-- Supports scientific notation for numeric values
-- Strict type and enumeration constraints
+The `exchanges` element describes how the main actors of the simulation communicate and relate to one-another.
+This means that a single exchange needs to define a source participant `from`, a destination participant `to` and 
+patches (interfaces) of these participants through `from-patch` and `to-patch`. 
+The data that is exchanges is given as `data` and the type of the exchange (strong (implicit) or weak (explicit)) 
+is chosen through `type`.
+The optional parameter `data-type` can take either of the two values `scalar` or `vector`. 
+If not given, a value might be inferred from the name of the `data`.
 
-## Compatibility and Best Practices
+At least one exchange must exist for a valid topology. Exchanges must be unique.
+A valid entry might look as follows:
 
-- Designed for preCICE coupling framework
-- Supports complex multi-physics simulations
-- Flexible configuration for various scientific computing scenarios
+```yaml
+exchanges:
+  - from: Crocodile     # A string that corresponds to a previously defined participant
+    to: Alligator       # A string that corresponds to a previously defined participant
+    from-patch: claw    # A patch (interface) of the `from`-participant
+    to-patch: claw      # A patch (interface) of the `to`-participant
+    type: strong        # The type of the data-exchange; either `strong` (implicit) or `weak` (explicit)
+    data: fish          # The data that is being exchanged
+    data-type: vector   # The type of the data that is being exchange; either `scalar`,`vector` or not given
+  - ...
+```
 
-## Limitations
+## Example
 
-- Predefined acceleration and exchange methods
-- Strict schema validation
+A complete example for a valid `topology.yaml` file is the following:
 
-## Future Extensions
+```yaml
+participants:
+  - name: Crocodile     # An arbitrary string
+    solver: SeeYouLater # An arbitrary string
+    dimensionality: 3   # Either 2, 3 or not given
+  - name: Alligator
+    solver: InAWhile
+exchanges:
+  - from: Crocodile     # A string that corresponds to a previously defined participant
+    to: Alligator       # A string that corresponds to a previously defined participant
+    from-patch: claw    # A patch (interface) of the `from`-participant
+    to-patch: claw      # A patch (interface) of the `to`-participant
+    type: strong        # The type of the data-exchange; either `strong` (implicit) or `weak` (explicit)
+    data: fish          # The data that is being exchanged
+    data-type: vector
+```
 
-- Potential expansion of acceleration methods
-- Enhanced data exchange types
-- More flexible validation rules
+## Legacy
 
-## Contributing
-
-Contributions to expand and improve the schema are welcome. Please follow the project's contribution guidelines.
+In version 1 of preCICE Case Generate, the topology had the additional elements `coupling-scheme` and `acceleration`. 
+To facilitate the usage of the tool, they were removed and the parameters are now either inferred from the remaining 
+two tags or assigned a default value.

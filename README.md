@@ -1,16 +1,13 @@
-# precice-generator
+# preCICE Case Generate
 
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/precice/case-generate/check.yml?label=Examples%20generation%20and%20validation%20using%20config-checker)
+preCICE case-generate is a python based utility designed to simplify the generation of preCICE application cases. 
+Such cases consist of the central `precice-config.xml` file which defines all sorts of connections and relations between 
+involved solvers, as well as `adapter-config.json` files for each solver. 
 
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/precice/case-generate/installation.yml?label=Installation%20Checker)
-
-![GitHub License](https://img.shields.io/github/license/precice/case-generate)
-
-## Project Overview
-
-The preCICE case-generate package is a Python-based utility designed to automate the generation of preCICE configuration files from
-simple YAML topology descriptions. This tool simplifies the process of setting up multi-physics simulations by transforming
-user-defined YAML configurations into preCICE-compatible XML configuration files.
+These files involve a lot of complex elements and modifiers, which are often times not needed. 
+This tool introduces a simpler, easier to read and write `topology.yaml` file, 
+which covers a wide range of features of the `precice-config.xml` file, yet with only a fraction of the complexity.
+An overview over the `topology.yaml` file can be found in `precicecasegenerate/schemas/README.md`.
 
 ## Key Features
 
@@ -20,16 +17,23 @@ user-defined YAML configurations into preCICE-compatible XML configuration files
 - Comprehensive error logging and handling
 - Simple command-line interface
 
-## Installation
+## Getting Started
 
 ### Prerequisites
 
-- Python 3.9 or
-  higher ([workflow validated](https://github.com/precice/case-generate/actions/workflows/installation.yml)
-  with 3.9, 3.10, 3.11 and 3.12)
+Required dependencies are:
+
+- Python ≥ 3.10 
 - pip
-- venv
-- (preCICE library)
+- git for cloning the repository :) 
+- [preCICE Config Graph](https://github.com/precice/config-graph)  (will be installed during the setup)
+- pyyaml
+- jsonschema
+
+Optional dependencies are:
+
+- pytest
+- [preCICE Config Check](https://github.com/precice/config-check)
 
 ### Manual Installation
 
@@ -37,7 +41,7 @@ user-defined YAML configurations into preCICE-compatible XML configuration files
 
 ```bash
 git clone https://github.com/precice/case-generate.git
-cd precice-generator
+cd case-generate
 ```
 
 2. Create a virtual environment
@@ -61,6 +65,11 @@ pip install build
 
 # Install the project in editable mode
 pip install -e .
+```
+
+Optional dependencies for testing can be installed via 
+```bash
+pip install -e ".[dev]"
 ```
 
 ### Using Setup Scripts
@@ -92,102 +101,54 @@ precice-case-generate --help
 Generate a preCICE configuration file from a YAML topology called `topology.yaml`:
 
 ```bash
-precice-case-generate
+precice-case-generate path/to/topology.yaml
 ```
 
-or pass a topology file via argument;
-
-```bash
-precice-case-generate -f path/to/your/topology.yaml
-```
+The only required argument is the `path/to/topology.yaml`.
 
 The `precice-case-generate` tool supports the following optional parameters:
 
-- `-f, --input-file`: Path to the input topology.yaml file.
-  - **Default**: `./topology.yaml`
-  - **Description**: Specify a custom topology file for configuration generation.
-
 - `-o, --output-path`: Destination path for the generated folder.
   - **Default**: `./_generated/`
-  - **Description**: Choose a specific output location for generated files.
+  - **Description**: Choose a specific output location for the `_generated/` directory.
 
-- `-v, --verbose`: Enable verbose logging.
+- `-v, --verbose`: Enable verbose console logging.
   - **Default**: Disabled
   - **Description**: Provides detailed logging information during execution.
 
-- `--validate-topology`: Validate the input topology.yaml against the preCICE topology schema.
-  - **Default**: Enabled
-  - **Description**: Ensures the topology file meets the required schema specifications.
-
-Example usage:
-```bash
-precice-case-generate -f custom_topology.yaml -o /path/to/output -v
-```
 
 > [!NOTE]
-> You should validate your files by running them through precice-tools and the
-> preCICE [config-checker](https://github.com/precice/case-generate) to avoid errors.
+> While it is not expected, the topology generation might fail or produce faulty configuration files. 
+> This might happen in situations where the `topology.yaml` contains multiple edge cases, 
+> such as many data exchanges with the same `data`-tag. 
+> The preCICE [Config Check](https://github.com/precice/config-check) is designed to identify and alert to such errors.
+
+### Examples
+
+Valid `topology.yaml` <-> application case pairs can be found in the `examples/` directory. 
+They include the preCICE tutorials 1-4 as well as some more complex simulations.  
 
 ### Configuration
 
 1. Prepare a YAML topology file describing your multi-physics simulation setup.
 2. Use the command-line interface to generate the preCICE configuration.
-3. The tool will create the necessary configuration files in the `_generated/` directory.
+3. preCICE Case Generate will create the necessary configuration files in the `_generated/` directory.
 
-## Creating Topology with MetaConfigurator
+## Creating Topologies with MetaConfigurator
 
 You can create a topology for your preCICE simulation using the online MetaConfigurator.
 We provide a preloaded schema to help you get started:
 
 1. Open the MetaConfigurator with the preloaded
-   schema: [MetaConfigurator Link](https://metaconfigurator.github.io/meta-configurator/?schema=https://github.com/precice/case-generate/blob/main/precicecasegenerate/schemas/topology-schema.json&settings=https://github.com/precice/case-generate/blob/main/precicecasegenerate/templates/metaConfiguratorSettings.json)
+   schema: [MetaConfigurator link](https://metaconfigurator.github.io/meta-configurator/?schema=https://github.com/precice/case-generate/blob/main/precicecasegenerate/schemas/topology-schema.json&settings=https://github.com/precice/case-generate/blob/main/precicecasegenerate/templates/metaConfiguratorSettings.json)
 
 2. Use the interactive interface to define your topology:
     - The preloaded schema provides a structured way to describe your simulation components
-    - Add configuration details on the right side of the screen
 
 3. Once complete, export your topology as a YAML file
     - Save the generated YAML file
-    - Use this file with the `precice-generator` tool to create your preCICE configuration
-    - Validate the generated preCICE config
-      with [config-checker](https://github.com/precice/config-check)
-    - Use `precice-config-checker` and/or `precice-tools check` to validate the generated preCICE config
-
-### Benefits of Using MetaConfigurator
-
-- Visual, user-friendly interface
-- Real-time validation against our predefined schema
-- Reduces manual configuration errors
-- Simplifies topology creation process
-
-## Example Configurations
-
-### Normal Examples (0-5)
-
-Our project provides a set of progressively complex example configurations to help you get started with preCICE
-simulations:
-
-- Located in `examples/0` through `examples/5`
-- Designed for beginners and intermediate users
-- Each example includes:
-    - A `topology.yaml` file defining the simulation setup
-    - A `precice-config.xml` file
-    - Subdirectories for different simulation components
-- Showcase simple, linear multi-physics scenarios
-- Ideal for learning basic preCICE configuration concepts
-
-### Expert Examples
-
-For advanced users, we offer more sophisticated configuration examples:
-
-- Located in `examples/expert`
-- Contain more advanced usage of topology options but extend the according example with the same number
-- Demonstrate advanced coupling strategies and intricate topology configurations
-- Targeted at users with a better understanding of preCICE
-
-> [!TIP]
-> Start with normal examples (0-5) and progress to expert examples as you become more comfortable with preCICE
-> configurations.
+    - Use `precice-case-generate` to create your preCICE application case and configuration files
+    - Validate the generated preCICE config with [config-checker](https://github.com/precice/config-check)
 
 ## Documentation
 
@@ -207,10 +168,6 @@ Alongside it, you will find `README.md`, which explains the topology's parameter
 
 - Ensure all dependencies are correctly installed
 - Verify the format of your input YAML file
-- Check the generated logs for detailed error information
+- Check the generated logs (`./.logs`) for detailed process information
 
-## Acknowledgements
-
-This project was started with code from the [preCICE controller](https://github.com/precice/controller) repository.
-The file `format_precice_config.py` was taken
-from [preCICE pre-commit hook file](https://github.com/precice/precice-pre-commit-hooks/blob/main/format_precice_config/format_precice_config.py)
+If all else fails, open a pull request describing the issue you are encountering. 

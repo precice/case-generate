@@ -1,0 +1,117 @@
+from ruamel.yaml import YAML
+import json
+import jsonschema
+import logging
+from pathlib import Path
+from importlib.resources import files
+from precicecasegenerate import helper
+
+logger = logging.getLogger(__name__)
+
+
+class TopologyReader:
+    """
+    Read a given topology.yaml file and save it as a dict.
+    """
+
+    def __init__(self, path_to_topology_file: Path):
+        # Convert to Path object just in case
+        self.topology_file_path = Path(path_to_topology_file)
+        self.topology = self._read_topology()
+
+    def _read_topology(self) -> dict:
+        """
+        Read the topology file and convert it to a dict.
+        :return: The topology dict.
+        """
+        logger.debug(f"Reading topology file at {self.topology_file_path.resolve()}")
+        yaml = YAML(typ="safe")
+        with open(self.topology_file_path, "r") as topology_file:
+            topology = yaml.load(topology_file)
+        return topology
+
+    def validate_topology(self) -> int:
+        """
+        Check if the topology adheres to the defined schema in schemas/topology-schema.json
+        :return: 0 if topology is valid, 1 otherwise
+        """
+        schema_path = files("precicecasegenerate.schemas") / "topology-schema.json"
+
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        try:
+            jsonschema.validate(self.topology, schema)
+            logger.debug("Topology file adheres to the schema.")
+        except jsonschema.ValidationError as e:
+            logger.critical(f"Topology file {self.topology_file_path.resolve()} does not adhere to the schema "
+                            f"as specified in {schema_path}: {e.message}. Aborting program.")
+            return 1
+        return 0
+
+    def check_topology(self) -> int:
+        """
+        Check if the topology is valid.
+        This check includes:
+
+        - Checking if participant names are unique.
+        - Checking if exchanges only contain known "to" and "from" participants.
+        - Checking if exchanges are unique, when ignoring "to-patch", "from-patch" and "type" tags.
+        If any of these checks fail, an error message is printed and the program is aborted.
+        Additionally, it is checked if any of the data names contains one of the uniquifiers defined in
+        helper.DATA_UNIQUIFIERS. If so, this uniquifier is removed from the list of uniquifiers.
+        :return: 0 if topology is valid, 1 otherwise
+        """
+        participant_names: set[str] = set()
+        # Check if participant names are unique
+        for participant in self.topology["participants"]:
+            if participant["name"] in participant_names:
+                logger.critical(
+                    f"Duplicate participant name {participant['name']} in topology file {self.topology_file_path}.")
+                return 1
+            participant_names.add(participant["name"])
+        logger.debug("Topology does not contain duplicate participant names.")
+
+        # Check if participants actually appear in exchanges
+        participants_in_exchanges: set[str] = set()
+
+        # Check if exchanges only contain known "to" and "from" participants
+        for exchange in self.topology["exchanges"]:
+            to_participant: str = exchange["to"]
+            from_participant: str = exchange["from"]
+
+            participants_in_exchanges.add(to_participant)
+            participants_in_exchanges.add(from_participant)
+
+            if to_participant not in participant_names:
+                logger.critical(f"Unknown participant {to_participant} in topology file "
+                                f"{self.topology_file_path}.")
+                return 1
+            if from_participant not in participant_names:
+                logger.critical(f"Unknown participant {from_participant} in topology file "
+                                f"{self.topology_file_path}.")
+                return 1
+            data: str = exchange["data"]
+
+            if from_participant == to_participant:
+                logger.error(f"Participant {from_participant} exchanges {data} with itself.")
+                return 1
+
+            # Remove uniquifiers from the list if they are present in a data name
+            for uniquifier in helper.DATA_UNIQUIFIERS.copy():
+                if uniquifier in data:
+                    helper.DATA_UNIQUIFIERS.remove(uniquifier)
+                    logger.debug(f"Removed uniquifier {uniquifier} from the list of uniquifiers.")
+
+        for participant in self.topology["participants"]:
+            if participant["name"] not in participants_in_exchanges:
+                logger.warning(f"Removing participant {participant['name']} as it is defined but never used.")
+                self.topology["participants"].remove(participant)
+
+        logger.debug("Topology does not contain any errors.")
+        return 0
+
+    def get_topology(self) -> dict:
+        """
+        Return the topology dict.
+        :return: A dict representing the topology.
+        """
+        return self.topology

@@ -1,0 +1,14 @@
+participants:
+  - name: A
+    solver: ASolver
+  - name: B
+    solver: BSolver
+    dimensionality: 2
+exchanges:
+  - from: A
+    to: B
+    from-patch: interface
+    to-patch: interface
+    data: Color
+    type: weak
+    data-type: scalar

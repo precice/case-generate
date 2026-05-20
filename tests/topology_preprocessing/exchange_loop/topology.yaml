@@ -1,0 +1,11 @@
+participants:
+  - name: Croc
+    solver: IDK
+
+exchanges:
+  - from: Croc
+    to: Croc
+    from-patch: I
+    to-patch: I
+    data: Fish
+    type: strong

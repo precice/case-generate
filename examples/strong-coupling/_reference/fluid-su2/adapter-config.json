@@ -1,0 +1,24 @@
+{
+    "participant_name": "Fluid",
+    "precice_config_file_path": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "Fluid-Extensive-Mesh",
+            "patches": [
+                "interface-extensive"
+            ],
+            "write_data_names": [
+                "Force"
+            ]
+        },
+        {
+            "mesh_name": "Fluid-Intensive-Mesh",
+            "patches": [
+                "interface-intensive"
+            ],
+            "read_data_names": [
+                "Displacement"
+            ]
+        }
+    ]
+}
