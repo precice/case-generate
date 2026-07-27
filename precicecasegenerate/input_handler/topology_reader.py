@@ -2,6 +2,7 @@ from ruamel.yaml import YAML
 import json
 import jsonschema
 import logging
+import re
 from pathlib import Path
 from importlib.resources import files
 from precicecasegenerate import helper
@@ -33,7 +34,7 @@ class TopologyReader:
     def validate_topology(self) -> int:
         """
         Check if the topology adheres to the defined schema in schemas/topology-schema.json
-        :return: 0 if topology is valid, 1 otherwise
+        :return: 0 if the topology is valid, 1 otherwise
         """
         schema_path = files("precicecasegenerate.schemas") / "topology-schema.json"
 
@@ -49,12 +50,13 @@ class TopologyReader:
 
     def check_topology(self) -> int:
         """
-        Check if the topology is valid.
-        This check includes:
+        Check if the topology is valid and update it if necessary.
+        It is checked whether:
 
-        - Checking if participant names are unique.
-        - Checking if exchanges only contain known "to" and "from" participants.
-        - Checking if exchanges are unique, when ignoring "to-patch", "from-patch" and "type" tags.
+        - participant names are unique.
+        - exchanges only contain known "to" and "from" participants.
+        - exchanges are unique, when ignoring "to-patch", "from-patch" and "type" tags.
+
         If any of these checks fail, an error message is printed and the program is aborted.
         Additionally, it is checked if any of the data names contains one of the uniquifiers defined in
         helper.DATA_UNIQUIFIERS. If so, this uniquifier is removed from the list of uniquifiers.
@@ -108,6 +110,32 @@ class TopologyReader:
 
         logger.debug("Topology does not contain any errors.")
         return 0
+
+    def preprocess_participant_names(self):
+        """
+        This method works in-place with the topology dict.
+        Participant names are capitalized, any spaces are replaced by hyphens, and other special characters are removed.
+        :return: None
+        """
+        participant_name_map: dict[str, str] = {}
+        for participant in self.topology["participants"]:
+            name: str = participant["name"]
+            new_name: str = name
+            no_special_symbols_name: str = re.sub(r"[^a-zA-Z0-9\-]", "", new_name)
+            if not name[0].isupper():
+                new_name = new_name.capitalize()
+            if " " in name:
+                new_name = new_name.replace(" ", "-")
+            if no_special_symbols_name != new_name:
+                new_name = no_special_symbols_name
+            if name != new_name:
+                logger.warning(f"Participant name {name} was updated to {new_name} to adhere to naming convention.")
+            participant_name_map[name] = new_name
+            participant["name"] = new_name
+
+        for exchange in self.topology["exchanges"]:
+            exchange["to"] = participant_name_map[exchange["to"]]
+            exchange["from"] = participant_name_map[exchange["from"]]
 
     def get_topology(self) -> dict:
         """

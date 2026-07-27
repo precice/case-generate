@@ -72,6 +72,9 @@ def generate_case(input_file: Path, output_root: Path) -> int:
     return_value: int = topology_reader.check_topology()
     if return_value != 0:
         return return_value
+    # Preprocess the participant names to ensure they have the correct format.
+    # This needs to be done before creating the nodes.
+    topology_reader.preprocess_participant_names()
     topology: dict = topology_reader.get_topology()
     logger.debug("Topology reader finished.")
 

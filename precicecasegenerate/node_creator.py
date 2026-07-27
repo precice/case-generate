@@ -437,7 +437,7 @@ class NodeCreator:
             data_label: helper.DataKind = helper.get_data_label(data.name.lower())
             if data_label == helper.DataKind.DEFAULT:
                 logger.info(f"Data \"{data.name}\" is neither extensive nor intensive. Choosing default "
-                               f"{helper.DEFAULT_DATA_KIND} with corresponding {helper.DEFAULT_MAPPING_KIND}-mapping.")
+                            f"{helper.DEFAULT_DATA_KIND} with corresponding {helper.DEFAULT_MAPPING_KIND}-mapping.")
 
             from_mesh: n.MeshNode = mesh_map[(from_participant, to_participant, data_label.value)]
             to_mesh: n.MeshNode = mesh_map[(to_participant, from_participant, data_label.value)]
@@ -1189,5 +1189,3 @@ class NodeCreator:
                              f"mesh {suspect.mesh.name} and data {suspect.data.name}.")
                 return True
         return False
-
-
