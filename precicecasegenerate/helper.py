@@ -37,7 +37,8 @@ INTENSIVE_DATA: list[str] = [
     "pressure",
     "velocity",
     "heat-flux",
-    "heatflux"
+    "heatflux",
+    "traction"
 ]
 
 class DataKind(Enum):
