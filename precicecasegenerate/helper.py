@@ -43,12 +43,11 @@ INTENSIVE_DATA: list[str] = [
 class DataKind(Enum):
     EXTENSIVE = "extensive"
     INTENSIVE = "intensive"
-    DEFAULT = DEFAULT_DATA_KIND
 
 def get_data_label(data_name: str) -> DataKind:
     """
     Return the kind / label of data based on the name of the data:
-    either "extensive" or "intensive"; with default "intensive".
+    either "extensive" or "intensive"; with default DEFAULT_DATA_KIND.
     :param data_name: The name of the data.
     :return: Enum type of the data kind.
     """
@@ -57,7 +56,15 @@ def get_data_label(data_name: str) -> DataKind:
     elif _is_intensive(data_name):
         return DataKind.INTENSIVE
     else:
-        return DataKind.DEFAULT
+        return DataKind(DEFAULT_DATA_KIND)
+
+def is_unknown_data_kind(data_name: str) -> bool:
+    """
+    Checks if the given data name is associated with an unknown data kind, i.e., neither extensive nor intensive.
+    :param data_name: The name of the data to check.
+    :return: True, if the data kind is unknown. False otherwise.
+    """
+    return not _is_extensive(data_name) and not _is_intensive(data_name)
 
 def _is_extensive(data_name: str) -> bool:
     """
