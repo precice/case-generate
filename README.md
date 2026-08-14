@@ -1,6 +1,6 @@
 # preCICE Case Generate
 
-preCICE case-generate is a python based utility designed to simplify the generation of preCICE application cases. 
+preCICE case-generate is a Python-based utility designed to simplify the generation of preCICE application cases. 
 Such cases consist of the central `precice-config.xml` file which defines all sorts of connections and relations between 
 involved solvers, as well as `adapter-config.json` files for each solver. 
 
@@ -26,7 +26,7 @@ Required dependencies are:
 - Python ≥ 3.10 
 - pip
 - git for cloning the repository :) 
-- [preCICE Config Graph](https://github.com/precice/config-graph)  (will be installed during the setup)
+- [preCICE Config Graph](https://github.com/precice/config-graph) (will be installed during the setup)
 - pyyaml
 - jsonschema
 
@@ -126,7 +126,7 @@ The `precice-case-generate` tool supports the following optional parameters:
 ### Examples
 
 Valid `topology.yaml` <-> application case pairs can be found in the `examples/` directory. 
-They include the preCICE tutorials 1-4 as well as some more complex simulations.  
+They include the preCICE tutorials 1–4 as well as some more complex simulations.  
 
 ### Configuration
 
@@ -140,7 +140,7 @@ You can create a topology for your preCICE simulation using the online MetaConfi
 We provide a preloaded schema to help you get started:
 
 1. Open the MetaConfigurator with the preloaded
-   schema: [MetaConfigurator link](https://metaconfigurator.github.io/meta-configurator/?schema=https://github.com/precice/case-generate/blob/main/precicecasegenerate/schemas/topology-schema.json&settings=https://github.com/precice/case-generate/blob/main/precicecasegenerate/templates/metaConfiguratorSettings.json)
+   schema: [MetaConfigurator Link](https://metaconfigurator.github.io/meta-configurator/?schema=https://github.com/precice/case-generate/blob/main/precicecasegenerate/schemas/topology-schema.json&settings=https://github.com/precice/case-generate/blob/main/meta_configurator/metaConfiguratorSettings.json)
 
 2. Use the interactive interface to define your topology:
     - The preloaded schema provides a structured way to describe your simulation components
