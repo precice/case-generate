@@ -435,7 +435,7 @@ class NodeCreator:
             data: n.DataNode = data_map[frozenset(exchange.items())]
 
             data_label: helper.DataKind = helper.get_data_label(data.name.lower())
-            if data_label == helper.DataKind.DEFAULT:
+            if helper.is_unknown_data_kind(data.name):
                 logger.info(f"Data \"{data.name}\" is neither extensive nor intensive. Choosing default "
                             f"{helper.DEFAULT_DATA_KIND} with corresponding {helper.DEFAULT_MAPPING_KIND}-mapping.")
 
