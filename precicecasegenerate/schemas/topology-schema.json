@@ -39,17 +39,33 @@
             "type": "string",
             "description": "Name of the source participant sending data"
           },
-          "from-patch": {
+          "from-location-name": {
             "type": "string",
-            "description": "Specific interface patch or surface on the source participant from which data is sent"
+            "description": "Name of the location on the source participant where data is sent"
+          },
+          "from-location-type": {
+            "type": "string",
+            "description": "Type of location on the source participant where data is sent",
+            "enum": [
+              "surface",
+              "volume"
+            ]
           },
           "to": {
             "type": "string",
             "description": "Name of the target participant receiving data"
           },
-          "to-patch": {
+          "to-location-name": {
             "type": "string",
-            "description": "Specific interface patch or surface on the target participant where data is received"
+            "description": "Name of the location on the target participant where data is received"
+          },
+          "to-location-type": {
+            "type": "string",
+            "description": "Type of location on the target participant where data is received",
+            "enum": [
+              "surface",
+              "volume"
+            ]
           },
           "data": {
             "type": "string",
@@ -75,15 +91,18 @@
         },
         "required": [
           "from",
-          "from-patch",
+          "from-location-name",
           "to",
-          "to-patch",
+          "to-location-name",
           "data",
           "type"
         ],
         "optional": [
-          "data-type"
-        ]
+          "data-type",
+          "from-location-type",
+          "to-location-type"
+        ],
+        "additionalProperties": false
       },
       "minItems": 1,
       "uniqueItems": true
@@ -93,6 +112,7 @@
     "participants",
     "exchanges"
   ],
+  "additionalProperties": false,
   "title": "preCICE Topology Configuration",
   "description": "JSON schema defining the topology configuration for precice-case-generate. Specifies participants, exchanges, and their coupling relationships."
 }
