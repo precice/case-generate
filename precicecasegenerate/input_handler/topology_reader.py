@@ -55,7 +55,7 @@ class TopologyReader:
 
         - participant names are unique.
         - exchanges only contain known "to" and "from" participants.
-        - exchanges are unique, when ignoring "to-patch", "from-patch" and "type" tags.
+        - exchanges are unique, when ignoring "to-location-name", "from-location-name" and "type" tags.
 
         If any of these checks fail, an error message is printed and the program is aborted.
         Additionally, it is checked if any of the data names contains one of the uniquifiers defined in
@@ -115,6 +115,7 @@ class TopologyReader:
         """
         This method works in-place with the topology dict.
         Participant names are capitalized, any spaces are replaced by hyphens, and other special characters are removed.
+        Additionally, the participant names are updated in the exchanges to match the new names.
         :return: None
         """
         participant_name_map: dict[str, str] = {}
@@ -130,9 +131,12 @@ class TopologyReader:
                 new_name = no_special_symbols_name
             if name != new_name:
                 logger.warning(f"Participant name {name} was updated to {new_name} to adhere to naming convention.")
+            # Save the reference old name -> new name
             participant_name_map[name] = new_name
+            # Update the name in the topology
             participant["name"] = new_name
 
+        # Update the names in the exchanges to match the new names
         for exchange in self.topology["exchanges"]:
             exchange["to"] = participant_name_map[exchange["to"]]
             exchange["from"] = participant_name_map[exchange["from"]]
