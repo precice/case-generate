@@ -16,19 +16,19 @@ class AdapterConfigCreator:
     """
 
     def __init__(self, participant_solver_map: dict[n.ParticipantNode, str],
-                 mesh_patch_map: dict[n.MeshNode, set[str]], precice_config_filename: str = "precice-config.xml"):
+                 mesh_location_map: dict[n.MeshNode, set[helper.LocationNode]],
+                 precice_config_filename: str = "precice-config.xml"):
         """
         Initialize an AdapterConfigCreator object, which creates adapter configuration files for each participant.
         :param participant_solver_map: A dict mapping participant nodes to their solver names.
-        :param mesh_patch_map: A map mapping meshes to sets of patches.
+        :param mesh_location_map: A map mapping meshes to sets of location nodes.
         :param precice_config_filename: The name of the precice-config.xml file.
         """
         self.participant_solver_map = participant_solver_map
-        self.patch_map = mesh_patch_map
+        self.location_map = mesh_location_map
         self.precice_config_filename = precice_config_filename
 
-    def _create_adapter_config_dict(self, participant: n.ParticipantNode,
-                                    mesh_patch_map: dict[n.MeshNode, set[str]]) -> dict[str, str | list[str]]:
+    def _create_adapter_config_dict(self, participant: n.ParticipantNode) -> dict[str, str | list[str]]:
         """
         Create a dictionary representing the adapter configuration file for the given participant.
         :param participant: The participant for which the adapter configuration is created.
@@ -39,32 +39,39 @@ class AdapterConfigCreator:
 
         # Create an entry for each mesh
         for mesh in participant.provide_meshes:
-            # Get the patches used by the current mesh
-            patches: list[str] = sorted(list(mesh_patch_map.get(mesh, [])))
+            # Get the locations used by the current mesh
+            locations: list[helper.LocationNode] = sorted(list(self.location_map[mesh]), key=lambda x: x.name)
+            # Get the location-type of the mesh: It should be the same for all locations
+            location_type: str = locations[0].type.value
+            for l in locations:
+                if l.type.value != location_type:
+                    raise ValueError(f"Location-type of mesh {mesh.name} is not the same for all locations.")
+
+            location_names: list[str] = [l.name for l in locations]
 
             # Get the read-data of the participant and the current mesh
             read_data: list[str] = [
-                rd.data.name for rd in participant.read_data
-                if rd.mesh == mesh
+                rd.data.name for rd in participant.read_data if rd.mesh == mesh
             ]
 
             # Get the write-data of the participant and the current mesh
             write_data: list[str] = [
-                wd.data.name for wd in participant.write_data
-                if wd.mesh == mesh
+                wd.data.name for wd in participant.write_data if wd.mesh == mesh
             ]
 
             # The mesh entry is a dictionary containing the mesh name and the patches used by it
-            mesh_entry: dict[str, str | list[str]] = {
+            mesh_entry: dict[str, str | list[str] | list[dict[str,str]]] = {
                 "mesh_name": mesh.name,
-                "patches": patches
+                "location": location_type,  # Maybe update to "location-type" in the future
+                "patches": location_names,  # Maybe update to "location-names" in the future
+                "is_received": False,
             }
 
             # Only add read-/write-data keys if the mesh reads/writes data
             if read_data:
-                mesh_entry["read_data_names"] = sorted(read_data)
+                mesh_entry["read_data"] = [{"name": rd_name} for rd_name in sorted(read_data)]
             if write_data:
-                mesh_entry["write_data_names"] = sorted(write_data)
+                mesh_entry["write_data"] = [{"name": wd_name} for wd_name in sorted(write_data)]
 
             # Add the mesh entry to the list of interfaces
             interfaces.append(mesh_entry)
@@ -105,8 +112,7 @@ class AdapterConfigCreator:
             logger.debug(f"Creating adapter configuration file for participant {participant.name}.")
             directory: Path = helper.get_participant_solver_directory(parent_directory, participant.name,
                                                                       self.participant_solver_map[participant])
-            adapter_config_dict: dict[str, str | list[str]] = self._create_adapter_config_dict(participant,
-                                                                                               self.patch_map)
+            adapter_config_dict: dict[str, str | list[str]] = self._create_adapter_config_dict(participant)
             try:
                 preciceadapterschema.validate(adapter_config_dict)
                 logger.debug(f"Adapter config file {directory} adheres to the schema.")
