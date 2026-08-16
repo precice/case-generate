@@ -79,7 +79,7 @@ class TopologyReader:
         # Check if exchanges are unique
         known_exchanges: set[tuple[str, str, str]] = set()
         # Check if locations of a participant have only one type
-        participant_location_type_map: dict[tuple[str, str], str] = {}
+        participant_location_type_map: dict[tuple[str, str], helper.LocationType] = {}
 
         # Check if exchanges only contain known "to" and "from" participants
         for exchange in self.topology["exchanges"]:
@@ -123,7 +123,7 @@ class TopologyReader:
                     logger.critical(f"Participant {from_participant} has multiple location types for location "
                                     f"{from_location_name}.")
                     return 1
-                participant_location_type_map[from_location] = from_location_type
+                participant_location_type_map[from_location] = helper.LocationType(from_location_type)
             if to_location_type is not None:
                 to_location: tuple[str, str] = (to_participant, to_location_name)
                 if to_location in participant_location_type_map and participant_location_type_map[
@@ -131,7 +131,7 @@ class TopologyReader:
                     logger.critical(f"Participant {to_participant} has multiple location types for location "
                                     f"{to_location_name}.")
                     return 1
-                participant_location_type_map[to_location] = to_location_type
+                participant_location_type_map[to_location] = helper.LocationType(to_location_type)
 
             # Remove uniquifiers from the list if they are present in a data name
             for uniquifier in helper.DATA_UNIQUIFIERS.copy():
@@ -154,9 +154,12 @@ class TopologyReader:
             # There is a maximum of one location type for each participant defined in the topology,
             # so we can just take it or use the default location type if it is not defined in the topology.
             exchange["from-location-type"] = participant_location_type_map.get((from_participant, from_location_name),
-                                                                               helper.DEFAULT_LOCATION_TYPE)
+                                                                               helper.LocationType(
+                                                                                   helper.DEFAULT_LOCATION_TYPE))
             exchange["to-location-type"] = participant_location_type_map.get((to_participant, to_location_name),
-                                                                             helper.DEFAULT_LOCATION_TYPE)
+                                                                             helper.LocationType(
+                                                                                 helper.DEFAULT_LOCATION_TYPE))
+
         logger.debug("Topology does not contain any errors.")
         return 0
 
