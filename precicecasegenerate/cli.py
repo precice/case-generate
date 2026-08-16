@@ -47,7 +47,10 @@ def runGenerate(args: argparse.Namespace) -> int:
 
     return_value = generate_case(input_file, output_root)
 
-    logger.info("Program finished.")
+    if return_value != 0:
+        logger.error(f"Program aborted with return value {return_value}.")
+    else:
+        logger.info("Program finished.")
     return return_value
 
 
@@ -100,7 +103,7 @@ def generate_case(input_file: Path, output_root: Path) -> int:
         logger.debug(f"Created participant directory at {participant_directory}")
 
     logger.debug("Starting adapter config creator.")
-    mesh_patch_map: dict = node_creator.get_mesh_patch_map()
+    mesh_patch_map: dict = node_creator.get_mesh_location_map()
     adapter_config_creator: AdapterConfigCreator = AdapterConfigCreator(participant_solver_map,
                                                                         mesh_patch_map,
                                                                         precice_config_filename=cli_helper.PRECICE_CONFIG_FILE_NAME)
