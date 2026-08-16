@@ -150,15 +150,6 @@ def get_participant_solver_directory(parent_directory: Path, participant_name: s
     return participant_directory
 
 
-class LocationState(Enum):
-    """
-    State of a location in the topology.yaml file.
-    A location can be used to either exchange extensive or intensive data.
-    """
-    EXTENSIVE = "extensive"
-    INTENSIVE = "intensive"
-
-
 class LocationType(Enum):
     """
     Type of a location in the topology.yaml file.
@@ -173,18 +164,39 @@ class LocationNode:
     A class to represent a location from a topology.yaml file.
     """
 
-    def __init__(self, name: str, participant: n.ParticipantNode, mesh: n.MeshNode, label: LocationState,
+    def __init__(self, name: str, participant: n.ParticipantNode,
+                 meshes: dict[n.ParticipantNode, dict[DataKind, n.MeshNode]],
                  type: LocationType = LocationType(DEFAULT_LOCATION_TYPE)):
         """
         Initialize a LocationNode.
         :param name: The name of the location.
         :param participant: The participant that owns the location.
-        :param mesh: The mesh the location is on.
-        :param label: The state of the location (extensive or intensive).
+        :param meshes: A dict mapping participants to meshes.
+        More accurately, the participants are the target participants of the location
+        and the meshes are the ones used by the owning participant in communication with the target participant.
+        As the mesh must be either "extensive" or "intensive", the target participant maps to a dict of meshes
+        with the keys "extensive" and "intensive".
         :param type: The type of the location (surface or volume). Defaults to surface.
         """
         self.name = name
         self.participant = participant
-        self.mesh = mesh
-        self.label = label
+        self.meshes = meshes
         self.type = type
+
+    def __eq__(self, other):
+        """
+        Equality check for LocationNode objects.
+        Two LocationNode objects are equal if they have the same name, participant, label and type.
+        As the mesh is assigned later, it is ignored for equality checks.
+        :param self: The current LocationNode object.
+        :param other: The other LocationNode object to compare with.
+        :return: True if the objects are equal, False otherwise.
+        """
+        if not isinstance(other, LocationNode):
+            return False
+        return (self.name == other.name and
+                self.participant == other.participant and
+                self.type == other.type)
+
+    def __hash__(self):
+        return hash((self.name, self.participant, self.type))
