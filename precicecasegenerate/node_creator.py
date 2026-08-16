@@ -10,14 +10,20 @@ logger = logging.getLogger(__name__)
 class NodeCreator:
 
     def __init__(self, topology: dict):
+        """
+        Initialize the NodeCreator.
+        This method automatically creates all nodes from the topology.
+        :param topology: The topology to be used for creating the nodes.
+        """
         self.topology = topology
+        # Nodes to be created
         self.participants: list[n.ParticipantNode] = []
         self.data: list[n.DataNode] = []
         self.meshes: list[n.MeshNode] = []
         self.coupling_schemes: list[n.CouplingSchemeNode | n.MultiCouplingSchemeNode] = []
         self.m2ns: list[n.M2NNode] = []
-        # Patches are important for adapter configs
-        self.patches: list[helper.PatchNode] = []
+        # Location nodes are important for adapter configs
+        self.locations: list[helper.LocationNode] = []
 
         # Containers for temporary values
         # Dimensionality is needed for meshes
@@ -26,20 +32,20 @@ class NodeCreator:
 
         self._create_nodes()
 
-    def get_mesh_patch_map(self) -> dict[n.MeshNode, set[str]]:
+    def get_mesh_location_map(self) -> dict[n.MeshNode, set[str]]:
         """
-        Create a dict mapping mesh nodes to sets of patches that they use / contain.
-        :return: A dict mapping mesh nodes to sets of patches.
+        Create a dict mapping mesh nodes to sets of locations that they use / contain.
+        :return: A dict mapping mesh nodes to sets of locations.
         """
-        mesh_patch_map: dict[n.MeshNode, set[str]] = {}
-        for patch in self.patches:
-            mesh: n.MeshNode = patch.mesh
+        mesh_location_map: dict[n.MeshNode, set[str]] = {}
+        for location in self.locations:
+            mesh: n.MeshNode = location.mesh
             # Create a a new entry if necessary
-            if mesh not in mesh_patch_map:
-                mesh_patch_map[mesh] = set()
-            mesh_patch_map[mesh].add(patch.name)
+            if mesh not in mesh_location_map:
+                mesh_location_map[mesh] = set()
+            mesh_location_map[mesh].add(location.name)
 
-        return mesh_patch_map
+        return mesh_location_map
 
     def get_participant_solver_map(self) -> dict[n.ParticipantNode, str]:
         """
@@ -74,26 +80,27 @@ class NodeCreator:
         participant_map: dict[str, n.ParticipantNode] = self._initialize_participants()
         logger.debug(f"Created {len(set(participant_map.values()))} participant nodes.")
 
-        # Update patches
+        # Update location entries in the topology.
         # IMPORTANT: This updates the topology dict.
         #  Anything using a "frozenset" of topology items needs to be done after this method!
         #  (such as "initialize_data")
-        participant_patch_label_map: dict[tuple[n.ParticipantNode, n.ParticipantNode], dict[str, set[str]]] = (
-            self._patch_preprocessing(participant_map))
+        participant_location_label_map: dict[
+            tuple[n.ParticipantNode, n.ParticipantNode], dict[str, set[tuple[str, helper.LocationType]]]] = (
+            self._location_preprocessing(participant_map))
 
-        # Update non-unique data names depending on from-/to-patches of the involved participants
+        # Update non-unique data names depending on from-/to-location-names of the involved participants
         # IMPORTANT: This updates the topology dict (see warning above)
         self._data_preprocessing(participant_map)
 
         # Initialize data from exchanges tag (defined implicitly)
-        # IMPORTANT: This uses the topology dict as keys, so it needs to be done after the patch preprocessing.
+        # IMPORTANT: This uses the topology dict as keys, so it needs to be done after the location "preprocessing".
         data_map: dict[frozenset, n.DataNode] = self._initialize_data(participant_map)
         logger.debug(f"Created {len(set(data_map.values()))} data nodes.")
 
         # Initialize meshes from the exchanges tag (defined implicitly)
         mesh_map: dict[
-            tuple[n.ParticipantNode, n.ParticipantNode, str], n.MeshNode] = self._initialize_meshes_and_patches(
-            participant_patch_label_map)
+            tuple[n.ParticipantNode, n.ParticipantNode, str], n.MeshNode] = self._initialize_meshes_and_locations(
+            participant_location_label_map)
         logger.debug(f"Created {len(set(mesh_map.values()))} mesh nodes.")
 
         # Initialize mappings from the exchanges tag (defined implicitly)
@@ -121,6 +128,7 @@ class NodeCreator:
 
         # Handle weak couplings
         if len(weak_couplings) > 0:
+            # The return value is not used anymore, but it looks nicer to have it here
             coupling_map = self._create_weak_coupling_schemes(weak_couplings, coupling_map)
 
         # Create M2Ns
@@ -172,8 +180,8 @@ class NodeCreator:
                     logger.debug(f"Created M2N from {first_participant.name} to "
                                  f"{second_participant.name}.")
 
-    def _create_strong_coupling_schemes(self, strong_couplings: list[dict], weak_couplings: list[dict]) -> (
-            dict[frozenset[n.ParticipantNode], n.CouplingSchemeNode]):
+    def _create_strong_coupling_schemes(self, strong_couplings: list[dict], weak_couplings: list[dict]) \
+            -> (dict[frozenset[n.ParticipantNode], n.CouplingSchemeNode]):
         """
         Create coupling-schemes for strong interactions.
         First, bidirectional strong couplings are determined. If there is more than one bidirectional strong coupling,
@@ -371,7 +379,7 @@ class NodeCreator:
         :return: A dict of potential couplings.
         """
         potential_couplings: list[dict] = []
-        # An exchange is a dict "from, to, data, type, optional[data-type], from_patch, to_patch"
+        # An exchange is a dict "from, to, data, type, optional[data-type, from-/to-location-type], from-/to-location-name"
         for exchange in self.topology["exchanges"]:
             from_participant: n.ParticipantNode = participant_map[exchange["from"]]
             to_participant: n.ParticipantNode = participant_map[exchange["to"]]
@@ -554,29 +562,32 @@ class NodeCreator:
         logger.debug(f"Created read-mapping between {from_mesh.name} and {to_mesh.name} "
                      f"for participant {to_participant.name}.")
 
-    def _initialize_meshes_and_patches(self, participant_patch_map: dict[tuple[n.ParticipantNode, n.ParticipantNode],
-    dict[str, set[str]]]) -> dict[tuple[n.ParticipantNode, n.ParticipantNode, str], n.MeshNode]:
+    def _initialize_meshes_and_locations(self,
+                                         participant_location_map: dict[
+                                             tuple[n.ParticipantNode, n.ParticipantNode], dict[
+                                                 str, set[tuple[str, helper.LocationType]]]]) -> dict[
+        tuple[n.ParticipantNode, n.ParticipantNode, str], n.MeshNode]:
         """
-        Initialize meshes based on the communication of participants and the involved patches.
+        Initialize meshes based on the communication of participants and the involved locations.
         First, communication between participants is counted to be able to determine the number of meshes needed and
         thus allow for better naming.
-        Next, for each communication pair, mesh(es) are created based on the involved patches.
-        During the mesh creation, while iterating over the patches, corresponding patch nodes are created.
-        :param participant_patch_map: A dict mapping (a-participant, b-participant) to a dict of extensive and intensive patches.
+        Next, for each communication pair, mesh(es) are created based on the involved locations.
+        During the mesh creation, while iterating over the locations, corresponding location nodes are created.
+        :param participant_location_map: A dict mapping (a-participant, b-participant) to a dict of extensive and intensive locations.
         :return: A dict mapping (a-participant, b-participant, extensive/intensive) to mesh nodes.
         """
         # Count the frequency of a participant appearing in communications to determine the number of meshes to create
-        frequency_map: dict[n.ParticipantNode, int] = {p1: 0 for p1, p2 in participant_patch_map}
-        for (from_participant, to_participant) in participant_patch_map:
+        frequency_map: dict[n.ParticipantNode, int] = {p1: 0 for p1, p2 in participant_location_map}
+        for (from_participant, to_participant) in participant_location_map:
             # Since the map is symmetric, we only need to increment "from"
             frequency_map[from_participant] += 1
         # Create a dict mapping participant communication and data label to meshes
         participant_label_mesh_map: dict[tuple[n.ParticipantNode, n.ParticipantNode, str], n.MeshNode] = {}
-        for (from_participant, to_participant) in participant_patch_map:
-            # Check how many patches the from-participant uses in communication with the to-participant
-            # Since the map is symmetric, it suffices to check the patches of "from"
-            extensives: int = len(participant_patch_map[(from_participant, to_participant)]["extensive"])
-            intensives: int = len(participant_patch_map[(from_participant, to_participant)]["intensive"])
+        for (from_participant, to_participant) in participant_location_map:
+            # Check how many locations the from-participant uses in communication with the to-participant
+            # Since the map is symmetric, it suffices to check the locations of "from"
+            extensives: int = len(participant_location_map[(from_participant, to_participant)]["extensive"])
+            intensives: int = len(participant_location_map[(from_participant, to_participant)]["intensive"])
             participant_dim: int = self.participant_dimensionality[from_participant]
             # Check if the communication uses both intensive and extensive data
             if extensives > 0 and intensives > 0:
@@ -608,19 +619,28 @@ class NodeCreator:
                 participant_label_mesh_map[(from_participant, to_participant, "intensive")] = intensive_mesh
                 logger.debug(f"Created extensive and intensive mesh for communication between "
                              f"{from_participant.name} and {to_participant.name}.")
-                # Create new patch nodes for from_participant
-                # Since only the patches of "from" are contained in
-                # participant_patch_map[(from_participant, to_participant)], we must not create any patches for "to"
-                for extensive_patch in participant_patch_map[(from_participant, to_participant)]["extensive"]:
-                    patch_node: helper.PatchNode = helper.PatchNode(name=extensive_patch, participant=from_participant,
-                                                                    mesh=extensive_mesh,
-                                                                    label=helper.PatchState.EXTENSIVE)
-                    self.patches.append(patch_node)
-                for intensive_patch in participant_patch_map[(from_participant, to_participant)]["intensive"]:
-                    patch_node: helper.PatchNode = helper.PatchNode(name=intensive_patch, participant=from_participant,
-                                                                    mesh=intensive_mesh,
-                                                                    label=helper.PatchState.INTENSIVE)
-                    self.patches.append(patch_node)
+                # Create new location nodes for from_participant
+                # Since only the locations of "from" are contained in
+                # participant_location_map[(from_participant, to_participant)],
+                # we must not create any locations for "to"
+                for extensive_location_name, extensive_location_type in participant_location_map[(from_participant, to_participant)]["extensive"]:
+                    location_node: helper.LocationNode = helper.LocationNode(name=extensive_location_name,
+                                                                          participant=from_participant,
+                                                                          mesh=extensive_mesh,
+                                                                          label=helper.LocationState.EXTENSIVE,
+                                                                          type=extensive_location_type)
+                    logger.debug(f"Created extensive location {extensive_location_name} for participant "
+                                 f"{from_participant.name}'s mesh {extensive_mesh.name} with type {extensive_location_type}.")
+                    self.locations.append(location_node)
+                for intensive_location_name, intensive_location_type in participant_location_map[(from_participant, to_participant)]["intensive"]:
+                    location_node: helper.LocationNode = helper.LocationNode(name=intensive_location_name,
+                                                                          participant=from_participant,
+                                                                          mesh=intensive_mesh,
+                                                                          label=helper.LocationState.INTENSIVE,
+                                                                          type=intensive_location_type)
+                    logger.debug(f"Created extensive location {intensive_location_name} for participant "
+                                 f"{from_participant.name}'s mesh {intensive_mesh.name} with type {intensive_location_type}.")
+                    self.locations.append(location_node)
             # The participant pair only communicates one kind of data
             else:
                 # Check if the from-participant communicates with more than one participant
@@ -641,13 +661,15 @@ class NodeCreator:
                 # Determine the kind of mesh this is (extensive or intensive)
                 label: str = "extensive" if extensives > 0 else "intensive"
                 participant_label_mesh_map[(from_participant, to_participant, label)] = mesh
-                logger.debug(f"Created mesh for communication between {from_participant.name} "
-                             f"and {to_participant.name}.")
-                # Create new patch nodes for only this label
-                for patch in participant_patch_map[(from_participant, to_participant)][label]:
-                    patch_node: helper.PatchNode = helper.PatchNode(name=patch, participant=from_participant,
-                                                                    mesh=mesh, label=helper.PatchState(label))
-                    self.patches.append(patch_node)
+                logger.debug(f"Created mesh for communication between {from_participant.name} and {to_participant.name}.")
+                # Create new location nodes for only this label
+                for location_name, location_type in participant_location_map[(from_participant, to_participant)][label]:
+                    location_node: helper.LocationNode = helper.LocationNode(name=location_name, participant=from_participant,
+                                                                          mesh=mesh, label=helper.LocationState(label),
+                                                                          type=location_type)
+                    logger.debug(f"Created {label} location {location_name} for participant {from_participant.name}'s "
+                                 f"mesh {mesh.name} with type {location_type}.")
+                    self.locations.append(location_node)
 
         return participant_label_mesh_map
 
@@ -677,15 +699,15 @@ class NodeCreator:
         Update data names in the topology dict, if they fulfill these conditions:
          - Data is sent from participant A to participant B with the same name multiple times
          - The exchanges are of the same type (strong/weak)
-        Then, these exchanges lead to errors, as they are only "unique" in the patch names,
+        Then, these exchanges lead to errors, as they are only "unique" in the location names,
         which are not included in the precice-config; i.e., they would lead to duplicate exchanges.
         Such a data name is then "uniquified", directly in the topology dict.
         :param participant_map: A dict mapping participant names to participant nodes.
         :return: None
         """
-        # Map tuples of from-/to-participants, data-name, data-type and exchange-type to the from-/to-patches
+        # Map tuples of from-/to-participants, data-name, data-type and exchange-type to the from-/to-location-names
         # that are used in exchanges
-        exchange_patch_map: dict[
+        exchange_location_map: dict[
             tuple[n.ParticipantNode, n.ParticipantNode, str, e.DataType, str], dict[str, list[str]]] = {}
         for exchange in self.topology["exchanges"]:
             from_participant: n.ParticipantNode = participant_map[exchange["from"]]
@@ -693,33 +715,35 @@ class NodeCreator:
             data: str = exchange["data"]
             data_type = self._get_data_type(exchange)
             type: str = exchange["type"]
-            from_patch: str = exchange["from-patch"]
-            to_patch: str = exchange["to-patch"]
-            if (from_participant, to_participant, data, data_type, type) in exchange_patch_map:
-                exchange_patch_map[from_participant, to_participant, data, data_type, type]["from-patch"].append(
-                    from_patch)
-                exchange_patch_map[from_participant, to_participant, data, data_type, type]["to-patch"].append(to_patch)
+            from_location_name: str = exchange["from-location-name"]
+            to_location_name: str = exchange["to-location-name"]
+            if (from_participant, to_participant, data, data_type, type) in exchange_location_map:
+                exchange_location_map[from_participant, to_participant, data, data_type, type]["from-location"].append(
+                    from_location_name)
+                exchange_location_map[from_participant, to_participant, data, data_type, type]["to-location"].append(
+                    to_location_name)
             else:
-                exchange_patch_map[from_participant, to_participant, data, data_type, type] = \
-                    {"from-patch": [from_patch], "to-patch": [to_patch]}
+                exchange_location_map[from_participant, to_participant, data, data_type, type] = \
+                    {"from-location": [from_location_name], "to-location": [to_location_name]}
 
         # Check every collected tuple for violations
-        for key, patches in exchange_patch_map.items():
+        for key, locations in exchange_location_map.items():
             from_participant, to_participant, data, data_type, type = key
-            from_patches = patches["from-patch"]
-            to_patches = patches["to-patch"]
+            from_locations = locations["from-location"]
+            to_locations = locations["to-location"]
             # Check if it is the first occurrence since we want to preserve the original data name 
             initial: bool = True
             # If a tuple is not unique, its dict will have sets of length greater than 1
-            if len(from_patches) > 1 or len(to_patches) > 1:
-                for from_patch, to_patch in zip(from_patches, to_patches):
+            if len(from_locations) > 1 or len(to_locations) > 1:
+                for from_location_name, to_location_name in zip(from_locations, to_locations):
                     # Iterate over all exchanges to check if they correspond to this tuple
                     for exchange in self.topology["exchanges"]:
                         # Check that all values match
                         if (from_participant.name == exchange["from"] and to_participant.name == exchange["to"]
                                 and data == exchange["data"] and type.lower() == exchange["type"].lower()
                                 and data_type == self._get_data_type(exchange)
-                                and from_patch == exchange["from-patch"] and to_patch == exchange["to-patch"]):
+                                and from_location_name == exchange["from-location-name"]
+                                and to_location_name == exchange["to-location-name"]):
                             # Do not modify the first occurrence in order to not uniquify all data names
                             if initial:
                                 initial = False
@@ -749,120 +773,142 @@ class NodeCreator:
                     break
         return data_type
 
-    def _patch_preprocessing(self, participant_map: dict[str, n.ParticipantNode]):
+    def _location_preprocessing(self, participant_map: dict[str, n.ParticipantNode]):
         """
-        Preprocess patch labels in the topology.
-        This is done by first assigning a label ("extensive" or "intensive") to each patch,
+        Preprocess location labels in the topology.
+        This is done by first assigning a label ("extensive" or "intensive") to each location,
         then splitting them up if necessary; i.e., if they have both labels.
         Finally, a map (participant_1, participant_2) -> {extensive: {i_j}, intensive: {l_k}} is created,
-        where an entry means that p1 uses extensive patches i_j and intensive patches l_k for communication with p2.
+        where an entry means that p1 uses extensive locations i_j and intensive locations l_k for communication with p2.
         :param participant_map: A dict mapping participant names to participant nodes.
-        :return: A dict mapping participant pairs to patches used in communication between them.
+        :return: A dict mapping participant pairs to locations used in communication between them.
         """
-        participant_patch_label_map: dict[tuple[n.ParticipantNode, str], set[str]] = {}
+        participant_location_label_map: dict[tuple[n.ParticipantNode, str], set[str]] = {}
 
+        # Gather all locations from the topology and their labels (extensive or intensive)
         for exchange in self.topology["exchanges"]:
             from_participant: n.ParticipantNode = participant_map[exchange["from"]]
             to_participant: n.ParticipantNode = participant_map[exchange["to"]]
-            from_patch: str = exchange["from-patch"]
-            to_patch: str = exchange["to-patch"]
+            from_location_name: str = exchange["from-location-name"]
+            to_location_name: str = exchange["to-location-name"]
             data_name: str = exchange["data"]
             # Get data label
             data_label: str = helper.get_data_label(data_name).value
             # Create new entries if necessary
-            if (from_participant, from_patch) not in participant_patch_label_map:
-                participant_patch_label_map[(from_participant, from_patch)] = set()
-            if (to_participant, to_patch) not in participant_patch_label_map:
-                participant_patch_label_map[(to_participant, to_patch)] = set()
-            # Add the label to the patch
-            participant_patch_label_map[(from_participant, from_patch)].add(data_label)
-            participant_patch_label_map[(to_participant, to_patch)].add(data_label)
+            if (from_participant, from_location_name) not in participant_location_label_map:
+                participant_location_label_map[(from_participant, from_location_name)] = set()
+            if (to_participant, to_location_name) not in participant_location_label_map:
+                participant_location_label_map[(to_participant, to_location_name)] = set()
+            # Add the label to the location
+            participant_location_label_map[(from_participant, from_location_name)].add(data_label)
+            participant_location_label_map[(to_participant, to_location_name)].add(data_label)
 
-        # Map split-up patches to new patches
-        participant_patch_new_patch_map: dict[tuple[n.ParticipantNode, str], dict[str, str]] = {}
-        # Now, check if a patch has more than one label (i.e., both intensive and extensive)
+        # Map old locations that need to be split up (because they are both intensive and extensive)
+        # to new locations that are only intensive or extensive
+        participant_location_new_location_map: dict[tuple[n.ParticipantNode, str], dict[str, str]] = {}
+        # Now, check if a location has more than one label (i.e., both intensive and extensive)
         for exchange in self.topology["exchanges"]:
             from_participant: n.ParticipantNode = participant_map[exchange["from"]]
             to_participant: n.ParticipantNode = participant_map[exchange["to"]]
-            from_patch: str = exchange["from-patch"]
-            to_patch: str = exchange["to-patch"]
+            from_location_name: str = exchange["from-location-name"]
+            to_location_name: str = exchange["to-location-name"]
             data_name: str = exchange["data"]
             # Extensive or intensive
             data_label: str = helper.get_data_label(data_name).value
 
-            # Check if this patch has been split up before
-            if (from_participant, from_patch) in participant_patch_new_patch_map:
-                # If so, then we just need to assign the new label to the patch
-                exchange["from-patch"] = participant_patch_new_patch_map[(from_participant, from_patch)][data_label]
-            # Else, if this patch has not been split, check if it needs to be split up
-            elif len(participant_patch_label_map[(from_participant, from_patch)]) > 1:
-                extensive_patch: str = f"{from_patch}-extensive"
-                intensive_patch: str = f"{from_patch}-intensive"
-                participant_patch_new_patch_map[(from_participant, from_patch)] = {"extensive": extensive_patch,
-                                                                                   "intensive": intensive_patch}
-                logger.warning(f"Split patch \"{from_patch}\" of participant {from_participant.name} into "
-                               f"extensive patch \"{extensive_patch}\" and intensive patch \"{intensive_patch}\".")
-                # Assign new patch name to the topology
-                exchange["from-patch"] = extensive_patch if data_label == "extensive" else intensive_patch
-            # If the patch has never been split and is not supposed to be split, nothing needs to be done
+            # Check if this location has been split up before
+            if (from_participant, from_location_name) in participant_location_new_location_map:
+                # If so, then we just need to assign the new label to the location
+                exchange["from-location-name"] = \
+                    participant_location_new_location_map[(from_participant, from_location_name)][data_label]
+            # Else, if this location has not been split, check if it needs to be split up
+            elif len(participant_location_label_map[(from_participant, from_location_name)]) > 1:
+                # If so, create two new locations, with names indicating their label
+                extensive_location: str = f"{from_location_name}-extensive"
+                intensive_location: str = f"{from_location_name}-intensive"
+                participant_location_new_location_map[(from_participant, from_location_name)] = {"extensive": extensive_location,
+                                                                                           "intensive": intensive_location}
+                logger.warning(f"Split location \"{from_location_name}\" of participant {from_participant.name} into "
+                               f"extensive location \"{extensive_location}\" and intensive location \"{intensive_location}\".")
+                # Assign new location name to the topology
+                exchange["from-location-name"] = extensive_location if data_label == "extensive" else intensive_location
+            # If the location has never been split and is not supposed to be split, nothing needs to be done
 
-            # Check if this patch has been split up before
-            if (to_participant, to_patch) in participant_patch_new_patch_map:
-                # If so, then we just need to assign the new label to the patch
-                exchange["to-patch"] = participant_patch_new_patch_map[(to_participant, to_patch)][data_label]
-            # Else, if this patch has not been split, check if it needs to be split up
-            elif len(participant_patch_label_map[(to_participant, to_patch)]) > 1:
-                extensive_patch: str = f"{to_patch}-extensive"
-                intensive_patch: str = f"{to_patch}-intensive"
-                participant_patch_new_patch_map[(to_participant, to_patch)] = {"extensive": extensive_patch,
-                                                                               "intensive": intensive_patch}
-                logger.warning(f"Split patch \"{to_patch}\" of participant {to_participant.name} into "
-                               f"extensive patch \"{extensive_patch}\" and intensive patch \"{intensive_patch}\".")
-                # Assign new patch name to the topology
-                exchange["to-patch"] = extensive_patch if data_label == "extensive" else intensive_patch
-            # If the patch has never been split and is not supposed to be split, nothing needs to be done
+            # Same logic for the to-participant and to-location-name:
+            # Check if it has been split up or if it needs to be split into extensive and intensive locationes
+            if (to_participant, to_location_name) in participant_location_new_location_map:
+                # If so, then we just need to assign the new label to the location
+                exchange["to-location-name"] = participant_location_new_location_map[(to_participant, to_location_name)][
+                    data_label]
+            # Else, if this location has not been split, check if it needs to be split up
+            elif len(participant_location_label_map[(to_participant, to_location_name)]) > 1:
+                extensive_location: str = f"{to_location_name}-extensive"
+                intensive_location: str = f"{to_location_name}-intensive"
+                participant_location_new_location_map[(to_participant, to_location_name)] = {"extensive": extensive_location,
+                                                                                       "intensive": intensive_location}
+                logger.warning(f"Split location \"{to_location_name}\" of participant {to_participant.name} into "
+                               f"extensive location \"{extensive_location}\" and intensive location \"{intensive_location}\".")
+                # Assign new location name to the topology
+                exchange["to-location-name"] = extensive_location if data_label == "extensive" else intensive_location
+            # If the location has never been split and is not supposed to be split, nothing needs to be done
 
-        # Now create a map for which participant pair uses which patch
-        # This means that for (p_1,p_2) -> {i_1,...,i_n}, p_1 uses i_j in communication with p_2; p_2 might use other patches
-        participant_patch_map: dict[tuple[n.ParticipantNode, n.ParticipantNode], dict[str, set[str]]] = {}
+        # Now create a map for which participant pair uses which location
+        # This means that for (p_1,p_2) -> {i_1,...,i_n}, p_1 uses i_j in communication with p_2; p_2 might use other location
+        participant_location_map: dict[
+            tuple[n.ParticipantNode, n.ParticipantNode], dict[str, set[tuple[str, helper.LocationType]]]] = {}
         for exchange in self.topology["exchanges"]:
             from_participant: n.ParticipantNode = participant_map[exchange["from"]]
             to_participant: n.ParticipantNode = participant_map[exchange["to"]]
-            from_patch: str = exchange["from-patch"]
-            to_patch: str = exchange["to-patch"]
+            from_location_name: str = exchange["from-location-name"]
+            to_location_name: str = exchange["to-location-name"]
+            from_location_type: helper.LocationType = exchange.get("from-location-type")
+            if from_location_type is None:
+                from_location_type = helper.DEFAULT_LOCATION_TYPE
+                logger.debug(f"Using default location type {from_location_type} for location {from_location_name} "
+                             f"of participant {from_participant.name}.")
+            from_location_type = helper.LocationType(from_location_type)
+            to_location_type: helper.LocationType = exchange.get("to-location-type")
+            if to_location_type is None:
+                to_location_type = helper.DEFAULT_LOCATION_TYPE
+                logger.debug(f"Using default location type {to_location_type} for location {to_location_name} "
+                             f"of participant {to_participant.name}.")
+            to_location_type = helper.LocationType(to_location_type)
             data_name: str = exchange["data"]
             data_label: str = helper.get_data_label(data_name).value
             # Initialize entries if necessary
-            if (from_participant, to_participant) not in participant_patch_map:
-                participant_patch_map[(from_participant, to_participant)] = {"extensive": set(), "intensive": set()}
+            if (from_participant, to_participant) not in participant_location_map:
+                participant_location_map[(from_participant, to_participant)] = {"extensive": set(), "intensive": set()}
                 # If this direction does not yet exist, the other direction is also not initialized yet
-                participant_patch_map[(to_participant, from_participant)] = {"extensive": set(), "intensive": set()}
-            # From-participant uses from-patch in communication with to-participant
-            participant_patch_map[(from_participant, to_participant)][data_label].add(from_patch)
-            # To-participant uses to-patch in communication with from-participant
-            participant_patch_map[(to_participant, from_participant)][data_label].add(to_patch)
+                participant_location_map[(to_participant, from_participant)] = {"extensive": set(), "intensive": set()}
+            # From-participant uses from-location in communication with to-participant
+            participant_location_map[(from_participant, to_participant)][data_label].add(
+                (from_location_name, from_location_type))
+            # To-participant uses to-location in communication with from-participant
+            participant_location_map[(to_participant, from_participant)][data_label].add(
+                (to_location_name, to_location_type))
 
-        return participant_patch_map
+        return participant_location_map
 
-    def _participant_patch_map(self, participant_map: dict[str, n.ParticipantNode]) -> dict[
-        n.ParticipantNode, set[str]]:
-        """
-        Create a dictionary mapping each participant to a list of patches it uses.
-        This is done by iterating over each exchange and adding the involved patches to the involved participants.
-        This assumes self.participants and self.topology are already initialized.
-        :param participant_map: A dict mapping participant names to participant nodes.
-        :return: A dictionary dict[ParticipantNode, set[str]]
-        """
-        patch_map: dict[n.ParticipantNode, set[str]] = {p: set() for p in self.participants}
-        for exchange in self.topology["exchanges"]:
-            from_participant: n.ParticipantNode = participant_map[exchange["from"]]
-            patch_map[from_participant].add(exchange["from-patch"])
-
-            to_participant: n.ParticipantNode = participant_map[exchange["to"]]
-            patch_map[to_participant].add(exchange["to-patch"])
-            logger.debug(f"Added entries for participant {from_participant.name} and patch {exchange['from-patch']}; "
-                         f"as well as for participant {to_participant.name} and patch {exchange['to-patch']}.")
-        return patch_map
+    # TODO: Is this method used?
+    # def _participant_location_map(self, participant_map: dict[str, n.ParticipantNode]) -> dict[
+    #     n.ParticipantNode, set[str]]:
+    #     """
+    #     Create a dictionary mapping each participant to a list of locationes it uses.
+    #     This is done by iterating over each exchange and adding the involved locationes to the involved participants.
+    #     This assumes self.participants and self.topology are already initialized.
+    #     :param participant_map: A dict mapping participant names to participant nodes.
+    #     :return: A dictionary dict[ParticipantNode, set[str]]
+    #     """
+    #     location_map: dict[n.ParticipantNode, set[str]] = {p: set() for p in self.participants}
+    #     for exchange in self.topology["exchanges"]:
+    #         from_participant: n.ParticipantNode = participant_map[exchange["from"]]
+    #         location_map[from_participant].add(exchange["from-location"])
+    #
+    #         to_participant: n.ParticipantNode = participant_map[exchange["to"]]
+    #         location_map[to_participant].add(exchange["to-location"])
+    #         logger.debug(f"Added entries for participant {from_participant.name} and location {exchange['from-location']}; "
+    #                      f"as well as for participant {to_participant.name} and location {exchange['to-location']}.")
+    #     return location_map
 
     def _determine_control_participant(self, participants: list[n.ParticipantNode],
                                        bidirectional_strong_couplings: list[dict]) -> n.ParticipantNode:
