@@ -55,7 +55,7 @@ class TopologyReader:
 
         - participant names are unique.
         - exchanges only contain known "to" and "from" participants.
-        - exchanges are unique, when ignoring "to-location-name", "from-location-name" and "type" tags.
+        - exchanges are unique, when ignoring "type" tags.
         - locations of the same participant are not defined with different "location-type" tags. If a location has its type defined only once, the type is written to the topology in all other exchanges where it was not defined.
 
         If any of these checks fail, an error message is printed and the program is aborted.
@@ -77,7 +77,7 @@ class TopologyReader:
         # Check if participants actually appear in exchanges
         participants_in_exchanges: set[str] = set()
         # Check if exchanges are unique
-        known_exchanges: set[tuple[str, str, str]] = set()
+        known_exchanges: set[tuple[str, str, str, str, str]] = set()
         # Check if locations of a participant have only one type
         participant_location_type_map: dict[tuple[str, str], helper.LocationType] = {}
 
@@ -108,7 +108,9 @@ class TopologyReader:
                 return 1
 
             # Check if the exchanges are unique when ignoring certain attributes
-            exchange_info: tuple[str, str, str] = (to_participant.lower(), from_participant.lower(), data.lower())
+            exchange_info: tuple[str, str, str, str, str] = (to_participant.lower(), from_participant.lower(),
+                                                             data.lower(),
+                                                             from_location_name.lower(), to_location_name.lower())
             if exchange_info in known_exchanges:
                 logger.critical(f"Duplicate exchange from {from_participant} to {to_participant} for data {data}.")
                 return 1
@@ -120,7 +122,7 @@ class TopologyReader:
                 from_location: tuple[str, str] = (from_participant, from_location_name)
                 if from_location in participant_location_type_map and participant_location_type_map[
                     from_location] != from_location_type:
-                    logger.critical(f"Participant {from_participant} has multiple location types for location "
+                    logger.critical(f"Participant {from_participant} has multiple location-types for location "
                                     f"{from_location_name}.")
                     return 1
                 participant_location_type_map[from_location] = helper.LocationType(from_location_type)
