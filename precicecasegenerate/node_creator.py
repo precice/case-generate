@@ -254,9 +254,13 @@ class NodeCreator:
 
         # Only one bidirectional strong coupling means implicit coupling-scheme
         elif len(bidirectional_strong_coupling_participant_pairs) == 1:
-            # Get both participants
-            first: n.ParticipantNode = list(list(bidirectional_strong_coupling_participant_pairs)[0])[0]
-            second: n.ParticipantNode = list(list(bidirectional_strong_coupling_participant_pairs)[0])[1]
+            # Extract the frozenset and sort the participants alphabetically by name to avoid random ordering
+            participant_pair = list(bidirectional_strong_coupling_participant_pairs)[0]
+            sorted_participants = sorted(participant_pair, key=lambda p: p.name)
+            # Get both participants deterministically
+            first: n.ParticipantNode = sorted_participants[0]
+            second: n.ParticipantNode = sorted_participants[1]
+
             implicit_coupling_scheme: n.CouplingSchemeNode = n.CouplingSchemeNode(first_participant=first,
                                                                                   second_participant=second,
                                                                                   type=helper.DEFAULT_IMPLICIT_COUPLING_TYPE)
