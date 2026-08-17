@@ -40,10 +40,10 @@
     <write-data name="Displacements" mesh="Solid-Mesh" />
   </participant>
 
-  <m2n:sockets acceptor="Solid" connector="Fluid" exchange-directory=".." />
+  <m2n:sockets acceptor="Fluid" connector="Solid" exchange-directory=".." />
 
   <coupling-scheme:parallel-implicit>
-    <participants first="Solid" second="Fluid" />
+    <participants first="Fluid" second="Solid" />
     <exchange data="Forces" mesh="Solid-Mesh" from="Fluid" to="Solid" />
     <exchange data="Displacements" mesh="Solid-Mesh" from="Solid" to="Fluid" />
     <time-window-size value="0.1" />
