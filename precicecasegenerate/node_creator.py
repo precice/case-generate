@@ -254,9 +254,13 @@ class NodeCreator:
 
         # Only one bidirectional strong coupling means implicit coupling-scheme
         elif len(bidirectional_strong_coupling_participant_pairs) == 1:
-            # Get both participants
-            first: n.ParticipantNode = list(list(bidirectional_strong_coupling_participant_pairs)[0])[0]
-            second: n.ParticipantNode = list(list(bidirectional_strong_coupling_participant_pairs)[0])[1]
+            # Extract the frozenset and sort the participants alphabetically by name to avoid random ordering
+            participant_pair = list(bidirectional_strong_coupling_participant_pairs)[0]
+            sorted_participants = sorted(participant_pair, key=lambda p: p.name)
+            # Get both participants deterministically
+            first: n.ParticipantNode = sorted_participants[0]
+            second: n.ParticipantNode = sorted_participants[1]
+
             implicit_coupling_scheme: n.CouplingSchemeNode = n.CouplingSchemeNode(first_participant=first,
                                                                                   second_participant=second,
                                                                                   type=helper.DEFAULT_IMPLICIT_COUPLING_TYPE)
@@ -524,12 +528,14 @@ class NodeCreator:
         mapping_map[(from_mesh, to_mesh)] = mapping
         from_participant.mappings.append(mapping)
         # In a write-mapping, the writer has to receive the to-mesh to be able to map to it
-        receive_mesh: n.ReceiveMeshNode = n.ReceiveMeshNode(participant=from_participant,
-                                                            mesh=to_mesh,
-                                                            from_participant=to_participant,
-                                                            api_access=False)
-        from_participant.receive_meshes.append(receive_mesh)
-        logger.debug(f"Added receive-mesh {receive_mesh.mesh.name} to participant {from_participant.name}.")
+        if not any(rm.mesh == to_mesh for rm in from_participant.receive_meshes):
+            # Only add the receive-mesh if it is not already present.
+            receive_mesh: n.ReceiveMeshNode = n.ReceiveMeshNode(participant=from_participant,
+                                                                mesh=to_mesh,
+                                                                from_participant=to_participant,
+                                                                api_access=False)
+            from_participant.receive_meshes.append(receive_mesh)
+            logger.debug(f"Added receive-mesh {receive_mesh.mesh.name} to participant {from_participant.name}.")
         logger.debug(f"Created write-mapping between {from_mesh.name} and {to_mesh.name} "
                      f"for participant {from_participant.name}.")
 
@@ -557,12 +563,13 @@ class NodeCreator:
         mapping_map[(from_mesh, to_mesh)] = mapping
         to_participant.mappings.append(mapping)
         # In a read-mapping, the reader has to receive the from-mesh to be able to map from it
-        receive_mesh: n.ReceiveMeshNode = n.ReceiveMeshNode(participant=to_participant,
-                                                            mesh=from_mesh,
-                                                            from_participant=from_participant,
-                                                            api_access=False)
-        to_participant.receive_meshes.append(receive_mesh)
-        logger.debug(f"Added receive-mesh {receive_mesh.mesh.name} to participant {to_participant.name}.")
+        if not any(rm.mesh == from_mesh for rm in to_participant.receive_meshes):
+            receive_mesh: n.ReceiveMeshNode = n.ReceiveMeshNode(participant=to_participant,
+                                                                mesh=from_mesh,
+                                                                from_participant=from_participant,
+                                                                api_access=False)
+            to_participant.receive_meshes.append(receive_mesh)
+            logger.debug(f"Added receive-mesh {receive_mesh.mesh.name} to participant {to_participant.name}.")
         logger.debug(f"Created read-mapping between {from_mesh.name} and {to_mesh.name} "
                      f"for participant {to_participant.name}.")
 
@@ -676,6 +683,8 @@ class NodeCreator:
         First, it is counted how many participants each participant communicates with.
         Second, it is stored what kind of meshes different communication partners need (e.g., extensive-surface, et cetera).
         Third, a mesh node is created for each kind of mesh that is needed.
+        In the case that participants exchange different kinds of data (e.g., extensive and intensive)
+        in different directions only, only one mesh is created per participant for this pair.
         Fourth, the mesh nodes are added to the correct location nodes.
         :param participant_map: A dict mapping participant names to participant nodes.
         :param participant_location_map: A dict mapping participants and names of their locations to location nodes.
@@ -693,6 +702,8 @@ class NodeCreator:
         # A dict mapping pairs of participants to types of meshes they use
         participant_mesh_type_map: dict[
             tuple[n.ParticipantNode, n.ParticipantNode], set[tuple[helper.DataKind, helper.LocationType]]] = {}
+        # Maps participant pairs in the direction of their exchange to the data-kind they exchange
+        participant_direction_kind_map: dict[tuple[n.ParticipantNode, n.ParticipantNode], set[helper.DataKind]] = {}
         # Iterate over all exchanges and thus the communications between participants
         for exchange in self.topology["exchanges"]:
             from_participant: n.ParticipantNode = participant_map[exchange["from"]]
@@ -706,36 +717,61 @@ class NodeCreator:
                 participant_mesh_type_map[(from_participant, to_participant)] = set()
             if (to_participant, from_participant) not in participant_mesh_type_map:
                 participant_mesh_type_map[(to_participant, from_participant)] = set()
-
+            # Symmetric: Store which types of meshes are needed for each communication partner
             participant_mesh_type_map[(from_participant, to_participant)].add((data_kind, from_location_type))
             participant_mesh_type_map[(to_participant, from_participant)].add((data_kind, to_location_type))
+
+            if (from_participant, to_participant) not in participant_direction_kind_map:
+                participant_direction_kind_map[(from_participant, to_participant)] = set()
+            if (to_participant, from_participant) not in participant_direction_kind_map:
+                participant_direction_kind_map[(to_participant, from_participant)] = set()
+            # Non-symmetric: Store the data-kind exchanged in the direction of the exchange
+            participant_direction_kind_map[(from_participant, to_participant)].add(data_kind)
 
         # A dict mapping each from-participant, to-participant, data-kind, location-type to a mesh node
         participant_mesh_map: dict[
             tuple[n.ParticipantNode, n.ParticipantNode, helper.DataKind, helper.LocationType], n.MeshNode] = {}
+
         # Loop over all participants and their communication with each other to create all necessary meshes
         for from_participant, to_participant in participant_mesh_type_map:
-            # Distinguish between extensive and intensive and between surface and volume
+
+            # It requires a split if the direction of the exchange is the same and more than one kind of data is exchanged
+            requires_kind_split: bool = (len(participant_direction_kind_map[(from_participant, to_participant)]) > 1
+                                         or len(participant_direction_kind_map[(to_participant, from_participant)]) > 1)
+
+            # Store the created mesh node when no split is required. The mesh-name is unique per mesh.
+            created_meshes: dict[str, n.MeshNode] = {}
+
             for data_kind, location_type in participant_mesh_type_map[(from_participant, to_participant)]:
-                # Do not capitalize the participant name, as they are allowed to be in all-caps
-                mesh_name: str = from_participant.name[:1].upper() + from_participant.name[1:]
+                # Determine the mesh name based on
+                # the participant name, the number of communication partners, data-kind and location-type
+                # Do not capitalize() the participant name, as they are allowed to be in all-caps
+                mesh_name = from_participant.name[:1].upper() + from_participant.name[1:]
                 # If there is more than one communication partner, include the name of the other participant in the mesh name
                 if len(participant_communication_map[from_participant]) > 1:
                     mesh_name += "-" + to_participant.name[:1].upper() + to_participant.name[1:]
-                # If they exchange more than one kind of data (extensive or intensive), include it in the mesh name
-                if len({kind for kind, _ in participant_mesh_type_map[(from_participant, to_participant)]}) > 1:
+                # If it requires a split based on its kind, include it in the name
+                if requires_kind_split:
                     mesh_name += "-" + data_kind.value.capitalize()
-                if len({location_type for kind, location_type in
-                        participant_mesh_type_map[(from_participant, to_participant)] if kind == data_kind}) > 1:
+                # If it requires a split based in its location type, include it in the name
+                if len({loc for _, loc in participant_mesh_type_map[(from_participant, to_participant)]}) > 1:
                     mesh_name += "-" + location_type.value.capitalize()
-                mesh: n.MeshNode = n.MeshNode(name=mesh_name + "-Mesh",
-                                              dimensions=self.participant_dimensionality[from_participant],
-                                              use_data=[])
-                participant_mesh_map[(from_participant, to_participant, data_kind, location_type)] = mesh
-                self.meshes.append(mesh)
-                from_participant.provide_meshes.append(mesh)
+                # If a mesh with this name already exists, reuse it
+                # This happens when no split is required, and thus we do not need one mesh per tuple of (data_kind, location_type)
+                # Otherwise, create a new mesh
+                if mesh_name not in created_meshes:
+                    mesh = n.MeshNode(name=mesh_name + "-Mesh",
+                                      dimensions=self.participant_dimensionality[from_participant],
+                                      use_data=[])
+                    self.meshes.append(mesh)
+                    from_participant.provide_meshes.append(mesh)
+                    created_meshes[mesh_name] = mesh
+                # Point to the mesh node that was created for the current name;
+                # i.e., the current name is the same as a previous one if no split is required.
+                participant_mesh_map[(from_participant, to_participant, data_kind, location_type)] = created_meshes[
+                    mesh_name]
 
-                # Loop over the exchanges again and assign mesh nodes to the correct location nodes
+        # Loop over the exchanges again and assign mesh nodes to the correct location nodes
         for exchange in self.topology["exchanges"]:
             from_participant: n.ParticipantNode = participant_map[exchange["from"]]
             to_participant: n.ParticipantNode = participant_map[exchange["to"]]
