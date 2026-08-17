@@ -5,7 +5,7 @@ participants:
 exchanges:
   - from: Croc
     to: Croc
-    from-patch: I
-    to-patch: I
+    from-location-name: I
+    to-location-name: I
     data: Fish
     type: strong

@@ -8,22 +8,22 @@ participants:
 exchanges:
   - from: Alligator
     to: Crocodile
-    from-patch: Face
-    to-patch: Face
+    from-location-name: Face
+    to-location-name: Face
     type: weak
     data: Information
     data-type: scalar
   - from: Alligator
     to: Crocodile
-    from-patch: Body
-    to-patch: Body
+    from-location-name: Face
+    to-location-name: Body
     type: weak
     data: Information
     data-type: scalar
   - from: Alligator
     to: Crocodile
-    from-patch: Eye
-    to-patch: Eye
+    from-location-name: Face
+    to-location-name: Eye
     type: weak
     data: Information
     data-type: scalar

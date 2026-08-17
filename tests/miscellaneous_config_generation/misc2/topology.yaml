@@ -13,17 +13,17 @@ participants:
     
 exchanges:
   - from: Heater
-    from-patch: top-surface
+    from-location-name: top-surface
     to: Wall
-    to-patch: bottom-surface
+    to-location-name: bottom-surface
     data: Heat-Flux
     data-type: scalar
     type: strong
     
   - from: Wall
-    from-patch: inner-surface
+    from-location-name: inner-surface
     to: Fluid
-    to-patch: wall
+    to-location-name: wall
     data: Temperature
     data-type: scalar
     type: strong

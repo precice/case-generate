@@ -14,26 +14,26 @@ exchanges:
     data: Color
     type: strong
     data-type: scalar
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
   - from: B
     to: A
     data: Color
     type: strong
     data-type: scalar
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
   - from: C
     to: A
     data: Color
     type: strong
     data-type: scalar
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
   - from: A
     to: C
     data: Color
     type: strong
     data-type: scalar
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface

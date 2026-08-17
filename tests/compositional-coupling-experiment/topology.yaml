@@ -12,78 +12,78 @@ participants:
 exchanges:
   - from: MuscleFibers
     to: MuscleMechanics
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
     data: Gamma
     type: weak
     data-type: scalar
   - from: MuscleMechanics
     to: MuscleFibers
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
     data: Geometry
     type: weak
     data-type: vector
   - from: TendonBottom
     to: MuscleMechanics
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
     data: Displacement
     type: strong
     data-type: vector
   - from: TendonBottom
     to: MuscleMechanics
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
     data: Velocity
     type: strong
     data-type: vector
   - from: MuscleMechanics
     to: TendonBottom
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
     data: Traction
     type: strong
     data-type: vector
   - from: TendonTopA
     to: MuscleMechanics
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
     data: Displacement
     type: strong
     data-type: vector
   - from: TendonTopA
     to: MuscleMechanics
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
     data: Velocity
     type: strong
     data-type: vector
   - from: MuscleMechanics
     to: TendonTopA
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
     data: Traction
     type: strong
     data-type: vector
   - from: TendonTopB
     to: MuscleMechanics
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
     data: Displacement
     type: strong
     data-type: vector
   - from: TendonTopB
     to: MuscleMechanics
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
     data: Velocity
     type: strong
     data-type: vector
   - from: MuscleMechanics
     to: TendonTopB
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
     data: Traction
     type: strong
     data-type: vector

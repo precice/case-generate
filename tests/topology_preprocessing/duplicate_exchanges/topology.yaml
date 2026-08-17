@@ -11,12 +11,12 @@ exchanges:
     data: Color
     type: weak
     data-type: scalar
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
   - from: A
     to: B
     data: Color
     type: weak
     data-type: scalar
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
