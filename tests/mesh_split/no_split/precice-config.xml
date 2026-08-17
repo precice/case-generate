@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink format="---[precice] %ColorizedSeverity% %Message%" />
+  </log>
+
+  <data:vector name="Forces" />
+  <data:vector name="Displacements" />
+
+  <mesh name="Fluid-Mesh" dimensions="3">
+    <use-data name="Forces" />
+    <use-data name="Displacements" />
+  </mesh>
+
+  <mesh name="Solid-Mesh" dimensions="3">
+    <use-data name="Forces" />
+    <use-data name="Displacements" />
+  </mesh>
+
+  <participant name="Fluid">
+    <provide-mesh name="Fluid-Mesh" />
+    <receive-mesh name="Solid-Mesh" from="Solid" />
+    <read-data name="Displacements" mesh="Fluid-Mesh" />
+    <write-data name="Forces" mesh="Fluid-Mesh" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="Fluid-Mesh"
+      to="Solid-Mesh"
+      constraint="conservative" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Solid-Mesh"
+      to="Fluid-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <participant name="Solid">
+    <provide-mesh name="Solid-Mesh" />
+    <read-data name="Forces" mesh="Solid-Mesh" />
+    <write-data name="Displacements" mesh="Solid-Mesh" />
+  </participant>
+
+  <m2n:sockets acceptor="Solid" connector="Fluid" exchange-directory=".." />
+
+  <coupling-scheme:parallel-implicit>
+    <participants first="Solid" second="Fluid" />
+    <exchange data="Forces" mesh="Solid-Mesh" from="Fluid" to="Solid" />
+    <exchange data="Displacements" mesh="Solid-Mesh" from="Solid" to="Fluid" />
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
+    <relative-convergence-measure data="Forces" mesh="Solid-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Displacements" mesh="Solid-Mesh" limit="0.1" />
+    <acceleration:IQN-ILS>
+      <data name="Forces" mesh="Solid-Mesh" />
+      <data name="Displacements" mesh="Solid-Mesh" />
+    </acceleration:IQN-ILS>
+  </coupling-scheme:parallel-implicit>
+</precice-configuration>

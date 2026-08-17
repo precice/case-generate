@@ -1,0 +1,23 @@
+participants:
+  - name: Fluid
+    solver: OpenFOAM
+  - name: Solid
+    solver: CalculiX
+
+exchanges:
+  - from: Fluid
+    to: Solid
+    from-location-name: wet-surface
+    to-location-name: wet-surface
+    type: strong
+    data: Forces # Extensive
+    from-location-type: surface
+    to-location-type: surface
+  - from: Solid
+    to: Fluid
+    from-location-name: wet-surface
+    to-location-name: wet-surface
+    type: strong
+    data: Displacements # Intensive
+    from-location-type: surface
+    to-location-type: surface
