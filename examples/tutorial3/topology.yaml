@@ -8,15 +8,15 @@ participants:
 exchanges:
   - from: Fluid
     to: Solid
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
     data: Temperature
     type: strong
     data-type: scalar
   - from: Solid
     to: Fluid
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
     data: Heat-Flux
     type: strong
     data-type: scalar

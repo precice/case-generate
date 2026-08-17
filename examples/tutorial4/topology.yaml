@@ -11,5 +11,5 @@ exchanges:
     data: Data
     type: weak
     data-type: scalar
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface

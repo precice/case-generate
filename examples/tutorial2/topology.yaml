@@ -11,15 +11,15 @@ participants:
 exchanges:
   - from: Generator-Left
     to: Propagator
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
     data: Color
     type: weak
     data-type: scalar
   - from: Generator-Right
     to: Propagator
-    from-patch: interface
-    to-patch: interface
+    from-location-name: interface
+    to-location-name: interface
     data: Color
     type: weak
     data-type: scalar
