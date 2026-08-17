@@ -108,13 +108,13 @@ class TopologyReader:
                 return 1
 
             # Check if the exchanges are unique when ignoring certain attributes
-            exchange_info: tuple[str, str, str, str, str] = (to_participant.lower(), from_participant.lower(),
-                                                             data.lower(),
-                                                             from_location_name.lower(), to_location_name.lower())
-            if exchange_info in known_exchanges:
-                logger.critical(f"Duplicate exchange from {from_participant} to {to_participant} for data {data}.")
-                return 1
-            known_exchanges.add(exchange_info)
+            # exchange_info: tuple[str, str, str, str, str] = (to_participant.lower(), from_participant.lower(),
+            #                                                  data.lower(),
+            #                                                  from_location_name.lower(), to_location_name.lower())
+            # if exchange_info in known_exchanges:
+            #     logger.critical(f"Duplicate exchange from {from_participant} to {to_participant} for data {data}.")
+            #     return 1
+            # known_exchanges.add(exchange_info)
 
             # Gather the location types of the locations of the participant only if they were defined in the topology
             # and check if they are unique
