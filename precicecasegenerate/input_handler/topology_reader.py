@@ -121,7 +121,7 @@ class TopologyReader:
             if from_location_type is not None:
                 from_location: tuple[str, str] = (from_participant, from_location_name)
                 if from_location in participant_location_type_map and participant_location_type_map[
-                    from_location] != from_location_type:
+                    from_location] != helper.LocationType(from_location_type):
                     logger.critical(f"Participant {from_participant} has multiple location-types for location "
                                     f"{from_location_name}.")
                     return 1
@@ -129,7 +129,7 @@ class TopologyReader:
             if to_location_type is not None:
                 to_location: tuple[str, str] = (to_participant, to_location_name)
                 if to_location in participant_location_type_map and participant_location_type_map[
-                    to_location] != to_location_type:
+                    to_location] != helper.LocationType(to_location_type):
                     logger.critical(f"Participant {to_participant} has multiple location types for location "
                                     f"{to_location_name}.")
                     return 1
