@@ -1,0 +1,24 @@
+{
+    "participant_name": "Fluid",
+    "precice_config_file_path": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "Fluid-Mesh",
+            "location": "volume",
+            "patches": [
+                "overlapping-domain"
+            ],
+            "is_received": false,
+            "read_data": [
+                {
+                    "name": "Porosity"
+                }
+            ],
+            "write_data": [
+                {
+                    "name": "Velocity"
+                }
+            ]
+        }
+    ]
+}

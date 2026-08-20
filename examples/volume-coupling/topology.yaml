@@ -1,0 +1,24 @@
+participants:
+  - name: Fluid
+    solver: OpenFOAM
+  - name: PorousMedia
+    solver: CalculiX
+exchanges:
+  - from: Fluid
+    to: PorousMedia
+    from-location-name: overlapping-domain
+    to-location-name: overlapping-domain
+    from-location-type: volume
+    to-location-type: volume
+    type: weak
+    data: Velocity
+    data-type: vector
+  - from: PorousMedia
+    to: Fluid
+    from-location-name: overlapping-domain
+    to-location-name: overlapping-domain
+    from-location-type: volume
+    to-location-type: volume
+    type: weak
+    data: Porosity
+    data-type: scalar
