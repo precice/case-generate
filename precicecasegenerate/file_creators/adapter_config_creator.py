@@ -60,10 +60,10 @@ class AdapterConfigCreator:
             ]
 
             # The mesh entry is a dictionary containing the mesh name and the patches used by it
-            mesh_entry: dict[str, str | list[str] | list[dict[str,str]]] = {
+            mesh_entry: dict[str, str | list[str] | list[dict[str, str]]] = {
                 "mesh_name": mesh.name,
-                "location": location_type,  # Maybe update to "location-type" in the future
-                "patches": location_names,  # Maybe update to "location-names" in the future
+                "location_type": location_type,
+                "location_names": location_names,
                 "is_received": False,
             }
 
