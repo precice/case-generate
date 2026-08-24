@@ -36,4 +36,4 @@ def test_location_type():
 
             interfaces: list = adapter_config["interfaces"]
             # The case_directory.name is the name of the location
-            assert interfaces[0]["location"] == case_directory.name
+            assert interfaces[0]["location_type"] == case_directory.name
