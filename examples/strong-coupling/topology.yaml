@@ -5,14 +5,14 @@ participants:
     solver: Calculix
 exchanges:
   - from: Fluid
-    from-location-name: interface
+    from-location-names: [interface]
     to: Solid
-    to-location-name: surface
+    to-location-names: [surface]
     data: Force
     type: strong
   - from: Solid
-    from-location-name: surface
+    from-location-names: [surface]
     to: Fluid
-    to-location-name: interface
+    to-location-names: [interface]
     data: Displacement
     type: strong

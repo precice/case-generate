@@ -2,6 +2,7 @@ from pathlib import Path
 from precice_config_graph import nodes as n, enums as e
 from precice_config_graph.nodes import MeshNode
 
+from precicecasegenerate.input_handler.topology_processor import TopologyProcessor
 from precicecasegenerate.input_handler.topology_reader import TopologyReader
 from precicecasegenerate.node_creator import NodeCreator
 import precicecasegenerate.helper as helper
@@ -18,8 +19,10 @@ def simple_setup(locations: bool = False) -> tuple[dict, dict, dict[MeshNode, se
     topology_file: Path = test_directory / "simple_topology.yaml"
 
     topology_reader: TopologyReader = TopologyReader(topology_file)
-    topology_reader.check_topology()
     topology: dict = topology_reader.get_topology()
+    topology_processor: TopologyProcessor = TopologyProcessor(topology, topology_file)
+    assert 0 == topology_processor.process(), "Topology processing failed."
+
     node_creator: NodeCreator = NodeCreator(topology)
     nodes: dict = node_creator.get_nodes()
     if locations:
@@ -35,8 +38,10 @@ def complex_setup() -> tuple[dict, dict]:
     topology_file: Path = test_directory / "complex_topology.yaml"
 
     topology_reader: TopologyReader = TopologyReader(topology_file)
-    topology_reader.check_topology()
     topology: dict = topology_reader.get_topology()
+    topology_processor: TopologyProcessor = TopologyProcessor(topology, topology_file)
+    assert 0 == topology_processor.process(), "Topology processing failed."
+
     node_creator: NodeCreator = NodeCreator(topology)
     nodes: dict = node_creator.get_nodes()
     return topology, nodes
@@ -422,20 +427,20 @@ def test_mesh_nodes():
             try:
                 # Note: This is only an approximate scheme, since location names are not unique
                 next(e for e in topology["exchanges"] if
-                     e["from-location-name"] == location.name or e["to-location-name"] == location.name)
+                     location.name in e["from-location-names"] or location.name in e["to-location-names"])
             except StopIteration:
                 assert False, f"Location {location.name} is not in any exchange in the topology."
 
     # Check that each location in the topology is in the mesh-location map
     for exchange in topology["exchanges"]:
-        from_location_name: str = exchange["from-location-name"]
-        try:
-            next(m for m in mesh_nodes if any(l.name == from_location_name for l in mesh_location_map[m]))
-        except StopIteration:
-            assert False, f"Location {from_location_name} is not in any mesh in the mesh-location map."
+        for from_location_name in exchange["from-location-names"]:
+            try:
+                next(m for m in mesh_nodes if any(l.name == from_location_name for l in mesh_location_map[m]))
+            except StopIteration:
+                assert False, f"Location {from_location_name} is not in any mesh in the mesh-location map."
 
-        to_location_name: str = exchange["to-location-name"]
-        try:
-            next(m for m in mesh_nodes if any(l.name == to_location_name for l in mesh_location_map[m]))
-        except StopIteration:
-            assert False, f"Location {to_location_name} is not in any mesh in the mesh-location map."
+        for to_location_name in exchange["to-location-names"]:
+            try:
+                next(m for m in mesh_nodes if any(l.name == to_location_name for l in mesh_location_map[m]))
+            except StopIteration:
+                assert False, f"Location {to_location_name} is not in any mesh in the mesh-location map."

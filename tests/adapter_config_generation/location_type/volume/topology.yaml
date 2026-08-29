@@ -7,8 +7,8 @@ participants:
 exchanges:
   - from: Fluid
     to: PorousMedia
-    from-location-name: overlapping-domain
-    to-location-name: overlapping-domain
+    from-location-names: [overlapping-domain]
+    to-location-names: [overlapping-domain]
     from-location-type: volume
     #    to-location-type: volume # This should be inferred from the next exchange
     type: weak
@@ -16,8 +16,8 @@ exchanges:
     data-type: vector
   - from: PorousMedia
     to: Fluid
-    from-location-name: overlapping-domain
-    to-location-name: overlapping-domain
+    from-location-names: [overlapping-domain]
+    to-location-names: [overlapping-domain]
     from-location-type: volume
     #    to-location-type: volume # This should be inferred from the previous exchange
     type: weak

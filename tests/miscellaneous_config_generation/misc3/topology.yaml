@@ -9,17 +9,17 @@ participants:
 
 exchanges:
   - from: A
-    from-location-name: interface
+    from-location-names: [interface]
     to: B
-    to-location-name: interface
+    to-location-names: [interface]
     data: Mighty-Force
     data-type: vector
     type: weak
 
   - from: B
-    from-location-name: interface
+    from-location-names: [interface]
     to: A
-    to-location-name: interface
+    to-location-names: [interface]
     data: Force
     data-type: vector
     type: weak

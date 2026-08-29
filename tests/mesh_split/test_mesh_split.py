@@ -25,7 +25,7 @@ def test_no_split():
     case_directory: Path = test_directory / "no_split"
     input_file: Path = case_directory / "topology.yaml"
 
-    generate_case(input_file, case_directory / "_generated")
+    assert 0 == generate_case(input_file, case_directory / "_generated"), "Case generation failed."
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
@@ -45,7 +45,7 @@ def test_split():
     case_directory: Path = test_directory / "split"
     input_file: Path = case_directory / "topology.yaml"
 
-    generate_case(input_file, case_directory / "_generated")
+    assert 0 == generate_case(input_file, case_directory / "_generated"), "Case generation failed."
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"

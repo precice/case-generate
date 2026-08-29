@@ -11,5 +11,5 @@ exchanges:
     data: Data
     type: weak
     data-type: scalar
-    from-location-name: interface
-    to-location-name: interface
+    from-location-names: [interface]
+    to-location-names: [interface]
