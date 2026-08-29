@@ -36,7 +36,7 @@ participants:
 
 The `exchanges` element describes how the main actors of the simulation communicate and relate to one-another.
 This means that a single exchange needs to define a source participant `from`, a destination participant `to` and
-locations (interfaces) of these participants through `from-location-name`, `to-location-name` and the ability to
+locations (interfaces) of these participants through `from-location-names`, `to-location-names` and the ability to
 further specify the location type through the optional tags `from-location-type` and `to-location-type` (surface or
 volume).
 The data that is exchanges is given as `data` and the type of the exchange (strong (implicit) or weak (explicit))
@@ -51,8 +51,8 @@ A valid entry may look as follows:
 exchanges:
   - from: Crocodile       # A string that corresponds to a previously defined participant
     to: Alligator         # A string that corresponds to a previously defined participant
-    from-location-name: claw    # A location (interface) of the `from`-participant
-    to-location-name: claw      # A location (interface) of the `to`-participant
+    from-location-names: [claw]    # A list of locations (interfaces) of the `from`-participant
+    to-location-names: [claw]      # A list of locations (interfaces) of the `to`-participant
     from-location-type: surface # Either `surface` or `volume`
     to-location-type: surface   # Either `surface` or `volume`
     type: strong          # The type of the data-exchange; either `strong` (implicit) or `weak` (explicit)
@@ -75,11 +75,14 @@ participants:
 exchanges:
   - from: Crocodile     # A string that corresponds to a previously defined participant
     to: Alligator       # A string that corresponds to a previously defined participant
-    from-location-name: claw    # A location (interface) of the `from`-participant
-    to-location-name: claw      # A location (interface) of the `to`-participant
+    from-location-name: [claw]    # A location (interface) of the `from`-participant
+    to-location-name: [claw-left, claw-right]      # Locations (interfaces) of the `to`-participant
     type: strong        # The type of the data-exchange; either `strong` (implicit) or `weak` (explicit)
     data: fish          # The data that is being exchanged
 ```
+
+This topology results in one exchange between the `Crocodile` and the `Alligator` with the data `fish`.
+However, in the adapter-configuration, the `Alligator` will read data from the `claw-left` and `claw-right` interfaces.
 
 ## Legacy
 
@@ -88,4 +91,5 @@ To facilitate the usage of the tool, they were removed and the parameters are no
 two tags or assigned a default value.
 
 In version 2, the `from-location-type` and `to-location-type` were added to the `exchanges` element and the previous
-tags `from-patch` and `to-patch` were renamed to `from-location-name` and `to-location-name`, respectively.
+tags `from-patch` and `to-patch` were renamed to `from-location-names` and `to-location-names`, respectively, 
+while allowing lists of values.
