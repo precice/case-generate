@@ -86,14 +86,8 @@ class NodeCreator:
         participant_location_map: dict[tuple[n.ParticipantNode, str], helper.LocationNode] = self._initialize_locations(
             participant_map)
 
-        # Update non-unique data names depending on from-/to-location-names of the involved participants
-        # # IMPORTANT: This updates the topology dict.
-        # #  Anything using a "frozenset" of topology items needs to be done after this method!
-        # #  (such as "initialize_data")
-        self._data_preprocessing(participant_map)
-
         # Initialize data from exchanges tag (defined implicitly)
-        # IMPORTANT: This uses the topology dict as keys, so it needs to be done after the location "preprocessing".
+        # This uses exchanges from the topology dict as keys, so the topology may not be modified afterward
         data_map: dict[frozenset, n.DataNode] = self._initialize_data(participant_map)
         logger.debug(f"Created {len(set(data_map.values()))} data nodes.")
 
@@ -594,67 +588,6 @@ class NodeCreator:
             logger.debug(f"Initialized participant {parzival.name} with dimensionality {dim}.")
         return participant_map
 
-    def _data_preprocessing(self, participant_map: dict[str, n.ParticipantNode]):
-        """
-        Update data names in the topology dict, if they fulfill these conditions:
-         - Data is sent from participant A to participant B with the same name multiple times
-         - The exchanges are of the same type (strong/weak)
-        Then, these exchanges lead to errors, as they are only "unique" in the location names,
-        which are not included in the precice-config; i.e., they would lead to duplicate exchanges.
-        Such a data name is then "uniquified", directly in the topology dict.
-        :param participant_map: A dict mapping participant names to participant nodes.
-        :return: None
-        """
-        # Map tuples of from-/to-participants, data-name, data-type and exchange-type to the from-/to-location-names
-        # that are used in exchanges
-        exchange_location_map: dict[
-            tuple[n.ParticipantNode, n.ParticipantNode, str, e.DataType, str], dict[str, list[str]]] = {}
-        for exchange in self.topology["exchanges"]:
-            from_participant: n.ParticipantNode = participant_map[exchange["from"]]
-            to_participant: n.ParticipantNode = participant_map[exchange["to"]]
-            data: str = exchange["data"]
-            data_type = self._get_data_type(exchange)
-            type: str = exchange["type"]
-            from_location_name: str = exchange["from-location-name"]
-            to_location_name: str = exchange["to-location-name"]
-            if (from_participant, to_participant, data, data_type, type) in exchange_location_map:
-                exchange_location_map[from_participant, to_participant, data, data_type, type]["from-location"].append(
-                    from_location_name)
-                exchange_location_map[from_participant, to_participant, data, data_type, type]["to-location"].append(
-                    to_location_name)
-            else:
-                exchange_location_map[from_participant, to_participant, data, data_type, type] = \
-                    {"from-location": [from_location_name], "to-location": [to_location_name]}
-
-        # Check every collected tuple for violations
-        for key, locations in exchange_location_map.items():
-            from_participant, to_participant, data, data_type, type = key
-            from_locations = locations["from-location"]
-            to_locations = locations["to-location"]
-            # Check if it is the first occurrence since we want to preserve the original data name 
-            initial: bool = True
-            # If a tuple is not unique, its dict will have sets of length greater than 1
-            if len(from_locations) > 1 or len(to_locations) > 1:
-                for from_location_name, to_location_name in zip(from_locations, to_locations):
-                    # Iterate over all exchanges to check if they correspond to this tuple
-                    for exchange in self.topology["exchanges"]:
-                        # Check that all values match
-                        if (from_participant.name == exchange["from"] and to_participant.name == exchange["to"]
-                                and data == exchange["data"] and type.lower() == exchange["type"].lower()
-                                and data_type == self._get_data_type(exchange)
-                                and from_location_name == exchange["from-location-name"]
-                                and to_location_name == exchange["to-location-name"]):
-                            # Do not modify the first occurrence in order to not uniquify all data names
-                            if initial:
-                                initial = False
-                                continue
-                            # All values match, and it is not the first violation
-                            # Thus, uniquify the data name
-                            # Choose a new uniquifier for each violation
-                            uniquifier: str = helper.get_uniquifier()
-                            new_data_name: str = f"{uniquifier.capitalize()}-{helper.capitalize_name(data)}"
-                            exchange["data"] = new_data_name
-
     def _get_data_type(self, exchange: dict) -> e.DataType:
         """
         Get the data-type for the data in the given exchange or choose a default if none is given.
@@ -775,25 +708,32 @@ class NodeCreator:
         for exchange in self.topology["exchanges"]:
             from_participant: n.ParticipantNode = participant_map[exchange["from"]]
             to_participant: n.ParticipantNode = participant_map[exchange["to"]]
-            from_location_name: str = exchange["from-location-name"]
-            to_location_name: str = exchange["to-location-name"]
+            # Tuple of location-names
+            from_location_names: tuple[str] = exchange["from-location-names"]
+            to_location_names: tuple[str] = exchange["to-location-names"]
+
             data: str = exchange["data"]
             data_kind: helper.DataKind = helper.get_data_label(data)
             from_location_type: helper.LocationType = exchange["from-location-type"]
             to_location_type: helper.LocationType = exchange["to-location-type"]
 
+            # The mesh is independent of the location, so we can grab the mesh for all locations
             from_mesh: n.MeshNode = participant_mesh_map[
                 (from_participant, to_participant, data_kind, from_location_type)]
             to_mesh: n.MeshNode = participant_mesh_map[(to_participant, from_participant, data_kind, to_location_type)]
-            from_location: helper.LocationNode = participant_location_map[(from_participant, from_location_name)]
-            to_location: helper.LocationNode = participant_location_map[(to_participant, to_location_name)]
 
-            if to_participant not in from_location.meshes:
-                from_location.meshes[to_participant] = {}
-            from_location.meshes[to_participant][data_kind] = from_mesh
-            if from_participant not in to_location.meshes:
-                to_location.meshes[from_participant] = {}
-            to_location.meshes[from_participant][data_kind] = to_mesh
+            # Assign the mesh to all location nodes
+            for from_location_name in from_location_names:
+                from_location: helper.LocationNode = participant_location_map[(from_participant, from_location_name)]
+                if to_participant not in from_location.meshes:
+                    from_location.meshes[to_participant] = {}
+                from_location.meshes[to_participant][data_kind] = from_mesh
+
+            for to_location_name in to_location_names:
+                to_location: helper.LocationNode = participant_location_map[(to_participant, to_location_name)]
+                if from_participant not in to_location.meshes:
+                    to_location.meshes[from_participant] = {}
+                to_location.meshes[from_participant][data_kind] = to_mesh
 
         return participant_mesh_map
 
@@ -809,28 +749,29 @@ class NodeCreator:
         for exchange in self.topology["exchanges"]:
             from_participant: n.ParticipantNode = participant_map[exchange["from"]]
             to_participant: n.ParticipantNode = participant_map[exchange["to"]]
-            from_location_name: str = exchange["from-location-name"]
-            to_location_name: str = exchange["to-location-name"]
-            # We can safely access the location-type here, as it was assigned in the preprocessing step
-            from_location_type: helper.LocationType = exchange["from-location-type"]
-            to_location_type: helper.LocationType = exchange["to-location-type"]
+            from_location_names: list[str] = exchange["from-location-names"]
+            for from_location_name in from_location_names:
+                # We can safely access the location-type here, as it was assigned in the preprocessing step
+                from_location_type: helper.LocationType = exchange["from-location-type"]
+                # Create new location nodes if necessary. The meshes and label are not yet known.
+                if (from_participant, from_location_name) not in participant_location_map:
+                    location: helper.LocationNode = helper.LocationNode(name=from_location_name,
+                                                                        participant=from_participant,
+                                                                        type=from_location_type,
+                                                                        meshes={})
+                    participant_location_map[(from_participant, from_location_name)] = location
+                    self.locations.append(location)
 
-            # Create new location nodes if necessary. The meshes and label are not yet known.
-            if (from_participant, from_location_name) not in participant_location_map:
-                location: helper.LocationNode = helper.LocationNode(name=from_location_name,
-                                                                    participant=from_participant,
-                                                                    type=from_location_type,
-                                                                    meshes={})
-                participant_location_map[(from_participant, from_location_name)] = location
-                self.locations.append(location)
-
-            if (to_participant, to_location_name) not in participant_location_map:
-                location: helper.LocationNode = helper.LocationNode(name=to_location_name,
-                                                                    participant=to_participant,
-                                                                    type=to_location_type,
-                                                                    meshes={})
-                participant_location_map[(to_participant, to_location_name)] = location
-                self.locations.append(location)
+            to_location_names: list[str] = exchange["to-location-names"]
+            for to_location_name in to_location_names:
+                to_location_type: helper.LocationType = exchange["to-location-type"]
+                if (to_participant, to_location_name) not in participant_location_map:
+                    location: helper.LocationNode = helper.LocationNode(name=to_location_name,
+                                                                        participant=to_participant,
+                                                                        type=to_location_type,
+                                                                        meshes={})
+                    participant_location_map[(to_participant, to_location_name)] = location
+                    self.locations.append(location)
 
         return participant_location_map
 
