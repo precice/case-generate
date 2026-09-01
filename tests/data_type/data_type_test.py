@@ -23,7 +23,7 @@ def test_same_type_one_direction():
     case_directory: Path = test_directory / "same_type_one_direction"
     input_file: Path = case_directory / "topology.yaml"
 
-    generate_case(input_file, case_directory / "_generated")
+    assert 0 == generate_case(input_file, case_directory / "_generated"), "Case generation failed."
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
@@ -40,7 +40,7 @@ def test_different_type_one_direction():
     case_directory: Path = test_directory / "different_type_one_direction"
     input_file: Path = case_directory / "topology.yaml"
 
-    generate_case(input_file, case_directory / "_generated")
+    assert 0 == generate_case(input_file, case_directory / "_generated"), "Case generation failed."
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
@@ -57,12 +57,13 @@ def test_same_type_both_directions():
     case_directory: Path = test_directory / "same_type_both_directions"
     input_file: Path = case_directory / "topology.yaml"
 
-    generate_case(input_file, case_directory / "_generated")
+    assert 0 == generate_case(input_file, case_directory / "_generated"), "Case generation failed."
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
     assert not operations.check_config_equivalence(expected, actual), "Configs are equivalent with different names."
-    assert operations.check_config_equivalence(expected, actual, ignore_names=True), "Configs not are equivalent up to naming."
+    assert operations.check_config_equivalence(expected, actual,
+                                               ignore_names=True), "Configs not are equivalent up to naming."
     assert runCheck(actual, True) == 0, "The config failed to validate."
 
 
@@ -75,7 +76,7 @@ def test_different_type_both_directions():
     case_directory: Path = test_directory / "different_type_both_directions"
     input_file: Path = case_directory / "topology.yaml"
 
-    generate_case(input_file, case_directory / "_generated")
+    assert 0 == generate_case(input_file, case_directory / "_generated"), "Case generation failed."
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
@@ -94,10 +95,11 @@ def test_both_types_both_directions():
     case_directory: Path = test_directory / "both_types_both_directions"
     input_file: Path = case_directory / "topology.yaml"
 
-    generate_case(input_file, case_directory / "_generated")
+    assert 0 == generate_case(input_file, case_directory / "_generated"), "Case generation failed."
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
     assert not operations.check_config_equivalence(expected, actual), "Configs are equivalent with different names."
-    assert operations.check_config_equivalence(expected, actual, ignore_names=True), "Configs are not equivalent up to naming."
+    assert operations.check_config_equivalence(expected, actual,
+                                               ignore_names=True), "Configs are not equivalent up to naming."
     assert runCheck(actual, True) == 0, "The config failed to validate."

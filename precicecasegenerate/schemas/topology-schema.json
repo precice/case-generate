@@ -39,17 +39,45 @@
             "type": "string",
             "description": "Name of the source participant sending data"
           },
-          "from-patch": {
+          "from-location-names": {
+            "type": "array",
+            "description": "Array of names of the location on the source participant where data is sent",
+            "items": {
+              "type": "string",
+              "description": "Name of the location on the source participant where data is sent",
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          },
+          "from-location-type": {
             "type": "string",
-            "description": "Specific interface patch or surface on the source participant from which data is sent"
+            "description": "Type of location on the source participant where data is sent",
+            "enum": [
+              "surface",
+              "volume"
+            ]
           },
           "to": {
             "type": "string",
             "description": "Name of the target participant receiving data"
           },
-          "to-patch": {
+          "to-location-names": {
+            "type": "array",
+            "description": "Array of names of the location on the target participant where data is received",
+            "items": {
+              "type": "string",
+              "description": "Name of the location on the source target where data is received",
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          },
+          "to-location-type": {
             "type": "string",
-            "description": "Specific interface patch or surface on the target participant where data is received"
+            "description": "Type of location on the target participant where data is received",
+            "enum": [
+              "surface",
+              "volume"
+            ]
           },
           "data": {
             "type": "string",
@@ -75,15 +103,18 @@
         },
         "required": [
           "from",
-          "from-patch",
+          "from-location-names",
           "to",
-          "to-patch",
+          "to-location-names",
           "data",
           "type"
         ],
         "optional": [
-          "data-type"
-        ]
+          "data-type",
+          "from-location-type",
+          "to-location-type"
+        ],
+        "additionalProperties": false
       },
       "minItems": 1,
       "uniqueItems": true
@@ -93,6 +124,7 @@
     "participants",
     "exchanges"
   ],
+  "additionalProperties": false,
   "title": "preCICE Topology Configuration",
   "description": "JSON schema defining the topology configuration for precice-case-generate. Specifies participants, exchanges, and their coupling relationships."
 }

@@ -1,11 +1,11 @@
 # The Topology File
 
-A `topology.yaml` file is the only file needed to run this program. 
+A `topology.yaml` file is the only file needed to run this program.
 
 > [!NOTE] As a YAML file, the topology is case-, indent- and whitespace-sensitive.
 
 
-The JSON schema of the topology can be found in the `topology-schema.json` file.
+The JSON schema of the topology can be found in the `topology-schema.json` file in the same directory.
 
 It consists of two main elements:
 
@@ -14,13 +14,13 @@ It consists of two main elements:
 
 ## Participants
 
-The `participants` element describes the main actors of the simulation through given `name`s and the `solver`s they use. 
-It can hold an arbitrary number of elements, which must have pairwise unique names. 
+The `participants` element describes the main actors of the simulation through given `name`s and the `solver`s they use.
+It can hold an arbitrary number of elements, which must have pairwise unique names.
 The optional parameter `dimensionality` defines the dimensions of the meshes used by the participant.
 
-There must be at least one participant defined, however, for a successful communication to be possible, 
+There must be at least one participant defined, however, for a successful communication to be possible,
 at least two participants must exist.
-A valid entry might look as follows:
+A valid entry may look as follows:
 
 ```yaml
 participants:
@@ -35,25 +35,29 @@ participants:
 ## Exchanges
 
 The `exchanges` element describes how the main actors of the simulation communicate and relate to one-another.
-This means that a single exchange needs to define a source participant `from`, a destination participant `to` and 
-patches (interfaces) of these participants through `from-patch` and `to-patch`. 
-The data that is exchanges is given as `data` and the type of the exchange (strong (implicit) or weak (explicit)) 
+This means that a single exchange needs to define a source participant `from`, a destination participant `to` and
+locations (interfaces) of these participants through `from-location-names`, `to-location-names` and the ability to
+further specify the location type through the optional tags `from-location-type` and `to-location-type` (surface or
+volume).
+The data that is exchanges is given as `data` and the type of the exchange (strong (implicit) or weak (explicit))
 is chosen through `type`.
-The optional parameter `data-type` can take either of the two values `scalar` or `vector`. 
-If not given, a value might be inferred from the name of the `data`.
+The optional parameter `data-type` can take either of the two values `scalar` or `vector`.
+If not given, a value may be inferred from the name of the `data`.
 
 At least one exchange must exist for a valid topology. Exchanges must be unique.
-A valid entry might look as follows:
+A valid entry may look as follows:
 
 ```yaml
 exchanges:
-  - from: Crocodile     # A string that corresponds to a previously defined participant
-    to: Alligator       # A string that corresponds to a previously defined participant
-    from-patch: claw    # A patch (interface) of the `from`-participant
-    to-patch: claw      # A patch (interface) of the `to`-participant
-    type: strong        # The type of the data-exchange; either `strong` (implicit) or `weak` (explicit)
-    data: fish          # The data that is being exchanged
-    data-type: vector   # The type of the data that is being exchange; either `scalar`,`vector` or not given
+  - from: Crocodile       # A string that corresponds to a previously defined participant
+    to: Alligator         # A string that corresponds to a previously defined participant
+    from-location-names: [claw]    # A list of locations (interfaces) of the `from`-participant
+    to-location-names: [claw]      # A list of locations (interfaces) of the `to`-participant
+    from-location-type: surface # Either `surface` or `volume`
+    to-location-type: surface   # Either `surface` or `volume`
+    type: strong          # The type of the data-exchange; either `strong` (implicit) or `weak` (explicit)
+    data: fish            # The data that is being exchanged
+    data-type: vector     # The type of the data that is being exchange; either `scalar`,`vector` or not given
   - ...
 ```
 
@@ -71,15 +75,21 @@ participants:
 exchanges:
   - from: Crocodile     # A string that corresponds to a previously defined participant
     to: Alligator       # A string that corresponds to a previously defined participant
-    from-patch: claw    # A patch (interface) of the `from`-participant
-    to-patch: claw      # A patch (interface) of the `to`-participant
+    from-location-names: [claw]    # Locations (interfaces) of the `from`-participant
+    to-location-names: [claw-left, claw-right]      # Locations (interfaces) of the `to`-participant
     type: strong        # The type of the data-exchange; either `strong` (implicit) or `weak` (explicit)
     data: fish          # The data that is being exchanged
-    data-type: vector
 ```
+
+This topology results in one exchange between the `Crocodile` and the `Alligator` with the data `fish`.
+However, in the adapter-configuration, the `Alligator` will read data from the `claw-left` and `claw-right` interfaces.
 
 ## Legacy
 
-In version 1 of preCICE Case Generate, the topology had the additional elements `coupling-scheme` and `acceleration`. 
-To facilitate the usage of the tool, they were removed and the parameters are now either inferred from the remaining 
+In version 1 of preCICE Case Generate, the topology had the additional elements `coupling-scheme` and `acceleration`.
+To facilitate the usage of the tool, they were removed and the parameters are now either inferred from the remaining
 two tags or assigned a default value.
+
+In version 2, the `from-location-type` and `to-location-type` were added to the `exchanges` element and the previous
+tags `from-patch` and `to-patch` were renamed to `from-location-names` and `to-location-names`, respectively, 
+while allowing lists of values.

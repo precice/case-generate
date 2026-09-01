@@ -11,26 +11,26 @@ participants:
 
 exchanges:
   - from: Fluid-Top
-    from-patch: surface
+    from-location-names: [surface]
     to: Solid
-    to-patch: interface
+    to-location-names: [interface]
     data: Temperature-Top  # Solid reads temperature
     type: strong
   - from: Solid
-    from-patch: surface
+    from-location-names: [surface]
     to: Fluid-Top
-    to-patch: interface
+    to-location-names: [interface]
     data: HeatTransfer-Top  # Solid reads temperature
     type: strong
   - from: Fluid-Bottom
-    from-patch: surface
+    from-location-names: [surface]
     to: Solid
-    to-patch: interface
+    to-location-names: [interface]
     data: Temperature-Bottom  # Solid reads temperature
     type: strong
   - from: Solid
-    from-patch: interface
+    from-location-names: [interface]
     to: Fluid-Bottom
-    to-patch: surface
+    to-location-names: [surface]
     data: HeatTransfer-Bottom # Fluid reads heat flux
     type: strong

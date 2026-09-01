@@ -2,6 +2,7 @@ from pathlib import Path
 from precice_config_graph import nodes as n, enums as e
 from precice_config_graph.nodes import MeshNode
 
+from precicecasegenerate.input_handler.topology_processor import TopologyProcessor
 from precicecasegenerate.input_handler.topology_reader import TopologyReader
 from precicecasegenerate.node_creator import NodeCreator
 import precicecasegenerate.helper as helper
@@ -9,7 +10,8 @@ import precicecasegenerate.helper as helper
 test_directory: Path = Path(__file__).parent
 
 
-def simple_setup(patches: bool = False) -> tuple[dict, dict, dict[MeshNode, set[str]]] | tuple[dict, dict]:
+def simple_setup(locations: bool = False) -> tuple[dict, dict, dict[MeshNode, set[helper.LocationNode]]] | tuple[
+    dict, dict]:
     """
     Create all nodes for the (simple) test topology file.
     :return: A dict representing the topology and a dict containing all nodes created from the topology.
@@ -18,10 +20,13 @@ def simple_setup(patches: bool = False) -> tuple[dict, dict, dict[MeshNode, set[
 
     topology_reader: TopologyReader = TopologyReader(topology_file)
     topology: dict = topology_reader.get_topology()
+    topology_processor: TopologyProcessor = TopologyProcessor(topology, topology_file)
+    assert 0 == topology_processor.process(), "Topology processing failed."
+
     node_creator: NodeCreator = NodeCreator(topology)
     nodes: dict = node_creator.get_nodes()
-    if patches:
-        return topology, nodes, node_creator.get_mesh_patch_map()
+    if locations:
+        return topology, nodes, node_creator.get_mesh_location_map()
     return topology, nodes
 
 
@@ -34,6 +39,9 @@ def complex_setup() -> tuple[dict, dict]:
 
     topology_reader: TopologyReader = TopologyReader(topology_file)
     topology: dict = topology_reader.get_topology()
+    topology_processor: TopologyProcessor = TopologyProcessor(topology, topology_file)
+    assert 0 == topology_processor.process(), "Topology processing failed."
+
     node_creator: NodeCreator = NodeCreator(topology)
     nodes: dict = node_creator.get_nodes()
     return topology, nodes
@@ -368,7 +376,7 @@ def test_mesh_nodes():
     """
     Check that mesh nodes are created correctly.
     """
-    topology, nodes, mesh_patch_map = simple_setup(patches=True)
+    topology, nodes, mesh_location_map = simple_setup(locations=True)
     mesh_nodes: list[n.MeshNode] = nodes["meshes"]
 
     # Check that each mesh is provided by exactly one participant
@@ -408,30 +416,31 @@ def test_mesh_nodes():
                     increase_dim = True
                     break
             assert increase_dim, (f"Mesh {mesh.name} has dimensions {mesh.dimensions}, "
-                           f"expected {dimensionality}.")
+                                  f"expected {dimensionality}.")
 
-    # Check that each mesh is in the mesh-patch map
+    # Check that each mesh is in the mesh-location map
     for mesh in mesh_nodes:
-        assert mesh in mesh_patch_map, f"Mesh {mesh.name} is not in the mesh-patch map."
-        # Check that the patch in the mesh-patch-map is in the topology
-        patch_names: set[str] = mesh_patch_map[mesh]
-        for patch_name in patch_names:
+        assert mesh in mesh_location_map, f"Mesh {mesh.name} is not in the mesh-location map."
+        # Check that the location in the mesh-location-map is in the topology
+        locations: set[helper.LocationNode] = mesh_location_map[mesh]
+        for location in locations:
             try:
-                # Note: This is only an approximate scheme, since patch names are not unique
-                next(e for e in topology["exchanges"] if e["from-patch"] == patch_name or e["to-patch"] == patch_name)
+                # Note: This is only an approximate scheme, since location names are not unique
+                next(e for e in topology["exchanges"] if
+                     location.name in e["from-location-names"] or location.name in e["to-location-names"])
             except StopIteration:
-                assert False, f"Patch {patch_name} is not in any exchange in the topology."
+                assert False, f"Location {location.name} is not in any exchange in the topology."
 
-    # Check that each patch in the topology is in the mesh-patch map
+    # Check that each location in the topology is in the mesh-location map
     for exchange in topology["exchanges"]:
-        from_patch_name: str = exchange["from-patch"]
-        try:
-            next(m for m in mesh_nodes if from_patch_name in mesh_patch_map[m])
-        except StopIteration:
-            assert False, f"Patch {from_patch_name} is not in any mesh in the mesh-patch map."
+        for from_location_name in exchange["from-location-names"]:
+            try:
+                next(m for m in mesh_nodes if any(l.name == from_location_name for l in mesh_location_map[m]))
+            except StopIteration:
+                assert False, f"Location {from_location_name} is not in any mesh in the mesh-location map."
 
-        to_patch_name: str = exchange["to-patch"]
-        try:
-            next(m for m in mesh_nodes if to_patch_name in mesh_patch_map[m])
-        except StopIteration:
-            assert False, f"Patch {to_patch_name} is not in any mesh in the mesh-patch map."
+        for to_location_name in exchange["to-location-names"]:
+            try:
+                next(m for m in mesh_nodes if any(l.name == to_location_name for l in mesh_location_map[m]))
+            except StopIteration:
+                assert False, f"Location {to_location_name} is not in any mesh in the mesh-location map."

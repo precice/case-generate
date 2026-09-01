@@ -11,5 +11,5 @@ exchanges:
     data: Color
     type: weak
     data-type: scalar
-    from-patch: interface
-    to-patch: interface
+    from-location-names: [interface]
+    to-location-names: [interface]
