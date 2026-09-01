@@ -75,7 +75,7 @@ participants:
 exchanges:
   - from: Crocodile     # A string that corresponds to a previously defined participant
     to: Alligator       # A string that corresponds to a previously defined participant
-    from-location-name: [claw]    # A location (interface) of the `from`-participant
+    from-location-names: [claw]    # Locations (interfaces) of the `from`-participant
     to-location-names: [claw-left, claw-right]      # Locations (interfaces) of the `to`-participant
     type: strong        # The type of the data-exchange; either `strong` (implicit) or `weak` (explicit)
     data: fish          # The data that is being exchanged
