@@ -9,17 +9,17 @@ participants:
 
 exchanges:
   - from: Fluid
-    from-location-name: interface
+    from-location-names: [interface]
     to: Solid
-    to-location-name: interface
+    to-location-names: [interface]
     data: Forces
     data-type: vector
     type: strong
 
   - from: Solid
-    from-location-name: interface
+    from-location-names: [interface]
     to: Fluid
-    to-location-name: interface
+    to-location-names: [interface]
     data: Displacement
     data-type: vector
     type: strong

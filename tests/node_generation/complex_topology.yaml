@@ -14,43 +14,43 @@ participants:
 exchanges:
   - from: NASTIN
     to: SOLIDZ1
-    from-location-name: interface
-    to-location-name: interface
+    from-location-names: [interface]
+    to-location-names: [interface]
     data: Forces1
     type: strong
     data-type: vector
   - from: NASTIN
     to: SOLIDZ2
-    from-location-name: interface
-    to-location-name: interface
+    from-location-names: [interface]
+    to-location-names: [interface]
     data: Forces2
     type: strong
     data-type: vector
   - from: NASTIN
     to: SOLIDZ3
-    from-location-name: interface
-    to-location-name: interface
+    from-location-names: [interface]
+    to-location-names: [interface]
     data: Forces3
     type: strong
     data-type: vector
   - from: SOLIDZ1
     to: NASTIN
-    from-location-name: interface
-    to-location-name: interface
+    from-location-names: [interface]
+    to-location-names: [interface]
     data: Displacements1
     type: strong
     data-type: vector
   - from: SOLIDZ2
     to: NASTIN
-    from-location-name: interface
-    to-location-name: interface
+    from-location-names: [interface]
+    to-location-names: [interface]
     data: Displacements2
     type: strong
     data-type: vector
   - from: SOLIDZ3
     to: NASTIN
-    from-location-name: interface
-    to-location-name: interface
+    from-location-names: [interface]
+    to-location-names: [interface]
     data: Displacements3
     type: strong
     data-type: vector

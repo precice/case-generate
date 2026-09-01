@@ -8,8 +8,8 @@ participants:
 exchanges:
   - from: Generator
     to: Propagator
-    from-location-name: interface
-    to-location-name: interface
+    from-location-names: [interface]
+    to-location-names: [interface]
     data: Color
     type: weak
     data-type: scalar

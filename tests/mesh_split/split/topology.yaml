@@ -10,24 +10,24 @@ exchanges:
   # Split of meshes required because intensive and extensive are mapped in the same direction by Fluid
   - from: Fluid
     to: SolidA
-    from-location-name: interface-A
-    to-location-name: interface-A
+    from-location-names: [interface-A]
+    to-location-names: [interface-A]
     type: strong
     data: Forces
     from-location-type: surface
     to-location-type: surface
   - from: Fluid
     to: SolidA
-    from-location-name: interface-A
-    to-location-name: interface-A
+    from-location-names: [interface-A]
+    to-location-names: [interface-A]
     type: strong
     data: Temperature
     from-location-type: surface
     to-location-type: surface
   - from: SolidA
     to: Fluid
-    from-location-name: interface-A
-    to-location-name: interface-A
+    from-location-names: [interface-A]
+    to-location-names: [interface-A]
     type: strong
     data: Displacements
     from-location-type: surface
@@ -36,16 +36,16 @@ exchanges:
   # No split of meshes required because intensive and extensive are mapped in different directions
   - from: Fluid
     to: SolidB
-    from-location-name: interface-B
-    to-location-name: interface-B
+    from-location-names: [interface-B]
+    to-location-names: [interface-B]
     type: strong
     data: Forces
     from-location-type: surface
     to-location-type: surface
   - from: SolidB
     to: Fluid
-    from-location-name: interface-B
-    to-location-name: interface-B
+    from-location-names: [interface-B]
+    to-location-names: [interface-B]
     type: strong
     data: Displacements
     from-location-type: surface

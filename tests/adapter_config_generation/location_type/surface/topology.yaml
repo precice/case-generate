@@ -7,8 +7,8 @@ participants:
 exchanges:
   - from: Fluid
     to: Solid
-    from-location-name: wet-surface
-    to-location-name: wet-surface
+    from-location-names: [wet-surface]
+    to-location-names: [wet-surface]
     from-location-type: surface
     to-location-type: surface
     type: strong
@@ -16,8 +16,8 @@ exchanges:
     data-type: vector
   - from: Solid
     to: Fluid
-    from-location-name: wet-surface
-    to-location-name: wet-surface
+    from-location-names: [wet-surface]
+    to-location-names: [wet-surface]
     from-location-type: surface
     to-location-type: surface
     type: strong

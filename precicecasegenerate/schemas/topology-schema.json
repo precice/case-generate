@@ -39,9 +39,15 @@
             "type": "string",
             "description": "Name of the source participant sending data"
           },
-          "from-location-name": {
-            "type": "string",
-            "description": "Name of the location on the source participant where data is sent"
+          "from-location-names": {
+            "type": "array",
+            "description": "Array of names of the location on the source participant where data is sent",
+            "items": {
+              "type": "string",
+              "description": "Name of the location on the source participant where data is sent",
+              "minItems": 1,
+              "uniqueItems": true
+            }
           },
           "from-location-type": {
             "type": "string",
@@ -55,9 +61,15 @@
             "type": "string",
             "description": "Name of the target participant receiving data"
           },
-          "to-location-name": {
-            "type": "string",
-            "description": "Name of the location on the target participant where data is received"
+          "to-location-names": {
+            "type": "array",
+            "description": "Array of names of the location on the target participant where data is received",
+            "items": {
+              "type": "string",
+              "description": "Name of the location on the source target where data is received",
+              "minItems": 1,
+              "uniqueItems": true
+            }
           },
           "to-location-type": {
             "type": "string",
@@ -91,9 +103,9 @@
         },
         "required": [
           "from",
-          "from-location-name",
+          "from-location-names",
           "to",
-          "to-location-name",
+          "to-location-names",
           "data",
           "type"
         ],

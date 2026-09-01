@@ -11,12 +11,12 @@ exchanges:
     data: Color
     type: weak
     data-type: scalar
-    from-location-name: interface
-    to-location-name: interface
+    from-location-names: [interface]
+    to-location-names: [interface-a] # The correct version should have [interface-a, interface-b]
   - from: A
     to: B
     data: Color
     type: weak
     data-type: scalar
-    from-location-name: interface
-    to-location-name: interface
+    from-location-names: [interface]
+    to-location-names: [interface-b] # This is considered a duplicate
