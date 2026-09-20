@@ -42,7 +42,18 @@ if [ ! -f "$ROOT_DIR/precice-config.xml" ]; then
     esac
 fi
 
-echo "Cleaning artifacts in $ROOT_DIR..."
+# Determine a pretty path for printing
+if [[ "$ROOT_DIR" == "$PWD" ]]; then
+    DISPLAY_DIR="."
+elif [[ "$ROOT_DIR" == "$PWD"/* ]]; then
+    # Strip the PWD prefix from ROOT_DIR
+    DISPLAY_DIR="${ROOT_DIR#$PWD/}"
+else
+    # Fallback to absolute path if run from a completely different directory tree
+    DISPLAY_DIR="$ROOT_DIR"
+fi
+
+echo "Cleaning files in $DISPLAY_DIR"
 
 # Delete files
 if [ ${#FILES_TO_DELETE[@]} -gt 0 ]; then
