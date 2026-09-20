@@ -1,4 +1,5 @@
 import logging
+import stat
 import shutil
 from pathlib import Path
 from importlib.resources import files, as_file
@@ -59,6 +60,10 @@ class UtilityFileCreator:
         # Use as_file to get a real path even if the file is zipped
         with as_file(src) as real_src_path:
             shutil.copy2(real_src_path, file_path)
+
+        # Make the file executable
+        file_path.chmod(file_path.stat().st_mode | stat.S_IEXEC)
+
         logger.debug(f"File clean.sh written to {file_path.resolve()}")
 
     def _create_run_file(self, directory: Path = "./") -> None:
