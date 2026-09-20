@@ -7,9 +7,9 @@ participants:
     dimensionality: 2
 exchanges:
   - from: A
-    to: C
+    to: C # This participant does not exist
     data: Color
     type: weak
     data-type: scalar
-    from-patch: interface
-    to-patch: interface
+    from-location-names: [interface]
+    to-location-names: [interface]

@@ -8,6 +8,7 @@ from precicecasegenerate import helper
 from precicecasegenerate import cli_helper
 from precicecasegenerate.logging_setup import setup_logging
 from precicecasegenerate.input_handler.topology_reader import TopologyReader
+from precicecasegenerate.input_handler.topology_processor import TopologyProcessor
 from precicecasegenerate.node_creator import NodeCreator
 from precicecasegenerate.file_creators.config_creator import ConfigCreator
 from precicecasegenerate.file_creators.adapter_config_creator import AdapterConfigCreator
@@ -47,7 +48,10 @@ def runGenerate(args: argparse.Namespace) -> int:
 
     return_value = generate_case(input_file, output_root)
 
-    logger.info("Program finished.")
+    if return_value != 0:
+        logger.error(f"Program aborted with return value {return_value}.")
+    else:
+        logger.info("Program finished.")
     return return_value
 
 
@@ -65,18 +69,19 @@ def generate_case(input_file: Path, output_root: Path) -> int:
     logger.debug(f"Created output directory at {output_root}")
 
     logger.debug("Starting topology reader.")
-    topology_reader: TopologyReader = TopologyReader(input_file.resolve())
-    return_value: int = topology_reader.validate_topology()
-    if return_value != 0:
-        return return_value
-    return_value: int = topology_reader.check_topology()
-    if return_value != 0:
-        return return_value
-    # Preprocess the participant names to ensure they have the correct format.
-    # This needs to be done before creating the nodes.
-    topology_reader.preprocess_participant_names()
-    topology: dict = topology_reader.get_topology()
+    # Read the topology file
+    topology_reader = TopologyReader(input_file.resolve())
+    topology = topology_reader.get_topology()
     logger.debug("Topology reader finished.")
+
+    logger.debug("Starting topology processing.")
+    # Process and validate the topology
+    processor = TopologyProcessor(topology, input_file.resolve())
+    return_value = processor.process()
+
+    if return_value != 0:
+        return return_value
+    logger.debug("Topology processing finished.")
 
     logger.debug("Starting node creator.")
     node_creator: NodeCreator = NodeCreator(topology)
@@ -100,7 +105,7 @@ def generate_case(input_file: Path, output_root: Path) -> int:
         logger.debug(f"Created participant directory at {participant_directory}")
 
     logger.debug("Starting adapter config creator.")
-    mesh_patch_map: dict = node_creator.get_mesh_patch_map()
+    mesh_patch_map: dict = node_creator.get_mesh_location_map()
     adapter_config_creator: AdapterConfigCreator = AdapterConfigCreator(participant_solver_map,
                                                                         mesh_patch_map,
                                                                         precice_config_filename=cli_helper.PRECICE_CONFIG_FILE_NAME)

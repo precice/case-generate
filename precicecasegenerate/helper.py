@@ -24,6 +24,7 @@ DEFAULT_IMPLICIT_COUPLING_TYPE: e.CouplingSchemeType = e.CouplingSchemeType.PARA
 DEFAULT_CONVERGENCE_MEASURE_TYPE: e.ConvergenceMeasureType = e.ConvergenceMeasureType.RELATIVE
 DEFAULT_DATA_KIND: str = "intensive"
 DEFAULT_MAPPING_KIND: str = "read"
+DEFAULT_LOCATION_TYPE: str = "surface"
 
 EXTENSIVE_DATA: list[str] = [
     "force",
@@ -41,9 +42,11 @@ INTENSIVE_DATA: list[str] = [
     "traction"
 ]
 
+
 class DataKind(Enum):
     EXTENSIVE = "extensive"
     INTENSIVE = "intensive"
+
 
 def get_data_label(data_name: str) -> DataKind:
     """
@@ -59,6 +62,7 @@ def get_data_label(data_name: str) -> DataKind:
     else:
         return DataKind(DEFAULT_DATA_KIND)
 
+
 def is_unknown_data_kind(data_name: str) -> bool:
     """
     Checks if the given data name is associated with an unknown data kind, i.e., neither extensive nor intensive.
@@ -66,6 +70,7 @@ def is_unknown_data_kind(data_name: str) -> bool:
     :return: True, if the data kind is unknown. False otherwise.
     """
     return not _is_extensive(data_name) and not _is_intensive(data_name)
+
 
 def _is_extensive(data_name: str) -> bool:
     """
@@ -75,6 +80,7 @@ def _is_extensive(data_name: str) -> bool:
     """
     return any(data_name.lower().__contains__(extensive_data) for extensive_data in EXTENSIVE_DATA)
 
+
 def _is_intensive(data_name: str) -> bool:
     """
     Checks if the given data name is associated with an intensive data.
@@ -82,6 +88,7 @@ def _is_intensive(data_name: str) -> bool:
     :return: True, if the data intensive. False otherwise.
     """
     return any(data_name.lower().__contains__(intensive_data) for intensive_data in INTENSIVE_DATA)
+
 
 # To make duplicate data names unique
 DATA_UNIQUIFIERS: list[str] = [
@@ -143,25 +150,53 @@ def get_participant_solver_directory(parent_directory: Path, participant_name: s
     return participant_directory
 
 
-class PatchState(Enum):
-    EXTENSIVE = "extensive"
-    INTENSIVE = "intensive"
-
-
-class PatchNode:
+class LocationType(Enum):
     """
-    A class to represent a patch from a topology.yaml file.
+    Type of a location in the topology.yaml file.
+    The type can be either surface or volume.
+    """
+    SURFACE = "surface"
+    VOLUME = "volume"
+
+
+class LocationNode:
+    """
+    A class to represent a location from a topology.yaml file.
     """
 
-    def __init__(self, name: str, participant: n.ParticipantNode, mesh: n.MeshNode, label: PatchState):
+    def __init__(self, name: str, participant: n.ParticipantNode,
+                 meshes: dict[n.ParticipantNode, dict[DataKind, n.MeshNode]],
+                 type: LocationType = LocationType(DEFAULT_LOCATION_TYPE)):
         """
-        Initialize a PatchNode.
-        :param name: The name of the patch.
-        :param participant: The participant that owns the patch.
-        :param mesh: The mesh the patch is on.
-        :param label:
+        Initialize a LocationNode.
+        :param name: The name of the location.
+        :param participant: The participant that owns the location.
+        :param meshes: A dict mapping participants to meshes.
+        More accurately, the participants are the target participants of the location
+        and the meshes are the ones used by the owning participant in communication with the target participant.
+        As the mesh must be either "extensive" or "intensive", the target participant maps to a dict of meshes
+        with the keys "extensive" and "intensive".
+        :param type: The type of the location (surface or volume). Defaults to surface.
         """
         self.name = name
         self.participant = participant
-        self.mesh = mesh
-        self.label = label
+        self.meshes = meshes
+        self.type = type
+
+    def __eq__(self, other):
+        """
+        Equality check for LocationNode objects.
+        Two LocationNode objects are equal if they have the same name, participant, label and type.
+        As the mesh is assigned later, it is ignored for equality checks.
+        :param self: The current LocationNode object.
+        :param other: The other LocationNode object to compare with.
+        :return: True if the objects are equal, False otherwise.
+        """
+        if not isinstance(other, LocationNode):
+            return False
+        return (self.name == other.name and
+                self.participant == other.participant and
+                self.type == other.type)
+
+    def __hash__(self):
+        return hash((self.name, self.participant, self.type))

@@ -1,0 +1,24 @@
+{
+    "participant_name": "PorousMedia",
+    "precice_config_file_path": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "PorousMedia-Mesh",
+            "location": "volume",
+            "patches": [
+                "overlapping-domain"
+            ],
+            "is_received": false,
+            "read_data": [
+                {
+                    "name": "Velocity"
+                }
+            ],
+            "write_data": [
+                {
+                    "name": "Porosity"
+                }
+            ]
+        }
+    ]
+}

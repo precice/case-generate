@@ -1,0 +1,14 @@
+participants:
+  - name: Fluid
+    solver: OpenFOAM
+  - name: Solid
+    solver: CalculiX
+
+exchanges:
+  - from: Fluid
+    to: Solid
+    from-location-names: [interface-f1, interface-f2]
+    to-location-names: [interface-s1, interface-s2]
+    type: strong
+    data: Forces
+    data-type: vector

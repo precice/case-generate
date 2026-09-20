@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink format="---[precice] %ColorizedSeverity% %Message%" />
+  </log>
+
+  <data:vector name="Velocity" />
+  <data:scalar name="Porosity" />
+
+  <mesh name="Fluid-Mesh" dimensions="3">
+    <use-data name="Velocity" />
+    <use-data name="Porosity" />
+  </mesh>
+
+  <mesh name="PorousMedia-Mesh" dimensions="3">
+    <use-data name="Velocity" />
+    <use-data name="Porosity" />
+  </mesh>
+
+  <participant name="Fluid">
+    <provide-mesh name="Fluid-Mesh" />
+    <receive-mesh name="PorousMedia-Mesh" from="PorousMedia" />
+    <read-data name="Porosity" mesh="Fluid-Mesh" />
+    <write-data name="Velocity" mesh="Fluid-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="PorousMedia-Mesh"
+      to="Fluid-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <participant name="PorousMedia">
+    <provide-mesh name="PorousMedia-Mesh" />
+    <receive-mesh name="Fluid-Mesh" from="Fluid" />
+    <read-data name="Velocity" mesh="PorousMedia-Mesh" />
+    <write-data name="Porosity" mesh="PorousMedia-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Fluid-Mesh"
+      to="PorousMedia-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <m2n:sockets acceptor="Fluid" connector="PorousMedia" exchange-directory=".." />
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="Fluid" second="PorousMedia" />
+    <exchange data="Velocity" mesh="Fluid-Mesh" from="Fluid" to="PorousMedia" />
+    <exchange data="Porosity" mesh="PorousMedia-Mesh" from="PorousMedia" to="Fluid" />
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
+  </coupling-scheme:parallel-explicit>
+</precice-configuration>

@@ -7,8 +7,8 @@ participants:
 exchanges:
   - from: A
     to: B
-    from-patch: interface
-    to-patch: interface
+    from-location-names: [interface]
+    to-location-names: [interface]
     data: Color
     type: weak
     data-type: scalar

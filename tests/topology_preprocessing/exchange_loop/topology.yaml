@@ -3,9 +3,9 @@ participants:
     solver: IDK
 
 exchanges:
-  - from: Croc
+  - from: Croc # This exchange is a loop
     to: Croc
-    from-patch: I
-    to-patch: I
+    from-location-names: [I]
+    to-location-names: [I]
     data: Fish
     type: strong

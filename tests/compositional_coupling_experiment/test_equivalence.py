@@ -17,7 +17,7 @@ def test_compositional_coupling_experiment():
     case_directory: Path = test_directory
     input_file: Path = case_directory / "topology.yaml"
 
-    generate_case(input_file, case_directory / "_generated")
+    assert 0 == generate_case(input_file, case_directory / "_generated"), "Case generation failed."
 
     expected: Path = case_directory / "precice-config.xml"
     actual: Path = case_directory / "_generated/precice-config.xml"
