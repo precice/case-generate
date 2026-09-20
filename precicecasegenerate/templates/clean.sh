@@ -11,6 +11,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # File patterns to delete
 FILES_TO_DELETE=(
     "precice-*.log"
+    "watchpoint-*.log"
+    "precice-*-events.json"
+    "precice-*-trace.json"
     "core"
     "*.vtk"
     "*.vtu"
@@ -20,12 +23,19 @@ FILES_TO_DELETE=(
     "*.sta"
     "*.cvg"
     "*.rout"
+    "*.msg"
+    "*.fbd"
+    "history.csv"
+    "forces.csv"
+    "*.pvd"
 )
 
 # Exact folder names to delete completely
 DIRS_TO_DELETE=(
     "precice-run"
+    "precice-profiling"
     "postProcessing"
+    "processor*"
 )
 
 # ==========================================
