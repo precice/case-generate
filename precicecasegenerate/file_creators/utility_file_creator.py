@@ -171,16 +171,12 @@ class UtilityFileCreator:
         )
         # Explanation of clean.sh
         readme_str += (
-            "- `clean.sh` removes any files in the current root directory that were not created by preCICE case-generate "
-            "(and moves them to a backup folder).\n"
+            "- `clean.sh` removes any files files and folders as specified in the script (feel free to edit the list yourself).\n "
             "Execution:\n"
             "\n"
             "```bash\n"
-            "./clean.sh [--force] [--dry-run]\n"
-            "```\n"
-            "\n"
-            "- `--force` Deletes the files and any backup folders\n"
-            "- `--dry-run` Does not delete any files, but prints files that would be deleted\n")
+            "./clean.sh\n"
+            "```\n")
 
         readme_str += topic_separator
 
