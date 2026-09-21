@@ -27,12 +27,14 @@ DEFAULT_MAPPING_KIND: str = "read"
 DEFAULT_LOCATION_TYPE: str = "surface"
 
 EXTENSIVE_DATA: list[str] = [
+    "extensive",
     "force",
     "heat-transfer",
     "heattransfer",
 ]
 
 INTENSIVE_DATA: list[str] = [
+    "intensive",
     "displacement",
     "temperature",
     "pressure",
