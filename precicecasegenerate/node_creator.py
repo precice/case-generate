@@ -140,16 +140,6 @@ class NodeCreator:
         for coupling_scheme in self.coupling_schemes:
             # Treat multi-coupling-schemes separately: More than one M2N is needed here
             if isinstance(coupling_scheme, n.MultiCouplingSchemeNode):
-                # Create an M2N for every exchange (once per pair of participants)
-                for exchange in coupling_scheme.exchanges:
-                    if frozenset((exchange.from_participant, exchange.to_participant)) not in m2n_map:
-                        m2n: n.M2NNode = n.M2NNode(type=helper.DEFAULT_M2N_TYPE, acceptor=exchange.from_participant,
-                                                   connector=exchange.to_participant)
-                        m2n_map[frozenset((exchange.from_participant, exchange.to_participant))] = m2n
-                        self.m2ns.append(m2n)
-                        logger.debug(f"Created M2N from {exchange.from_participant.name} to "
-                                     f"{exchange.to_participant.name}.")
-
                 control_participant: n.ParticipantNode = coupling_scheme.control_participant
                 # Create an M2N from the control participant to every other participant
                 for participant in coupling_scheme.participants:
@@ -161,6 +151,16 @@ class NodeCreator:
                             self.m2ns.append(m2n)
                             logger.debug(f"Created M2N from control-participant {control_participant.name} "
                                          f"to {participant.name}.")
+
+                # Create an M2N for every exchange (once per pair of participants)
+                for exchange in coupling_scheme.exchanges:
+                    if frozenset((exchange.from_participant, exchange.to_participant)) not in m2n_map:
+                        m2n: n.M2NNode = n.M2NNode(type=helper.DEFAULT_M2N_TYPE, acceptor=exchange.from_participant,
+                                                   connector=exchange.to_participant)
+                        m2n_map[frozenset((exchange.from_participant, exchange.to_participant))] = m2n
+                        self.m2ns.append(m2n)
+                        logger.debug(f"Created M2N from {exchange.from_participant.name} to "
+                                     f"{exchange.to_participant.name}.")
 
             # Only one M2N is needed for a regular coupling-scheme (since there is only one pair of participants involved)
             elif isinstance(coupling_scheme, n.CouplingSchemeNode):

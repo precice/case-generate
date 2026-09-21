@@ -150,9 +150,9 @@
 
     </participant>
 
-    <m2n:sockets acceptor="TendonBottom" connector="MuscleMechanics" exchange-directory=".."/>
-    <m2n:sockets acceptor="TendonTopA" connector="MuscleMechanics" exchange-directory=".."/>
-    <m2n:sockets acceptor="TendonTopB" connector="MuscleMechanics" exchange-directory=".."/>
+    <m2n:sockets acceptor="MuscleMechanics" connector="TendonBottom" exchange-directory=".."/>
+    <m2n:sockets acceptor="MuscleMechanics" connector="TendonTopA" exchange-directory=".."/>
+    <m2n:sockets acceptor="MuscleMechanics" connector="TendonTopB" exchange-directory=".."/>
     <m2n:sockets acceptor="MuscleFibers" connector="MuscleMechanics" exchange-directory=".."/>
 
     <coupling-scheme:parallel-explicit>
