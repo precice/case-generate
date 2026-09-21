@@ -7,9 +7,6 @@ from pathlib import Path
 from precicecasegenerate.cli import generate_case
 
 
-# This directory is the same for all tests in this file.
-
-
 def test_clean_script():
     """
     Check that all topologies generate valid preCICE config files.
