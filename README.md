@@ -27,8 +27,8 @@ Required dependencies are:
 - pip
 - git for cloning the repository :) 
 - [preCICE Config Graph](https://github.com/precice/config-graph) (will be installed during the setup)
-- pyyaml
-- jsonschema
+- ruamel.yaml
+- preciceadapterschema
 
 Optional dependencies are:
 

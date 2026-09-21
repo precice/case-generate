@@ -1,4 +1,5 @@
 import logging
+import stat
 import shutil
 from pathlib import Path
 from importlib.resources import files, as_file
@@ -59,6 +60,10 @@ class UtilityFileCreator:
         # Use as_file to get a real path even if the file is zipped
         with as_file(src) as real_src_path:
             shutil.copy2(real_src_path, file_path)
+
+        # Make the file executable
+        file_path.chmod(file_path.stat().st_mode | stat.S_IEXEC)
+
         logger.debug(f"File clean.sh written to {file_path.resolve()}")
 
     def _create_run_file(self, directory: Path = "./") -> None:
@@ -166,16 +171,12 @@ class UtilityFileCreator:
         )
         # Explanation of clean.sh
         readme_str += (
-            "- `clean.sh` removes any files in the current root directory that were not created by preCICE case-generate "
-            "(and moves them to a backup folder).\n"
+            "- `clean.sh` removes any files files and folders as specified in the script (feel free to edit the list yourself).\n "
             "Execution:\n"
             "\n"
             "```bash\n"
-            "./clean.sh [--force] [--dry-run]\n"
-            "```\n"
-            "\n"
-            "- `--force` Deletes the files and any backup folders\n"
-            "- `--dry-run` Does not delete any files, but prints files that would be deleted\n")
+            "./clean.sh\n"
+            "```\n")
 
         readme_str += topic_separator
 
