@@ -6,6 +6,7 @@ from pathlib import Path
 
 from precicecasegenerate import helper
 from precicecasegenerate import cli_helper
+from precicecasegenerate.state_tracker import StateTracker
 from precicecasegenerate.logging_setup import setup_logging
 from precicecasegenerate.input_handler.topology_reader import TopologyReader
 from precicecasegenerate.input_handler.topology_processor import TopologyProcessor
@@ -68,6 +69,10 @@ def generate_case(input_file: Path, output_root: Path) -> int:
     output_root.mkdir(parents=True, exist_ok=True)
     logger.debug(f"Created output directory at {output_root}")
 
+    # Track generated files
+    state_tracker = StateTracker(output_root)
+    state_tracker.backup_modified_files()
+
     logger.debug("Starting topology reader.")
     # Read the topology file
     topology_reader = TopologyReader(input_file.resolve())
@@ -98,9 +103,7 @@ def generate_case(input_file: Path, output_root: Path) -> int:
     for participant in participant_solver_map:
         participant_directory: Path = helper.get_participant_solver_directory(output_root, participant.name,
                                                                               participant_solver_map[participant])
-        # The directory will be overwritten if it already exists and is of the form "_generated/name-solver/"
-        if participant_directory.exists():
-            shutil.rmtree(participant_directory, ignore_errors=True)
+        # Create the participant directory if it does not exist
         participant_directory.mkdir(parents=True, exist_ok=True)
         logger.debug(f"Created participant directory at {participant_directory}")
 
@@ -114,6 +117,9 @@ def generate_case(input_file: Path, output_root: Path) -> int:
     logger.debug("Starting utility file creator.")
     utility_file_creator: UtilityFileCreator = UtilityFileCreator(participant_solver_map)
     utility_file_creator.create_utility_files(parent_directory=output_root)
+
+    state_tracker.save_new_state()
+
     return 0
 
 
