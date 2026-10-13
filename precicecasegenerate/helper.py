@@ -31,6 +31,8 @@ EXTENSIVE_DATA: list[str] = [
     "force",
     "heat-transfer",
     "heattransfer",
+    "mass",
+    "current",
 ]
 
 INTENSIVE_DATA: list[str] = [
@@ -41,7 +43,13 @@ INTENSIVE_DATA: list[str] = [
     "velocity",
     "heat-flux",
     "heatflux",
-    "traction"
+    "traction",
+    "stress",
+    "voltage",
+    "porosity",
+    "concentration",
+    "k00",
+    "k11",
 ]
 
 
@@ -80,6 +88,9 @@ def _is_extensive(data_name: str) -> bool:
     :param data_name: The name of the data to check.
     :return: True, if the data extensive. False otherwise.
     """
+    # E.g., a "heat-transfer-coefficient" is not extensive
+    if data_name.lower().__contains__("coefficient"):
+        return False
     return any(data_name.lower().__contains__(extensive_data) for extensive_data in EXTENSIVE_DATA)
 
 
@@ -89,6 +100,9 @@ def _is_intensive(data_name: str) -> bool:
     :param data_name: The name of the data to check.
     :return: True, if the data intensive. False otherwise.
     """
+    # E.g., a "heat-transfer-coefficient" is intensive
+    if data_name.lower().__contains__("coefficient"):
+        return True
     return any(data_name.lower().__contains__(intensive_data) for intensive_data in INTENSIVE_DATA)
 
 
@@ -118,6 +132,14 @@ DEFAULT_DATA_TYPES: dict[str, e.DataType] = {
     "heatflux": e.DataType.VECTOR,
     "heat-transfer": e.DataType.SCALAR,
     "heattransfer": e.DataType.SCALAR,
+    "stress": e.DataType.VECTOR,
+    "mass": e.DataType.SCALAR,
+    "current": e.DataType.SCALAR,
+    "voltage": e.DataType.SCALAR,
+    "porosity": e.DataType.SCALAR,
+    "concentration": e.DataType.SCALAR,
+    "k00": e.DataType.SCALAR,
+    "k11": e.DataType.SCALAR,
 }
 
 
