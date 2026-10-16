@@ -14,12 +14,12 @@ exchanges:
     data: Color
     type: weak
     data-type: scalar
-    from-location-names: [interface]
+    from-location-names: [interface-b]
     to-location-names: [interface]
   - from: A
     to: C
     data: Color
     type: strong
     data-type: scalar
-    from-location-names: [interface]
+    from-location-names: [interface-c]
     to-location-names: [interface]
