@@ -1,5 +1,5 @@
 """
-Test that exchanges between participants correctly lead to data renaming if only the specified patches are unique.
+Test that the generated config is equivalent to the expected one with a complex example.
 """
 
 from pathlib import Path
