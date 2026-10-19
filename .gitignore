@@ -15,4 +15,4 @@ build/
 # Created directories/files during runs
 *_generated/
 *logs/
-*file_state.json
+*file-state.json
