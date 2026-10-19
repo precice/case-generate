@@ -1,0 +1,58 @@
+{
+    "participant_name": "Fluid",
+    "precice_config_file_path": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "Fluid-SolidUpstream-Surface-Mesh",
+            "location_type": "surface",
+            "location_names": [
+                "nodes-upstream"
+            ],
+            "is_received": false,
+            "read_data": [
+                {
+                    "name": "Displacement-Upstream"
+                }
+            ]
+        },
+        {
+            "mesh_name": "Fluid-SolidUpstream-Volume-Mesh",
+            "location_type": "volume",
+            "location_names": [
+                "centers-upstream"
+            ],
+            "is_received": false,
+            "write_data": [
+                {
+                    "name": "Stress-Upstream"
+                }
+            ]
+        },
+        {
+            "mesh_name": "Fluid-SolidDownstream-Surface-Mesh",
+            "location_type": "surface",
+            "location_names": [
+                "nodes-downstream"
+            ],
+            "is_received": false,
+            "read_data": [
+                {
+                    "name": "Displacement-Downstream"
+                }
+            ]
+        },
+        {
+            "mesh_name": "Fluid-SolidDownstream-Volume-Mesh",
+            "location_type": "volume",
+            "location_names": [
+                "centers-downstream"
+            ],
+            "is_received": false,
+            "write_data": [
+                {
+                    "name": "Stress-Downstream"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,36 @@
+{
+    "participant_name": "Fluid2",
+    "precice_config_file_path": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "Fluid2-Mesh",
+            "location_type": "surface",
+            "location_names": [
+                "interface"
+            ],
+            "is_received": false,
+            "read_data": [
+                {
+                    "name": "PressureBack"
+                },
+                {
+                    "name": "Velocity"
+                },
+                {
+                    "name": "VelocityGradientBack"
+                }
+            ],
+            "write_data": [
+                {
+                    "name": "Pressure"
+                },
+                {
+                    "name": "VelocityBack"
+                },
+                {
+                    "name": "VelocityGradient"
+                }
+            ]
+        }
+    ]
+}

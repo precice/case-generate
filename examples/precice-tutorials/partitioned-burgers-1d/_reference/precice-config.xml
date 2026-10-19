@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink format="---[precice] %ColorizedSeverity% %Message%" />
+  </log>
+
+  <data:scalar name="Gradient" />
+  <data:scalar name="Velocity" />
+
+  <mesh name="Dirichlet-Mesh" dimensions="2">
+    <use-data name="Gradient" />
+    <use-data name="Velocity" />
+  </mesh>
+
+  <mesh name="Neumann-Mesh" dimensions="2">
+    <use-data name="Gradient" />
+    <use-data name="Velocity" />
+  </mesh>
+
+  <participant name="Dirichlet">
+    <provide-mesh name="Dirichlet-Mesh" />
+    <receive-mesh name="Neumann-Mesh" from="Neumann" />
+    <read-data name="Velocity" mesh="Dirichlet-Mesh" />
+    <write-data name="Gradient" mesh="Dirichlet-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Neumann-Mesh"
+      to="Dirichlet-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <participant name="Neumann">
+    <provide-mesh name="Neumann-Mesh" />
+    <receive-mesh name="Dirichlet-Mesh" from="Dirichlet" />
+    <read-data name="Gradient" mesh="Neumann-Mesh" />
+    <write-data name="Velocity" mesh="Neumann-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Dirichlet-Mesh"
+      to="Neumann-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <m2n:sockets acceptor="Dirichlet" connector="Neumann" exchange-directory=".." />
+
+  <coupling-scheme:parallel-implicit>
+    <participants first="Dirichlet" second="Neumann" />
+    <exchange data="Gradient" mesh="Dirichlet-Mesh" from="Dirichlet" to="Neumann" />
+    <exchange data="Velocity" mesh="Neumann-Mesh" from="Neumann" to="Dirichlet" />
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
+    <relative-convergence-measure data="Gradient" mesh="Dirichlet-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Velocity" mesh="Neumann-Mesh" limit="0.1" />
+    <acceleration:IQN-ILS>
+      <data name="Gradient" mesh="Dirichlet-Mesh" />
+      <data name="Velocity" mesh="Neumann-Mesh" />
+    </acceleration:IQN-ILS>
+  </coupling-scheme:parallel-implicit>
+</precice-configuration>

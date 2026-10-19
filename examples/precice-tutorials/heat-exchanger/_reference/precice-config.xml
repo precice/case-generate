@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink format="---[precice] %ColorizedSeverity% %Message%" />
+  </log>
+
+  <data:scalar name="Sink-Temperature-Solid" />
+  <data:scalar name="Heat-Transfer-Coefficient-Solid" />
+  <data:scalar name="Sink-Temperature-Fluid-Inner" />
+  <data:scalar name="Heat-Transfer-Coefficient-Fluid-Inner" />
+  <data:scalar name="Sink-Temperature-Fluid-Outer" />
+  <data:scalar name="Heat-Transfer-Coefficient-Fluid-Outer" />
+
+  <mesh name="Solid-FluidInner-Mesh" dimensions="3">
+    <use-data name="Sink-Temperature-Solid" />
+    <use-data name="Heat-Transfer-Coefficient-Solid" />
+    <use-data name="Sink-Temperature-Fluid-Inner" />
+    <use-data name="Heat-Transfer-Coefficient-Fluid-Inner" />
+  </mesh>
+
+  <mesh name="FluidInner-Mesh" dimensions="3">
+    <use-data name="Sink-Temperature-Solid" />
+    <use-data name="Heat-Transfer-Coefficient-Solid" />
+    <use-data name="Sink-Temperature-Fluid-Inner" />
+    <use-data name="Heat-Transfer-Coefficient-Fluid-Inner" />
+  </mesh>
+
+  <mesh name="Solid-FluidOuter-Mesh" dimensions="3">
+    <use-data name="Sink-Temperature-Solid" />
+    <use-data name="Heat-Transfer-Coefficient-Solid" />
+    <use-data name="Sink-Temperature-Fluid-Outer" />
+    <use-data name="Heat-Transfer-Coefficient-Fluid-Outer" />
+  </mesh>
+
+  <mesh name="FluidOuter-Mesh" dimensions="3">
+    <use-data name="Sink-Temperature-Solid" />
+    <use-data name="Heat-Transfer-Coefficient-Solid" />
+    <use-data name="Sink-Temperature-Fluid-Outer" />
+    <use-data name="Heat-Transfer-Coefficient-Fluid-Outer" />
+  </mesh>
+
+  <participant name="Solid">
+    <provide-mesh name="Solid-FluidInner-Mesh" />
+    <provide-mesh name="Solid-FluidOuter-Mesh" />
+    <receive-mesh name="FluidInner-Mesh" from="FluidInner" />
+    <receive-mesh name="FluidOuter-Mesh" from="FluidOuter" />
+    <read-data name="Sink-Temperature-Fluid-Inner" mesh="Solid-FluidInner-Mesh" />
+    <read-data name="Heat-Transfer-Coefficient-Fluid-Inner" mesh="Solid-FluidInner-Mesh" />
+    <read-data name="Sink-Temperature-Fluid-Outer" mesh="Solid-FluidOuter-Mesh" />
+    <read-data name="Heat-Transfer-Coefficient-Fluid-Outer" mesh="Solid-FluidOuter-Mesh" />
+    <write-data name="Sink-Temperature-Solid" mesh="Solid-FluidInner-Mesh" />
+    <write-data name="Heat-Transfer-Coefficient-Solid" mesh="Solid-FluidInner-Mesh" />
+    <write-data name="Sink-Temperature-Solid" mesh="Solid-FluidOuter-Mesh" />
+    <write-data name="Heat-Transfer-Coefficient-Solid" mesh="Solid-FluidOuter-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="FluidInner-Mesh"
+      to="Solid-FluidInner-Mesh"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="FluidOuter-Mesh"
+      to="Solid-FluidOuter-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <participant name="FluidInner">
+    <provide-mesh name="FluidInner-Mesh" />
+    <receive-mesh name="Solid-FluidInner-Mesh" from="Solid" />
+    <read-data name="Sink-Temperature-Solid" mesh="FluidInner-Mesh" />
+    <read-data name="Heat-Transfer-Coefficient-Solid" mesh="FluidInner-Mesh" />
+    <write-data name="Sink-Temperature-Fluid-Inner" mesh="FluidInner-Mesh" />
+    <write-data name="Heat-Transfer-Coefficient-Fluid-Inner" mesh="FluidInner-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Solid-FluidInner-Mesh"
+      to="FluidInner-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <participant name="FluidOuter">
+    <provide-mesh name="FluidOuter-Mesh" />
+    <receive-mesh name="Solid-FluidOuter-Mesh" from="Solid" />
+    <read-data name="Sink-Temperature-Solid" mesh="FluidOuter-Mesh" />
+    <read-data name="Heat-Transfer-Coefficient-Solid" mesh="FluidOuter-Mesh" />
+    <write-data name="Sink-Temperature-Fluid-Outer" mesh="FluidOuter-Mesh" />
+    <write-data name="Heat-Transfer-Coefficient-Fluid-Outer" mesh="FluidOuter-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Solid-FluidOuter-Mesh"
+      to="FluidOuter-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <m2n:sockets acceptor="Solid" connector="FluidInner" exchange-directory=".." />
+  <m2n:sockets acceptor="Solid" connector="FluidOuter" exchange-directory=".." />
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="Solid" second="FluidInner" />
+    <exchange
+      data="Sink-Temperature-Solid"
+      mesh="Solid-FluidInner-Mesh"
+      from="Solid"
+      to="FluidInner" />
+    <exchange
+      data="Heat-Transfer-Coefficient-Solid"
+      mesh="Solid-FluidInner-Mesh"
+      from="Solid"
+      to="FluidInner" />
+    <exchange
+      data="Sink-Temperature-Fluid-Inner"
+      mesh="FluidInner-Mesh"
+      from="FluidInner"
+      to="Solid" />
+    <exchange
+      data="Heat-Transfer-Coefficient-Fluid-Inner"
+      mesh="FluidInner-Mesh"
+      from="FluidInner"
+      to="Solid" />
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
+  </coupling-scheme:parallel-explicit>
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="Solid" second="FluidOuter" />
+    <exchange
+      data="Sink-Temperature-Solid"
+      mesh="Solid-FluidOuter-Mesh"
+      from="Solid"
+      to="FluidOuter" />
+    <exchange
+      data="Heat-Transfer-Coefficient-Solid"
+      mesh="Solid-FluidOuter-Mesh"
+      from="Solid"
+      to="FluidOuter" />
+    <exchange
+      data="Sink-Temperature-Fluid-Outer"
+      mesh="FluidOuter-Mesh"
+      from="FluidOuter"
+      to="Solid" />
+    <exchange
+      data="Heat-Transfer-Coefficient-Fluid-Outer"
+      mesh="FluidOuter-Mesh"
+      from="FluidOuter"
+      to="Solid" />
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
+  </coupling-scheme:parallel-explicit>
+</precice-configuration>

@@ -1,0 +1,13 @@
+participants:
+  - name: A
+    solver: A-Solver
+  - name: B
+    solver: B-Solver
+exchanges:
+  - from: A
+    to: B
+    from-location-names: [interface]
+    to-location-names: [interface]
+    data: Data
+    data-type: scalar
+    type: weak

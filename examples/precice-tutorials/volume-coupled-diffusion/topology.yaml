@@ -1,0 +1,22 @@
+participants:
+  - name: Source
+    solver: FEniCS
+    dimensionality: 2
+  - name: Drain
+    solver: FEniCS
+    dimensionality: 2
+exchanges:
+  - from: Source
+    to: Drain
+    data: Source-Data
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Drain
+    to: Source
+    data: Drain-Data
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]

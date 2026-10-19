@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink format="---[precice] %ColorizedSeverity% %Message%" />
+  </log>
+
+  <data:vector name="Velocity" />
+  <data:scalar name="Pressure" />
+
+  <mesh name="Fluid1DLeft-Mesh" dimensions="3">
+    <use-data name="Velocity" />
+    <use-data name="Pressure" />
+  </mesh>
+
+  <mesh name="Fluid3DRight-Mesh" dimensions="3">
+    <use-data name="Velocity" />
+    <use-data name="Pressure" />
+  </mesh>
+
+  <participant name="Fluid1DLeft">
+    <provide-mesh name="Fluid1DLeft-Mesh" />
+    <receive-mesh name="Fluid3DRight-Mesh" from="Fluid3DRight" />
+    <read-data name="Pressure" mesh="Fluid1DLeft-Mesh" />
+    <write-data name="Velocity" mesh="Fluid1DLeft-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Fluid3DRight-Mesh"
+      to="Fluid1DLeft-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <participant name="Fluid3DRight">
+    <provide-mesh name="Fluid3DRight-Mesh" />
+    <receive-mesh name="Fluid1DLeft-Mesh" from="Fluid1DLeft" />
+    <read-data name="Velocity" mesh="Fluid3DRight-Mesh" />
+    <write-data name="Pressure" mesh="Fluid3DRight-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Fluid1DLeft-Mesh"
+      to="Fluid3DRight-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <m2n:sockets acceptor="Fluid1DLeft" connector="Fluid3DRight" exchange-directory=".." />
+
+  <coupling-scheme:parallel-implicit>
+    <participants first="Fluid1DLeft" second="Fluid3DRight" />
+    <exchange data="Velocity" mesh="Fluid1DLeft-Mesh" from="Fluid1DLeft" to="Fluid3DRight" />
+    <exchange data="Pressure" mesh="Fluid3DRight-Mesh" from="Fluid3DRight" to="Fluid1DLeft" />
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
+    <relative-convergence-measure data="Velocity" mesh="Fluid1DLeft-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Pressure" mesh="Fluid3DRight-Mesh" limit="0.1" />
+    <acceleration:IQN-ILS>
+      <data name="Velocity" mesh="Fluid1DLeft-Mesh" />
+      <data name="Pressure" mesh="Fluid3DRight-Mesh" />
+    </acceleration:IQN-ILS>
+  </coupling-scheme:parallel-implicit>
+</precice-configuration>

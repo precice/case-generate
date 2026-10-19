@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink format="---[precice] %ColorizedSeverity% %Message%" />
+  </log>
+
+  <data:vector name="Grass" />
+  <data:vector name="Soil" />
+
+  <mesh name="WolfSheepGrass-Mesh" dimensions="2">
+    <use-data name="Grass" />
+    <use-data name="Soil" />
+  </mesh>
+
+  <mesh name="SoilCreep-Mesh" dimensions="2">
+    <use-data name="Grass" />
+    <use-data name="Soil" />
+  </mesh>
+
+  <participant name="WolfSheepGrass">
+    <provide-mesh name="WolfSheepGrass-Mesh" />
+    <receive-mesh name="SoilCreep-Mesh" from="SoilCreep" />
+    <read-data name="Soil" mesh="WolfSheepGrass-Mesh" />
+    <write-data name="Grass" mesh="WolfSheepGrass-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="SoilCreep-Mesh"
+      to="WolfSheepGrass-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <participant name="SoilCreep">
+    <provide-mesh name="SoilCreep-Mesh" />
+    <receive-mesh name="WolfSheepGrass-Mesh" from="WolfSheepGrass" />
+    <read-data name="Grass" mesh="SoilCreep-Mesh" />
+    <write-data name="Soil" mesh="SoilCreep-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="WolfSheepGrass-Mesh"
+      to="SoilCreep-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <m2n:sockets acceptor="WolfSheepGrass" connector="SoilCreep" exchange-directory=".." />
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="WolfSheepGrass" second="SoilCreep" />
+    <exchange data="Grass" mesh="WolfSheepGrass-Mesh" from="WolfSheepGrass" to="SoilCreep" />
+    <exchange data="Soil" mesh="SoilCreep-Mesh" from="SoilCreep" to="WolfSheepGrass" />
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
+  </coupling-scheme:parallel-explicit>
+</precice-configuration>

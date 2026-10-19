@@ -1,0 +1,25 @@
+{
+    "participant_name": "FluidBottom",
+    "precice_config_file_path": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "FluidBottom-Mesh",
+            "location_type": "surface",
+            "location_names": [
+                "faces",
+                "interface"
+            ],
+            "is_received": false,
+            "read_data": [
+                {
+                    "name": "Heat-Flux-Bottom"
+                }
+            ],
+            "write_data": [
+                {
+                    "name": "Temperature-Bottom"
+                }
+            ]
+        }
+    ]
+}

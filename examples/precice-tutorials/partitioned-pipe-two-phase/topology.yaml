@@ -1,0 +1,38 @@
+participants:
+  - name: Fluid1
+    solver: OpenFOAM
+  - name: Fluid2
+    solver: OpenFOAM
+exchanges:
+  - from: Fluid1
+    to: Fluid2
+    data: Velocity
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Fluid2
+    to: Fluid1
+    data: VelocityGradient
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Fluid2
+    to: Fluid1
+    data: Pressure
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Fluid1
+    to: Fluid2
+    data: Alpha
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Fluid2
+    to: Fluid1
+    data: AlphaGradient
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]

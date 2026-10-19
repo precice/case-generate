@@ -1,0 +1,19 @@
+{
+    "participant_name": "Chemical",
+    "precice_config_file_path": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "Chemical-Mesh",
+            "location_type": "surface",
+            "location_names": [
+                "interface"
+            ],
+            "is_received": false,
+            "read_data": [
+                {
+                    "name": "Velocity"
+                }
+            ]
+        }
+    ]
+}

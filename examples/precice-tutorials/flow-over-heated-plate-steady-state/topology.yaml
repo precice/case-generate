@@ -1,0 +1,38 @@
+participants:
+  - name: Solid
+    solver: CodeAster
+  - name: Fluid
+    solver: OpenFOAM
+exchanges:
+  - from: Solid
+    to: Fluid
+    data: Sink-Temperature-Solid
+    type: weak
+    from-location-names: [nodes]
+    to-location-names: [interface]
+    from-location-type: volume
+    to-location-type: surface
+  - from: Solid
+    to: Fluid
+    data: Heat-Transfer-Coefficient-Solid
+    type: weak
+    from-location-names: [nodes]
+    to-location-names: [interface]
+    from-location-type: volume
+    to-location-type: surface # TODO: change type
+  - from: Fluid
+    to: Solid
+    data: Sink-Temperature-Fluid
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [center]
+    from-location-type: surface
+    to-location-type: surface
+  - from: Fluid
+    to: Solid
+    data: Heat-Transfer-Coefficient-Fluid
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [center]
+    from-location-type: surface
+    to-location-type: surface

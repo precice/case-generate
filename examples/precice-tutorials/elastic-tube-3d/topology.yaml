@@ -1,0 +1,19 @@
+participants:
+  - name: Fluid
+    solver: OpenFOAM
+  - name: Solid
+    solver: CalculiX
+exchanges:
+  - from: Fluid
+    to: Solid
+    data: Force
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Solid
+    to: Fluid
+    data: DisplacementDelta
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [boundary-interface]
+    to-location-type: volume

@@ -1,0 +1,23 @@
+participants:
+  - name: Fluid
+    solver: OpenFOAM
+  - name: Solid
+    solver: OpenFOAM
+exchanges:
+  - from: Fluid
+    to: Solid
+    data: Temperature
+    type: strong
+    from-location-names: [nodes]
+    to-location-names: [centers]
+    from-location-type: surface
+    to-location-type: volume # TODO: Change the type
+  - from: Solid
+    to: Fluid
+    data: HeatFlux
+    data-type: scalar
+    type: strong
+    from-location-names: [nodes]
+    to-location-names: [centers]
+    from-location-type: surface
+    to-location-type: volume

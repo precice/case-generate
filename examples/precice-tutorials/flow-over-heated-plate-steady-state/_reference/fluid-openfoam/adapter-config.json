@@ -1,0 +1,30 @@
+{
+    "participant_name": "Fluid",
+    "precice_config_file_path": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "Fluid-Mesh",
+            "location_type": "surface",
+            "location_names": [
+                "interface"
+            ],
+            "is_received": false,
+            "read_data": [
+                {
+                    "name": "Heat-Transfer-Coefficient-Solid"
+                },
+                {
+                    "name": "Sink-Temperature-Solid"
+                }
+            ],
+            "write_data": [
+                {
+                    "name": "Heat-Transfer-Coefficient-Fluid"
+                },
+                {
+                    "name": "Sink-Temperature-Fluid"
+                }
+            ]
+        }
+    ]
+}

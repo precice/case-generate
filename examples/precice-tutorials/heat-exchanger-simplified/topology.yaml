@@ -1,0 +1,45 @@
+participants:
+  - name: Fluid-Top
+    solver: OpenFOAM
+    dimensionality: 2
+  - name: Fluid-Bottom
+    solver: OpenFOAM
+    dimensionality: 2
+  - name: Solid
+    solver: CalculiX
+    dimensionality: 2
+exchanges:
+  - from: Fluid-Top
+    to: Solid
+    data: Temperature-Top
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [nodes]
+    from-location-type: surface # TODO change type
+    to-location-type: volume
+  - from: Solid
+    to: Fluid-Top
+    data: Heat-Flux-Top
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [faces]
+    from-location-type: surface
+    to-location-type: surface
+  - from: Fluid-Bottom
+    to: Solid
+    data: Temperature-Bottom
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [nodes]
+    from-location-type: surface
+    to-location-type: volume
+  - from: Solid
+    to: Fluid-Bottom
+    data: Heat-Flux-Bottom
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [faces]
+    from-location-type: surface
+    to-location-type: surface

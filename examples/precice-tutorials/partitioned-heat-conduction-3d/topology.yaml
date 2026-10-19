@@ -1,0 +1,18 @@
+participants:
+  - name: Dirichlet
+    solver: FEniCS
+  - name: Neumann
+    solver: FEniCS
+exchanges:
+  - from: Dirichlet
+    to: Neumann
+    data: Heat-Flux
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Neumann
+    to: Dirichlet
+    data: Temperature
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]

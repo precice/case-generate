@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink format="---[precice] %ColorizedSeverity% %Message%" />
+  </log>
+
+  <data:vector name="Heat-Flux" />
+  <data:scalar name="Temperature" />
+
+  <mesh name="Dirichlet-Mesh" dimensions="2">
+    <use-data name="Heat-Flux" />
+    <use-data name="Temperature" />
+  </mesh>
+
+  <mesh name="Neumann-Mesh" dimensions="2">
+    <use-data name="Heat-Flux" />
+    <use-data name="Temperature" />
+  </mesh>
+
+  <participant name="Dirichlet">
+    <provide-mesh name="Dirichlet-Mesh" />
+    <receive-mesh name="Neumann-Mesh" from="Neumann" />
+    <read-data name="Temperature" mesh="Dirichlet-Mesh" />
+    <write-data name="Heat-Flux" mesh="Dirichlet-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Neumann-Mesh"
+      to="Dirichlet-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <participant name="Neumann">
+    <provide-mesh name="Neumann-Mesh" />
+    <receive-mesh name="Dirichlet-Mesh" from="Dirichlet" />
+    <read-data name="Heat-Flux" mesh="Neumann-Mesh" />
+    <write-data name="Temperature" mesh="Neumann-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Dirichlet-Mesh"
+      to="Neumann-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <m2n:sockets acceptor="Dirichlet" connector="Neumann" exchange-directory=".." />
+
+  <coupling-scheme:parallel-implicit>
+    <participants first="Dirichlet" second="Neumann" />
+    <exchange data="Heat-Flux" mesh="Dirichlet-Mesh" from="Dirichlet" to="Neumann" />
+    <exchange data="Temperature" mesh="Neumann-Mesh" from="Neumann" to="Dirichlet" />
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
+    <relative-convergence-measure data="Heat-Flux" mesh="Dirichlet-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Temperature" mesh="Neumann-Mesh" limit="0.1" />
+    <acceleration:IQN-ILS>
+      <data name="Heat-Flux" mesh="Dirichlet-Mesh" />
+      <data name="Temperature" mesh="Neumann-Mesh" />
+    </acceleration:IQN-ILS>
+  </coupling-scheme:parallel-implicit>
+</precice-configuration>

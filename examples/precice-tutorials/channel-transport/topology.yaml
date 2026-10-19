@@ -1,0 +1,14 @@
+participants:
+  - name: Fluid
+    solver: OpenFOAM
+    dimensionality: 2
+  - name: Transport
+    solver: Nutils
+    dimensionality: 2
+exchanges: # TODO requires write-consistent mapping
+  - from: Fluid
+    to: Transport
+    data: Velocity
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [interface]

@@ -1,0 +1,14 @@
+participants:
+  - name: Fluid
+    solver: Fluid-Solver
+    dimensionality: 2
+  - name: Chemical
+    solver: Chemical-Solver
+    dimensionality: 2
+exchanges:
+  - from: Fluid
+    to: Chemical
+    data: Velocity
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [interface]

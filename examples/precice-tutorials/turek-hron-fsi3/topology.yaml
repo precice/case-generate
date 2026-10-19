@@ -1,0 +1,22 @@
+participants:
+  - name: Fluid
+    solver: SolidSolver
+    dimensionality: 2
+  - name: Solid
+    solver: SolidSolver
+    dimensionality: 2
+exchanges:
+  - from: Fluid
+    to: Solid
+    data: Stress
+    type: strong
+    from-location-names: [centers]
+    to-location-names: [interface]
+    from-location-type: volume # TODO change type
+  - from: Solid
+    to: Fluid
+    data: Displacement
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [nodes]
+    to-location-type: surface

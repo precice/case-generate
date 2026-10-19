@@ -1,0 +1,22 @@
+participants:
+  - name: Free-Flow
+    solver: DuMux
+    dimensionality: 2
+  - name: Porous-Media
+    solver: DuMux
+    dimensionality: 2
+exchanges: # TODO requires write-consistent mapping
+  - from: Free-Flow
+    to: Porous-Media
+    data: Pressure
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Porous-Media
+    to: Free-Flow
+    data: Velocity
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]

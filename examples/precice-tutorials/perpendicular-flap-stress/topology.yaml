@@ -1,0 +1,20 @@
+participants:
+  - name: Fluid
+    solver: OpenFOAM
+    dimensionality: 2
+  - name: Solid
+    solver: G+Smo
+    dimensionality: 2
+exchanges:
+  - from: Fluid
+    to: Solid
+    data: Stress
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Solid
+    to: Fluid
+    data: Displacement
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]

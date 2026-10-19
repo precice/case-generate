@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink format="---[precice] %ColorizedSeverity% %Message%" />
+  </log>
+
+  <data:scalar name="Source-Data" />
+  <data:scalar name="Drain-Data" />
+
+  <mesh name="Source-Mesh" dimensions="2">
+    <use-data name="Source-Data" />
+    <use-data name="Drain-Data" />
+  </mesh>
+
+  <mesh name="Drain-Mesh" dimensions="2">
+    <use-data name="Source-Data" />
+    <use-data name="Drain-Data" />
+  </mesh>
+
+  <participant name="Source">
+    <provide-mesh name="Source-Mesh" />
+    <receive-mesh name="Drain-Mesh" from="Drain" />
+    <read-data name="Drain-Data" mesh="Source-Mesh" />
+    <write-data name="Source-Data" mesh="Source-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Drain-Mesh"
+      to="Source-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <participant name="Drain">
+    <provide-mesh name="Drain-Mesh" />
+    <receive-mesh name="Source-Mesh" from="Source" />
+    <read-data name="Source-Data" mesh="Drain-Mesh" />
+    <write-data name="Drain-Data" mesh="Drain-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Source-Mesh"
+      to="Drain-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <m2n:sockets acceptor="Drain" connector="Source" exchange-directory=".." />
+
+  <coupling-scheme:parallel-implicit>
+    <participants first="Drain" second="Source" />
+    <exchange data="Source-Data" mesh="Source-Mesh" from="Source" to="Drain" />
+    <exchange data="Drain-Data" mesh="Drain-Mesh" from="Drain" to="Source" />
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
+    <relative-convergence-measure data="Source-Data" mesh="Source-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Drain-Data" mesh="Drain-Mesh" limit="0.1" />
+    <acceleration:IQN-ILS>
+      <data name="Source-Data" mesh="Source-Mesh" />
+      <data name="Drain-Data" mesh="Drain-Mesh" />
+    </acceleration:IQN-ILS>
+  </coupling-scheme:parallel-implicit>
+</precice-configuration>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink format="---[precice] %ColorizedSeverity% %Message%" />
+  </log>
+
+  <data:vector name="Velocity" />
+
+  <mesh name="Fluid-Mesh" dimensions="2">
+    <use-data name="Velocity" />
+  </mesh>
+
+  <mesh name="Chemical-Mesh" dimensions="2">
+    <use-data name="Velocity" />
+  </mesh>
+
+  <participant name="Fluid">
+    <provide-mesh name="Fluid-Mesh" />
+    <write-data name="Velocity" mesh="Fluid-Mesh" />
+  </participant>
+
+  <participant name="Chemical">
+    <provide-mesh name="Chemical-Mesh" />
+    <receive-mesh name="Fluid-Mesh" from="Fluid" />
+    <read-data name="Velocity" mesh="Chemical-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Fluid-Mesh"
+      to="Chemical-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <m2n:sockets acceptor="Fluid" connector="Chemical" exchange-directory=".." />
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="Fluid" second="Chemical" />
+    <exchange data="Velocity" mesh="Fluid-Mesh" from="Fluid" to="Chemical" />
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
+  </coupling-scheme:parallel-explicit>
+</precice-configuration>
