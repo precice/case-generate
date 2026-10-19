@@ -1,0 +1,23 @@
+participants:
+  - name: A
+    solver: Solver
+    dimensionality: 2
+  - name: B
+    solver: Solver
+    dimensionality: 2
+  - name: C
+    solver: Solver
+    dimensionality: 2
+exchanges:
+  - from: A
+    to: B
+    data: Data
+    type: weak
+    from-location-names: [interface-a1, interface-a2]
+    to-location-names: [interface-b]
+  - from: A
+    to: C
+    data: Data
+    type: weak
+    from-location-names: [interface-a1, interface-a2]
+    to-location-names: [interface-c]

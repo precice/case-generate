@@ -53,14 +53,14 @@ def test_data_kind_split():
     assert operations.check_config_equivalence(expected, actual), "Configs are not equivalent."
     assert runCheck(actual, True) == 0, "The config failed to validate."
 
-def test_location_split():
+def test_location_split_recipient():
     """
     Test that meshes are split correctly based on locations. The exchanges are:
        Fluid1 --Data-> Solid(Loc1, Loc2)
        Fluid2 --Data-> Solid(Loc1, Loc3)
     Because the locations on Solid are different, two meshes are needed for Solid.
     """
-    case_directory: Path = test_directory / "location" / "split"
+    case_directory: Path = test_directory / "location" / "split_recipient"
     input_file: Path = case_directory / "topology.yaml"
 
     assert 0 == generate_case(input_file, case_directory / "_generated"), "Case generation failed."
@@ -70,14 +70,48 @@ def test_location_split():
     assert operations.check_config_equivalence(expected, actual), "Configs are not equivalent."
     assert runCheck(actual, True) == 0, "The config failed to validate."
 
-def test_location_no_split():
+def test_location_split_sender():
     """
     Test that meshes are split correctly based on locations. The exchanges are:
+       A(Loc1, Loc2) --Data-> B
+       A(Loc1, Loc3) --Data-> C
+    Because the locations on A are different, two meshes are needed for A.
+    """
+    case_directory: Path = test_directory / "location" / "split_sender"
+    input_file: Path = case_directory / "topology.yaml"
+
+    assert 0 == generate_case(input_file, case_directory / "_generated"), "Case generation failed."
+
+    expected: Path = case_directory / "precice-config.xml"
+    actual: Path = case_directory / "_generated/precice-config.xml"
+    assert operations.check_config_equivalence(expected, actual), "Configs are not equivalent."
+    assert runCheck(actual, True) == 0, "The config failed to validate."
+
+def test_location_no_split_recipient():
+    """
+    Test that meshes are not split based on locations. The exchanges are:
        Fluid1 --Data-> Solid(Loc1, Loc2)
        Fluid2 --Data-> Solid(Loc1, Loc2)
     Because the locations on Solid are the same, only one mesh is needed for Solid.
     """
-    case_directory: Path = test_directory / "location" / "split"
+    case_directory: Path = test_directory / "location" / "no_split_recipient"
+    input_file: Path = case_directory / "topology.yaml"
+
+    assert 0 == generate_case(input_file, case_directory / "_generated"), "Case generation failed."
+
+    expected: Path = case_directory / "precice-config.xml"
+    actual: Path = case_directory / "_generated/precice-config.xml"
+    assert operations.check_config_equivalence(expected, actual), "Configs are not equivalent."
+    assert runCheck(actual, True) == 0, "The config failed to validate."
+
+def test_location_no_split_sender():
+    """
+    Test that meshes are not split based on locations. The exchanges are:
+       A(Loc1, Loc2) --Data-> B
+       A(Loc1, Loc2) --Data-> C
+    Because the locations on A are the same, only one mesh is needed for A.
+    """
+    case_directory: Path = test_directory / "location" / "no_split_sender"
     input_file: Path = case_directory / "topology.yaml"
 
     assert 0 == generate_case(input_file, case_directory / "_generated"), "Case generation failed."
