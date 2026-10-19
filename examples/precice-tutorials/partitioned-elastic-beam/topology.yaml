@@ -1,0 +1,18 @@
+participants:
+  - name: Dirichlet
+    solver: CalculiX
+  - name: Neumann
+    solver: CalculiX
+exchanges:
+  - from: Neumann
+    to: Dirichlet
+    data: Displacement
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Dirichlet
+    to: Neumann
+    data: Force
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]

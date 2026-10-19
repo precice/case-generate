@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink format="---[precice] %ColorizedSeverity% %Message%" />
+  </log>
+
+  <data:vector name="Data" />
+
+  <mesh name="Fluid1-Mesh" dimensions="3">
+    <use-data name="Data" />
+  </mesh>
+
+  <mesh name="Fluid2-Mesh" dimensions="3">
+    <use-data name="Data" />
+  </mesh>
+
+  <mesh name="Solid-Fluid1-Mesh" dimensions="3">
+    <use-data name="Data" />
+  </mesh>
+
+  <mesh name="Solid-Fluid2-Mesh" dimensions="3">
+    <use-data name="Data" />
+  </mesh>
+
+  <participant name="Fluid1">
+    <provide-mesh name="Fluid1-Mesh" />
+    <write-data name="Data" mesh="Fluid1-Mesh" />
+  </participant>
+
+  <participant name="Fluid2">
+    <provide-mesh name="Fluid2-Mesh" />
+    <write-data name="Data" mesh="Fluid2-Mesh" />
+  </participant>
+
+  <participant name="Solid">
+    <provide-mesh name="Solid-Fluid1-Mesh" />
+    <provide-mesh name="Solid-Fluid2-Mesh" />
+    <receive-mesh name="Fluid1-Mesh" from="Fluid1" />
+    <receive-mesh name="Fluid2-Mesh" from="Fluid2" />
+    <read-data name="Data" mesh="Solid-Fluid1-Mesh" />
+    <read-data name="Data" mesh="Solid-Fluid2-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Fluid1-Mesh"
+      to="Solid-Fluid1-Mesh"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Fluid2-Mesh"
+      to="Solid-Fluid2-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <m2n:sockets acceptor="Fluid1" connector="Solid" exchange-directory=".." />
+  <m2n:sockets acceptor="Fluid2" connector="Solid" exchange-directory=".." />
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="Fluid1" second="Solid" />
+    <exchange data="Data" mesh="Fluid1-Mesh" from="Fluid1" to="Solid" />
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
+  </coupling-scheme:parallel-explicit>
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="Fluid2" second="Solid" />
+    <exchange data="Data" mesh="Fluid2-Mesh" from="Fluid2" to="Solid" />
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
+  </coupling-scheme:parallel-explicit>
+</precice-configuration>

@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-	<log>
-    <sink
-      filter="%Severity% > debug"
-      format="---[precice] %ColorizedSeverity% %Message%"
-      enabled="true" />
+  <log>
+    <sink format="---[precice] %ColorizedSeverity% %Message%" />
   </log>
 
   <data:scalar name="Color-Scalar" />
@@ -18,16 +15,14 @@
     <use-data name="Color-Vector" />
     <use-data name="Another-Color-Vector" />
   </mesh>
-  <mesh name="B-A-Mesh" dimensions="2">
+
+  <mesh name="B-Mesh" dimensions="2">
     <use-data name="Color-Scalar" />
     <use-data name="Another-Color-Scalar" />
     <use-data name="Color-Vector" />
     <use-data name="Another-Color-Vector" />
   </mesh>
-  <mesh name="B-C-Mesh" dimensions="2">
-    <use-data name="Another-Color-Scalar" />
-    <use-data name="Another-Color-Vector" />
-  </mesh>
+
   <mesh name="C-Mesh" dimensions="2">
     <use-data name="Another-Color-Scalar" />
     <use-data name="Another-Color-Vector" />
@@ -35,66 +30,50 @@
 
   <participant name="A">
     <provide-mesh name="A-Mesh" />
-    <receive-mesh name="B-A-Mesh" from="B" />
-    <write-data name="Color-Scalar" mesh="A-Mesh" />
-    <write-data name="Color-Vector" mesh="A-Mesh" />
+    <receive-mesh name="B-Mesh" from="B" />
     <read-data name="Another-Color-Scalar" mesh="A-Mesh" />
     <read-data name="Another-Color-Vector" mesh="A-Mesh" />
-    <mapping:nearest-neighbor
-    direction="read"
-    from="B-A-Mesh"
-    to="A-Mesh"
-    constraint="consistent"
-  />
-  </participant>
-  <participant name="B">
-    <provide-mesh name="B-A-Mesh" />
-    <provide-mesh name="B-C-Mesh" />
-    <receive-mesh name="A-Mesh" from="A" />
-    <write-data name="Another-Color-Scalar" mesh="B-A-Mesh" />
-    <write-data name="Another-Color-Vector" mesh="B-A-Mesh" />
-    <write-data name="Another-Color-Scalar" mesh="B-C-Mesh" />
-    <write-data name="Another-Color-Vector" mesh="B-C-Mesh" />
-    <read-data name="Color-Scalar" mesh="B-A-Mesh" />
-    <read-data name="Color-Vector" mesh="B-A-Mesh" />
-    <mapping:nearest-neighbor
-    direction="read"
-    from="A-Mesh"
-    to="B-A-Mesh"
-    constraint="consistent"
-  />
-  </participant>
-  <participant name="C">
-    <provide-mesh name="C-Mesh" />
-    <receive-mesh name="B-C-Mesh" from="B" />
-    <read-data name="Another-Color-Scalar" mesh="C-Mesh" />
-    <read-data name="Another-Color-Vector" mesh="C-Mesh" />
-    <mapping:nearest-neighbor
-    direction="read"
-    from="B-C-Mesh"
-    to="C-Mesh"
-    constraint="consistent"
-  />
+    <write-data name="Color-Scalar" mesh="A-Mesh" />
+    <write-data name="Color-Vector" mesh="A-Mesh" />
+    <mapping:nearest-neighbor direction="read" from="B-Mesh" to="A-Mesh" constraint="consistent" />
   </participant>
 
-  <m2n:sockets acceptor="A" connector="B" exchange-directory=".."/>
-  <m2n:sockets acceptor="B" connector="C" exchange-directory=".."/>
+  <participant name="B">
+    <provide-mesh name="B-Mesh" />
+    <receive-mesh name="A-Mesh" from="A" />
+    <read-data name="Color-Scalar" mesh="B-Mesh" />
+    <read-data name="Color-Vector" mesh="B-Mesh" />
+    <write-data name="Another-Color-Scalar" mesh="B-Mesh" />
+    <write-data name="Another-Color-Vector" mesh="B-Mesh" />
+    <mapping:nearest-neighbor direction="read" from="A-Mesh" to="B-Mesh" constraint="consistent" />
+  </participant>
+
+  <participant name="C">
+    <provide-mesh name="C-Mesh" />
+    <receive-mesh name="B-Mesh" from="B" />
+    <read-data name="Another-Color-Scalar" mesh="C-Mesh" />
+    <read-data name="Another-Color-Vector" mesh="C-Mesh" />
+    <mapping:nearest-neighbor direction="read" from="B-Mesh" to="C-Mesh" constraint="consistent" />
+  </participant>
+
+  <m2n:sockets acceptor="A" connector="B" exchange-directory=".." />
+  <m2n:sockets acceptor="B" connector="C" exchange-directory=".." />
 
   <coupling-scheme:parallel-explicit>
     <participants first="A" second="B" />
-    <max-time-windows value="10" />
-    <time-window-size value="0.1" />
     <exchange data="Color-Scalar" mesh="A-Mesh" from="A" to="B" />
-    <exchange data="Another-Color-Scalar" mesh="B-A-Mesh" from="B" to="A" />
+    <exchange data="Another-Color-Scalar" mesh="B-Mesh" from="B" to="A" />
     <exchange data="Color-Vector" mesh="A-Mesh" from="A" to="B" />
-    <exchange data="Another-Color-Vector" mesh="B-A-Mesh" from="B" to="A" />
-  </coupling-scheme:parallel-explicit>
-  <coupling-scheme:parallel-explicit>
-    <participants first="B" second="C" />
-    <max-time-windows value="10" />
+    <exchange data="Another-Color-Vector" mesh="B-Mesh" from="B" to="A" />
     <time-window-size value="0.1" />
-    <exchange data="Another-Color-Scalar" mesh="B-C-Mesh" from="B" to="C" />
-    <exchange data="Another-Color-Vector" mesh="B-C-Mesh" from="B" to="C" />
+    <max-time-windows value="10" />
   </coupling-scheme:parallel-explicit>
 
+  <coupling-scheme:parallel-explicit>
+    <participants first="B" second="C" />
+    <exchange data="Another-Color-Scalar" mesh="B-Mesh" from="B" to="C" />
+    <exchange data="Another-Color-Vector" mesh="B-Mesh" from="B" to="C" />
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
+  </coupling-scheme:parallel-explicit>
 </precice-configuration>

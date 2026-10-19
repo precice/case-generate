@@ -1,0 +1,20 @@
+participants:
+  - name: Coil
+    solver: CoilSolver
+    dimensionality: 2
+  - name: Capacitor
+    solver: CapacitorSolver
+    dimensionality: 2
+exchanges: # TODO requires write-consistent mapping
+  - from: Coil
+    to: Capacitor
+    data: Current-extensive
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Capacitor
+    to: Coil
+    data: Voltage-extensive
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]

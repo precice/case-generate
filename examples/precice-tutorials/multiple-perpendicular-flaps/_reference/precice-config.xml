@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink format="---[precice] %ColorizedSeverity% %Message%" />
+  </log>
+
+  <data:vector name="Stress-Upstream" />
+  <data:vector name="Stress-Downstream" />
+  <data:vector name="Displacement-Upstream" />
+  <data:vector name="Displacement-Downstream" />
+
+  <mesh name="Fluid-SolidUpstream-Surface-Mesh" dimensions="2">
+    <use-data name="Displacement-Upstream" />
+  </mesh>
+
+  <mesh name="Fluid-SolidUpstream-Volume-Mesh" dimensions="2">
+    <use-data name="Stress-Upstream" />
+  </mesh>
+
+  <mesh name="SolidUpstream-Mesh" dimensions="2">
+    <use-data name="Stress-Upstream" />
+    <use-data name="Displacement-Upstream" />
+  </mesh>
+
+  <mesh name="Fluid-SolidDownstream-Surface-Mesh" dimensions="2">
+    <use-data name="Displacement-Downstream" />
+  </mesh>
+
+  <mesh name="Fluid-SolidDownstream-Volume-Mesh" dimensions="2">
+    <use-data name="Stress-Downstream" />
+  </mesh>
+
+  <mesh name="SolidDownstream-Mesh" dimensions="2">
+    <use-data name="Stress-Downstream" />
+    <use-data name="Displacement-Downstream" />
+  </mesh>
+
+  <participant name="Fluid">
+    <provide-mesh name="Fluid-SolidUpstream-Surface-Mesh" />
+    <provide-mesh name="Fluid-SolidUpstream-Volume-Mesh" />
+    <provide-mesh name="Fluid-SolidDownstream-Surface-Mesh" />
+    <provide-mesh name="Fluid-SolidDownstream-Volume-Mesh" />
+    <receive-mesh name="SolidUpstream-Mesh" from="SolidUpstream" />
+    <receive-mesh name="SolidDownstream-Mesh" from="SolidDownstream" />
+    <read-data name="Displacement-Upstream" mesh="Fluid-SolidUpstream-Surface-Mesh" />
+    <read-data name="Displacement-Downstream" mesh="Fluid-SolidDownstream-Surface-Mesh" />
+    <write-data name="Stress-Upstream" mesh="Fluid-SolidUpstream-Volume-Mesh" />
+    <write-data name="Stress-Downstream" mesh="Fluid-SolidDownstream-Volume-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="SolidUpstream-Mesh"
+      to="Fluid-SolidUpstream-Surface-Mesh"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="SolidDownstream-Mesh"
+      to="Fluid-SolidDownstream-Surface-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <participant name="SolidUpstream">
+    <provide-mesh name="SolidUpstream-Mesh" />
+    <receive-mesh name="Fluid-SolidUpstream-Volume-Mesh" from="Fluid" />
+    <read-data name="Stress-Upstream" mesh="SolidUpstream-Mesh" />
+    <write-data name="Displacement-Upstream" mesh="SolidUpstream-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Fluid-SolidUpstream-Volume-Mesh"
+      to="SolidUpstream-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <participant name="SolidDownstream">
+    <provide-mesh name="SolidDownstream-Mesh" />
+    <receive-mesh name="Fluid-SolidDownstream-Volume-Mesh" from="Fluid" />
+    <read-data name="Stress-Downstream" mesh="SolidDownstream-Mesh" />
+    <write-data name="Displacement-Downstream" mesh="SolidDownstream-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Fluid-SolidDownstream-Volume-Mesh"
+      to="SolidDownstream-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <m2n:sockets acceptor="Fluid" connector="SolidUpstream" exchange-directory=".." />
+  <m2n:sockets acceptor="Fluid" connector="SolidDownstream" exchange-directory=".." />
+
+  <coupling-scheme:multi>
+    <participant name="Fluid" control="yes" />
+    <participant name="SolidUpstream" />
+    <participant name="SolidDownstream" />
+    <exchange
+      data="Stress-Upstream"
+      mesh="Fluid-SolidUpstream-Volume-Mesh"
+      from="Fluid"
+      to="SolidUpstream" />
+    <exchange
+      data="Stress-Downstream"
+      mesh="Fluid-SolidDownstream-Volume-Mesh"
+      from="Fluid"
+      to="SolidDownstream" />
+    <exchange
+      data="Displacement-Upstream"
+      mesh="SolidUpstream-Mesh"
+      from="SolidUpstream"
+      to="Fluid" />
+    <exchange
+      data="Displacement-Downstream"
+      mesh="SolidDownstream-Mesh"
+      from="SolidDownstream"
+      to="Fluid" />
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
+    <relative-convergence-measure
+      data="Stress-Upstream"
+      mesh="Fluid-SolidUpstream-Volume-Mesh"
+      limit="0.1" />
+    <relative-convergence-measure
+      data="Stress-Downstream"
+      mesh="Fluid-SolidDownstream-Volume-Mesh"
+      limit="0.1" />
+    <relative-convergence-measure
+      data="Displacement-Upstream"
+      mesh="SolidUpstream-Mesh"
+      limit="0.1" />
+    <relative-convergence-measure
+      data="Displacement-Downstream"
+      mesh="SolidDownstream-Mesh"
+      limit="0.1" />
+    <acceleration:IQN-ILS>
+      <data name="Stress-Upstream" mesh="Fluid-SolidUpstream-Volume-Mesh" />
+      <data name="Stress-Downstream" mesh="Fluid-SolidDownstream-Volume-Mesh" />
+      <data name="Displacement-Upstream" mesh="SolidUpstream-Mesh" />
+      <data name="Displacement-Downstream" mesh="SolidDownstream-Mesh" />
+    </acceleration:IQN-ILS>
+  </coupling-scheme:multi>
+</precice-configuration>

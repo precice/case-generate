@@ -1,0 +1,32 @@
+{
+    "participant_name": "Fluid",
+    "precice_config_file_path": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "Fluid-Volume-Mesh",
+            "location_type": "volume",
+            "location_names": [
+                "centers"
+            ],
+            "is_received": false,
+            "read_data": [
+                {
+                    "name": "HeatFlux"
+                }
+            ]
+        },
+        {
+            "mesh_name": "Fluid-Surface-Mesh",
+            "location_type": "surface",
+            "location_names": [
+                "nodes"
+            ],
+            "is_received": false,
+            "write_data": [
+                {
+                    "name": "Temperature"
+                }
+            ]
+        }
+    ]
+}

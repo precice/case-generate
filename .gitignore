@@ -12,6 +12,7 @@ build/
 # IntelliJ
 .idea/*
 
-# Created directories during runs
+# Created directories/files during runs
 *_generated/
 *logs/
+*file-state.json

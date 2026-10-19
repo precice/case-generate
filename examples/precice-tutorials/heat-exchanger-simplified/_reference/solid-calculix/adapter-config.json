@@ -1,0 +1,58 @@
+{
+    "participant_name": "Solid",
+    "precice_config_file_path": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "Solid-FluidTop-Surface-Mesh",
+            "location_type": "surface",
+            "location_names": [
+                "interface"
+            ],
+            "is_received": false,
+            "write_data": [
+                {
+                    "name": "Heat-Flux-Top"
+                }
+            ]
+        },
+        {
+            "mesh_name": "Solid-FluidTop-Volume-Mesh",
+            "location_type": "volume",
+            "location_names": [
+                "nodes"
+            ],
+            "is_received": false,
+            "read_data": [
+                {
+                    "name": "Temperature-Top"
+                }
+            ]
+        },
+        {
+            "mesh_name": "Solid-FluidBottom-Surface-Mesh",
+            "location_type": "surface",
+            "location_names": [
+                "interface"
+            ],
+            "is_received": false,
+            "write_data": [
+                {
+                    "name": "Heat-Flux-Bottom"
+                }
+            ]
+        },
+        {
+            "mesh_name": "Solid-FluidBottom-Volume-Mesh",
+            "location_type": "volume",
+            "location_names": [
+                "nodes"
+            ],
+            "is_received": false,
+            "read_data": [
+                {
+                    "name": "Temperature-Bottom"
+                }
+            ]
+        }
+    ]
+}

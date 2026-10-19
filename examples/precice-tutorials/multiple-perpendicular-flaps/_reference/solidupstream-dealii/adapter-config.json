@@ -1,0 +1,24 @@
+{
+    "participant_name": "SolidUpstream",
+    "precice_config_file_path": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "SolidUpstream-Mesh",
+            "location_type": "surface",
+            "location_names": [
+                "interface"
+            ],
+            "is_received": false,
+            "read_data": [
+                {
+                    "name": "Stress-Upstream"
+                }
+            ],
+            "write_data": [
+                {
+                    "name": "Displacement-Upstream"
+                }
+            ]
+        }
+    ]
+}

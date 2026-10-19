@@ -1,0 +1,55 @@
+participants:
+  - name: Fluid1
+    solver: OpenFOAM
+    dimensionality: 2
+  - name: Fluid2
+    solver: OpenFOAM
+    dimensionality: 2
+  - name: Solid
+    solver: OpenFOAM
+    dimensionality: 2
+exchanges:
+  - from: Fluid1
+    to: Solid
+    data: Temperature-Solid
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Solid
+    to: Fluid1
+    data: Heat-Flux
+    data-type: scalar
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [interface]
+
+  - from: Fluid1
+    to: Fluid2
+    data: Velocity
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Fluid2
+    to: Fluid1
+    data: VelocityGradient
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Fluid2
+    to: Fluid1
+    data: Pressure
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Fluid1
+    to: Fluid2
+    data: FlowTemperature-Fluid
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Fluid2
+    to: Fluid1
+    data: FlowTemperatureGradient
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]

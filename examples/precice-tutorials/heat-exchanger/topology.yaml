@@ -1,0 +1,57 @@
+participants:
+  - name: Solid
+    solver: CalculiX
+  - name: Fluid-Inner
+    solver: OpenFOAM
+  - name: Fluid-Outer
+    solver: OpenFOAM
+exchanges:
+  - from: Solid
+    to: Fluid-Inner
+    data: Sink-Temperature-Solid
+    type: weak
+    from-location-names: [interface-inner]
+    to-location-names: [interface]
+  - from: Solid
+    to: Fluid-Inner
+    data: Heat-Transfer-Coefficient-Solid
+    type: weak
+    from-location-names: [interface-inner]
+    to-location-names: [interface]
+  - from: Fluid-Inner
+    to: Solid
+    data: Sink-Temperature-Fluid-Inner
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [interface-inner]
+  - from: Fluid-Inner
+    to: Solid
+    data: Heat-Transfer-Coefficient-Fluid-Inner
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [interface-inner]
+
+  - from: Solid
+    to: Fluid-Outer
+    data: Sink-Temperature-Solid
+    type: weak
+    from-location-names: [interface-outer]
+    to-location-names: [interface]
+  - from: Solid
+    to: Fluid-Outer
+    data: Heat-Transfer-Coefficient-Solid
+    type: weak
+    from-location-names: [interface-outer]
+    to-location-names: [interface]
+  - from: Fluid-Outer
+    to: Solid
+    data: Sink-Temperature-Fluid-Outer
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [interface-outer]
+  - from: Fluid-Outer
+    to: Solid
+    data: Heat-Transfer-Coefficient-Fluid-Outer
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [interface-outer]

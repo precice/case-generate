@@ -1,0 +1,33 @@
+{
+    "participant_name": "Fluid1",
+    "precice_config_file_path": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "Fluid1-Mesh",
+            "location_type": "surface",
+            "location_names": [
+                "interface"
+            ],
+            "is_received": false,
+            "read_data": [
+                {
+                    "name": "AlphaGradient"
+                },
+                {
+                    "name": "Pressure"
+                },
+                {
+                    "name": "VelocityGradient"
+                }
+            ],
+            "write_data": [
+                {
+                    "name": "Alpha"
+                },
+                {
+                    "name": "Velocity"
+                }
+            ]
+        }
+    ]
+}

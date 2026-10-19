@@ -1,0 +1,22 @@
+participants:
+  - name: Fluid
+    solver: Fluid-Solver
+    dimensionality: 2
+  - name: Solid
+    solver: Solid-Solver
+    dimensionality: 2
+exchanges:
+  - from: Fluid
+    to: Solid
+    data: Pressure
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Solid
+    to: Fluid
+    data: CrossSectionLength
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]

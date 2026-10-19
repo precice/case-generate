@@ -1,0 +1,51 @@
+{
+    "participant_name": "Fluid1",
+    "precice_config_file_path": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "Fluid1-Solid-Mesh",
+            "location_type": "surface",
+            "location_names": [
+                "interface"
+            ],
+            "is_received": false,
+            "read_data": [
+                {
+                    "name": "Heat-Flux"
+                }
+            ],
+            "write_data": [
+                {
+                    "name": "Temperature-Solid"
+                }
+            ]
+        },
+        {
+            "mesh_name": "Fluid1-Fluid2-Mesh",
+            "location_type": "surface",
+            "location_names": [
+                "interface"
+            ],
+            "is_received": false,
+            "read_data": [
+                {
+                    "name": "FlowTemperatureGradient"
+                },
+                {
+                    "name": "Pressure"
+                },
+                {
+                    "name": "VelocityGradient"
+                }
+            ],
+            "write_data": [
+                {
+                    "name": "FlowTemperature-Fluid"
+                },
+                {
+                    "name": "Velocity"
+                }
+            ]
+        }
+    ]
+}

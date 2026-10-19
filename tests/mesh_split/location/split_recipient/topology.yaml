@@ -1,0 +1,20 @@
+participants:
+  - name: Fluid1
+    solver: Solver
+  - name: Fluid2
+    solver: Solver
+  - name: Solid
+    solver: Solver
+exchanges:
+  - from: Fluid1
+    to: Solid
+    data: Data
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [loc1,loc2]
+  - from: Fluid2
+    to: Solid
+    data: Data
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [loc1,loc3]

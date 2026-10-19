@@ -1,0 +1,19 @@
+# For the precice-config-1d-3d.xml
+participants:
+  - name: Fluid1DLeft
+    solver: Nutils
+  - name: Fluid3DRight
+    solver: OpenFOAM
+exchanges:
+  - from: Fluid1DLeft
+    to: Fluid3DRight
+    data: Velocity
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Fluid3DRight
+    to: Fluid1DLeft
+    data: Pressure
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]

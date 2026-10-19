@@ -1,0 +1,36 @@
+participants:
+  - name: Macro
+    solver: MacroSolver
+    dimensionality: 2
+  - name: Micro-Manager
+    solver: MicroSolver
+    dimensionality: 2
+exchanges: # TODO api-access for grain size, active-steps and active-state
+  - from: Micro-Manager
+    to: Macro
+    data: K00
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Micro-Manager
+    to: Macro
+    data: K11
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Micro-Manager
+    to: Macro
+    data: Porosity
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Macro
+    to: Micro-Manager
+    data: Concentration
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]

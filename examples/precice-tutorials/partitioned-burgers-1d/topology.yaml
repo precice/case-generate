@@ -1,0 +1,22 @@
+participants:
+  - name: Dirichlet
+    solver: SciPy
+    dimensionality: 2
+  - name: Neumann
+    solver: SciPy
+    dimensionality: 2
+exchanges:
+  - from: Dirichlet
+    to: Neumann
+    data: Gradient
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Neumann
+    to: Dirichlet
+    data: Velocity
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]

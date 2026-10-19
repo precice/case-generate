@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink format="---[precice] %ColorizedSeverity% %Message%" />
+  </log>
+
+  <data:scalar name="Sink-Temperature-Solid" />
+  <data:scalar name="Heat-Transfer-Coefficient-Solid" />
+  <data:scalar name="Sink-Temperature-Fluid" />
+  <data:scalar name="Heat-Transfer-Coefficient-Fluid" />
+
+  <mesh name="Solid-Volume-Mesh" dimensions="3">
+    <use-data name="Sink-Temperature-Solid" />
+    <use-data name="Heat-Transfer-Coefficient-Solid" />
+  </mesh>
+
+  <mesh name="Solid-Surface-Mesh" dimensions="3">
+    <use-data name="Sink-Temperature-Fluid" />
+    <use-data name="Heat-Transfer-Coefficient-Fluid" />
+  </mesh>
+
+  <mesh name="Fluid-Mesh" dimensions="3">
+    <use-data name="Sink-Temperature-Solid" />
+    <use-data name="Heat-Transfer-Coefficient-Solid" />
+    <use-data name="Sink-Temperature-Fluid" />
+    <use-data name="Heat-Transfer-Coefficient-Fluid" />
+  </mesh>
+
+  <participant name="Solid">
+    <provide-mesh name="Solid-Volume-Mesh" />
+    <provide-mesh name="Solid-Surface-Mesh" />
+    <receive-mesh name="Fluid-Mesh" from="Fluid" />
+    <read-data name="Sink-Temperature-Fluid" mesh="Solid-Surface-Mesh" />
+    <read-data name="Heat-Transfer-Coefficient-Fluid" mesh="Solid-Surface-Mesh" />
+    <write-data name="Sink-Temperature-Solid" mesh="Solid-Volume-Mesh" />
+    <write-data name="Heat-Transfer-Coefficient-Solid" mesh="Solid-Volume-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Fluid-Mesh"
+      to="Solid-Surface-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <participant name="Fluid">
+    <provide-mesh name="Fluid-Mesh" />
+    <receive-mesh name="Solid-Volume-Mesh" from="Solid" />
+    <read-data name="Sink-Temperature-Solid" mesh="Fluid-Mesh" />
+    <read-data name="Heat-Transfer-Coefficient-Solid" mesh="Fluid-Mesh" />
+    <write-data name="Sink-Temperature-Fluid" mesh="Fluid-Mesh" />
+    <write-data name="Heat-Transfer-Coefficient-Fluid" mesh="Fluid-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Solid-Volume-Mesh"
+      to="Fluid-Mesh"
+      constraint="consistent" />
+  </participant>
+
+  <m2n:sockets acceptor="Solid" connector="Fluid" exchange-directory=".." />
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="Solid" second="Fluid" />
+    <exchange data="Sink-Temperature-Solid" mesh="Solid-Volume-Mesh" from="Solid" to="Fluid" />
+    <exchange
+      data="Heat-Transfer-Coefficient-Solid"
+      mesh="Solid-Volume-Mesh"
+      from="Solid"
+      to="Fluid" />
+    <exchange data="Sink-Temperature-Fluid" mesh="Fluid-Mesh" from="Fluid" to="Solid" />
+    <exchange data="Heat-Transfer-Coefficient-Fluid" mesh="Fluid-Mesh" from="Fluid" to="Solid" />
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
+  </coupling-scheme:parallel-explicit>
+</precice-configuration>

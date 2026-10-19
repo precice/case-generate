@@ -588,56 +588,25 @@ class NodeCreator:
             logger.debug(f"Initialized participant {parzival.name} with dimensionality {dim}.")
         return participant_map
 
-    def _get_data_type(self, exchange: dict) -> e.DataType:
-        """
-        Get the data-type for the data in the given exchange or choose a default if none is given.
-        E.g., temperature defaults to DataType.SCALAR, whereas force defaults to DataType.VECTOR.
-        :param exchange: The exchange for which the data-type is needed.
-        :return: A data-type for the given exchange, which defaults to the helper.DEFAULT_DATA_TYPE.
-        """
-        data: str = exchange["data"]
-        data_type: e.DataType = exchange.get("data-type")
-        if data_type is None:
-            data_type = helper.DEFAULT_DATA_TYPE
-            # Check if the data has a default type. Sort by key length to have a deterministic order
-            for key in sorted(helper.DEFAULT_DATA_TYPES.keys(), key=len, reverse=True):
-                if key.lower() in data.lower():
-                    data_type = helper.DEFAULT_DATA_TYPES[key]
-                    break
-        return data_type
-
     def _initialize_meshes(self, participant_map: dict[str, n.ParticipantNode],
                            participant_location_map: dict[tuple[n.ParticipantNode, str], helper.LocationNode]) -> \
             dict[tuple[n.ParticipantNode, n.ParticipantNode, helper.DataKind, helper.LocationType], n.MeshNode]:
         """
         Initialize all mesh nodes that are necessary to enable the exchanges in the topology.
-        Separate meshes are created depending on the data-kind (extensive or intensive) and location type (surface or volume).
-        This is done in four steps:
-        First, it is counted how many participants each participant communicates with.
-        Second, it is stored what kind of meshes different communication partners need (e.g., extensive-surface, et cetera).
-        Third, a mesh node is created for each kind of mesh that is needed.
-        In the case that participants exchange different kinds of data (e.g., extensive and intensive)
-        in different directions only, only one mesh is created per participant for this pair.
-        Fourth, the mesh nodes are added to the correct location nodes.
+        Partners that communicate with a participant over the exact same set of locations on that participant
+        share a single mesh. Separate meshes are created depending on the data-kind (extensive or intensive)
+        and location type (surface or volume) when required.
+
         :param participant_map: A dict mapping participant names to participant nodes.
         :param participant_location_map: A dict mapping participants and names of their locations to location nodes.
         :return: A dict mapping (from-participant, to-participant, data-kind, location-type) to mesh nodes.
         """
-        # A dict mapping each participant to all other participants that they communicate with
-        participant_communication_map: dict[n.ParticipantNode, set[n.ParticipantNode]] = {p: set() for p in
-                                                                                          self.participants}
-        for exchange in self.topology["exchanges"]:
-            from_participant: n.ParticipantNode = participant_map[exchange["from"]]
-            to_participant: n.ParticipantNode = participant_map[exchange["to"]]
-            participant_communication_map[from_participant].add(to_participant)
-            participant_communication_map[to_participant].add(from_participant)
-
-        # A dict mapping pairs of participants to types of meshes they use
+        # Step 1: Collect total location sets, mesh types, and directional data kinds per participant pair
+        participant_pair_locations: dict[tuple[n.ParticipantNode, n.ParticipantNode], set[str]] = {}
         participant_mesh_type_map: dict[
             tuple[n.ParticipantNode, n.ParticipantNode], set[tuple[helper.DataKind, helper.LocationType]]] = {}
-        # Maps participant pairs in the direction of their exchange to the data-kind they exchange
         participant_direction_kind_map: dict[tuple[n.ParticipantNode, n.ParticipantNode], set[helper.DataKind]] = {}
-        # Iterate over all exchanges and thus the communications between participants
+
         for exchange in self.topology["exchanges"]:
             from_participant: n.ParticipantNode = participant_map[exchange["from"]]
             to_participant: n.ParticipantNode = participant_map[exchange["to"]]
@@ -646,69 +615,89 @@ class NodeCreator:
             from_location_type: helper.LocationType = exchange["from-location-type"]
             to_location_type: helper.LocationType = exchange["to-location-type"]
 
-            if (from_participant, to_participant) not in participant_mesh_type_map:
-                participant_mesh_type_map[(from_participant, to_participant)] = set()
-            if (to_participant, from_participant) not in participant_mesh_type_map:
-                participant_mesh_type_map[(to_participant, from_participant)] = set()
+            # Accumulate all locations used on each side of this participant pair
+            participant_pair_locations.setdefault((from_participant, to_participant), set()).update(
+                exchange["from-location-names"])
+            participant_pair_locations.setdefault((to_participant, from_participant), set()).update(
+                exchange["to-location-names"])
+
             # Symmetric: Store which types of meshes are needed for each communication partner
-            participant_mesh_type_map[(from_participant, to_participant)].add((data_kind, from_location_type))
-            participant_mesh_type_map[(to_participant, from_participant)].add((data_kind, to_location_type))
+            participant_mesh_type_map.setdefault((from_participant, to_participant), set()).add(
+                (data_kind, from_location_type))
+            participant_mesh_type_map.setdefault((to_participant, from_participant), set()).add(
+                (data_kind, to_location_type))
 
-            if (from_participant, to_participant) not in participant_direction_kind_map:
-                participant_direction_kind_map[(from_participant, to_participant)] = set()
-            if (to_participant, from_participant) not in participant_direction_kind_map:
-                participant_direction_kind_map[(to_participant, from_participant)] = set()
             # Non-symmetric: Store the data-kind exchanged in the direction of the exchange
-            participant_direction_kind_map[(from_participant, to_participant)].add(data_kind)
+            participant_direction_kind_map.setdefault((from_participant, to_participant), set()).add(data_kind)
+            participant_direction_kind_map.setdefault((to_participant, from_participant), set())
 
-        # A dict mapping each from-participant, to-participant, data-kind, location-type to a mesh node
+        # Step 2: Group each participant's communication partners by the set of locations they use
+        participant_location_groups: dict[n.ParticipantNode, dict[frozenset[str], set[n.ParticipantNode]]] = {
+            p: {} for p in self.participants
+        }
+        for (from_participant, to_participant), locs in participant_pair_locations.items():
+            loc_key = frozenset(locs)
+            participant_location_groups[from_participant].setdefault(loc_key, set()).add(to_participant)
+
+        # Step 3: Create meshes for each participant's location groups
         participant_mesh_map: dict[
             tuple[n.ParticipantNode, n.ParticipantNode, helper.DataKind, helper.LocationType], n.MeshNode] = {}
 
-        # Loop over all participants and their communication with each other to create all necessary meshes
-        for from_participant, to_participant in participant_mesh_type_map:
+        for from_participant, loc_groups in participant_location_groups.items():
+            num_groups: int = len(loc_groups)
+            num_multi_partner_groups = sum(1 for partners in loc_groups.values() if len(partners) > 1)
 
-            # It requires a split if the direction of the exchange is the same and more than one kind of data is exchanged
-            requires_kind_split: bool = (len(participant_direction_kind_map[(from_participant, to_participant)]) > 1
-                                         or len(participant_direction_kind_map[(to_participant, from_participant)]) > 1)
+            for partner_group in loc_groups.values():
+                # Collect all (data_kind, location_type) requirements across all partners in this group
+                group_mesh_types: set[tuple[helper.DataKind, helper.LocationType]] = set()
+                for to_participant in partner_group:
+                    group_mesh_types.update(participant_mesh_type_map[(from_participant, to_participant)])
 
-            # Store the created mesh node when no split is required. The mesh-name is unique per mesh.
-            created_meshes: dict[str, n.MeshNode] = {}
+                # A kind split is required if ANY partner in this group exchanges > 1 data kind in the same direction
+                requires_kind_split: bool = any(
+                    len(participant_direction_kind_map[(from_participant, to_participant)]) > 1
+                    or len(participant_direction_kind_map[(to_participant, from_participant)]) > 1
+                    for to_participant in partner_group
+                )
+                requires_loc_type_split: bool = len({loc for _, loc in group_mesh_types}) > 1
 
-            for data_kind, location_type in participant_mesh_type_map[(from_participant, to_participant)]:
-                # Determine the mesh name based on
-                # the participant name, the number of communication partners, data-kind and location-type
-                # Do not capitalize() the participant name, as they are allowed to be in all-caps
-                mesh_name = from_participant.name[:1].upper() + from_participant.name[1:]
-                # If there is more than one communication partner, include the name of the other participant in the mesh name
-                if len(participant_communication_map[from_participant]) > 1:
-                    mesh_name += "-" + to_participant.name[:1].upper() + to_participant.name[1:]
-                # If it requires a split based on its kind, include it in the name
-                if requires_kind_split:
-                    mesh_name += "-" + data_kind.value.capitalize()
-                # If it requires a split based in its location type, include it in the name
-                if len({loc for _, loc in participant_mesh_type_map[(from_participant, to_participant)]}) > 1:
-                    mesh_name += "-" + location_type.value.capitalize()
-                # If a mesh with this name already exists, reuse it
-                # This happens when no split is required, and thus we do not need one mesh per tuple of (data_kind, location_type)
-                # Otherwise, create a new mesh
-                if mesh_name not in created_meshes:
-                    mesh = n.MeshNode(name=mesh_name + "-Mesh",
-                                      dimensions=self.participant_dimensionality[from_participant],
-                                      use_data=[])
-                    self.meshes.append(mesh)
-                    from_participant.provide_meshes.append(mesh)
-                    created_meshes[mesh_name] = mesh
-                # Point to the mesh node that was created for the current name;
-                # i.e., the current name is the same as a previous one if no split is required.
-                participant_mesh_map[(from_participant, to_participant, data_kind, location_type)] = created_meshes[
-                    mesh_name]
+                created_meshes: dict[str, n.MeshNode] = {}
 
-        # Loop over the exchanges again and assign mesh nodes to the correct location nodes
+                for data_kind, location_type in group_mesh_types:
+                    mesh_name: str = from_participant.name[:1].upper() + from_participant.name[1:]
+
+                    # Only include partner name(s) if the participant has multiple distinct location groups
+                    if num_groups > 1:
+                        if len(partner_group) == 1:
+                            only_partner: n.ParticipantNode = next(iter(partner_group))
+                            mesh_name += "-" + only_partner.name[:1].upper() + only_partner.name[1:]
+                        elif num_multi_partner_groups > 1:
+                            sorted_partners: list[n.ParticipantNode] = sorted(partner_group, key=lambda p: p.name)
+                            mesh_name += "-" + "-".join(p.name[:1].upper() + p.name[1:] for p in sorted_partners)
+
+                    if requires_kind_split:
+                        mesh_name += "-" + data_kind.value.capitalize()
+                    if requires_loc_type_split:
+                        mesh_name += "-" + location_type.value.capitalize()
+
+                    if mesh_name not in created_meshes:
+                        mesh: n.MeshNode = n.MeshNode(name=mesh_name + "-Mesh",
+                                          dimensions=self.participant_dimensionality[from_participant],
+                                          use_data=[])
+                        self.meshes.append(mesh)
+                        from_participant.provide_meshes.append(mesh)
+                        created_meshes[mesh_name] = mesh
+
+                    # Assign the shared mesh to every partner in this group that uses this (data_kind, location_type)
+                    for to_participant in partner_group:
+                        if (data_kind, location_type) in participant_mesh_type_map[(from_participant, to_participant)]:
+                            participant_mesh_map[
+                                (from_participant, to_participant, data_kind, location_type)] = created_meshes[mesh_name]
+
+        # Step 4: Loop over the exchanges again and assign mesh nodes to the correct location nodes
         for exchange in self.topology["exchanges"]:
             from_participant: n.ParticipantNode = participant_map[exchange["from"]]
             to_participant: n.ParticipantNode = participant_map[exchange["to"]]
-            # Tuple of location-names
             from_location_names: tuple[str] = exchange["from-location-names"]
             to_location_names: tuple[str] = exchange["to-location-names"]
 
@@ -717,12 +706,11 @@ class NodeCreator:
             from_location_type: helper.LocationType = exchange["from-location-type"]
             to_location_type: helper.LocationType = exchange["to-location-type"]
 
-            # The mesh is independent of the location, so we can grab the mesh for all locations
             from_mesh: n.MeshNode = participant_mesh_map[
                 (from_participant, to_participant, data_kind, from_location_type)]
-            to_mesh: n.MeshNode = participant_mesh_map[(to_participant, from_participant, data_kind, to_location_type)]
+            to_mesh: n.MeshNode = participant_mesh_map[
+                (to_participant, from_participant, data_kind, to_location_type)]
 
-            # Assign the mesh to all location nodes
             for from_location_name in from_location_names:
                 from_location: helper.LocationNode = participant_location_map[(from_participant, from_location_name)]
                 if to_participant not in from_location.meshes:

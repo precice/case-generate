@@ -1,0 +1,22 @@
+participants:
+  - name: Mass-Left
+    solver: Python
+    dimensionality: 2
+  - name: Mass-Right
+    solver: Python
+    dimensionality: 2
+exchanges: # TODO requires write-consistent mapping
+  - from: Mass-Left
+    to: Mass-Right
+    data: Displacement-Left
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Mass-Right
+    to: Mass-Left
+    data: Displacement-Right
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]

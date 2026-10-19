@@ -1,0 +1,19 @@
+{
+    "participant_name": "A",
+    "precice_config_file_path": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "A-Mesh",
+            "location_type": "surface",
+            "location_names": [
+                "interface"
+            ],
+            "is_received": false,
+            "write_data": [
+                {
+                    "name": "Data"
+                }
+            ]
+        }
+    ]
+}

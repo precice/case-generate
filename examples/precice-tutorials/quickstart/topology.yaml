@@ -1,0 +1,20 @@
+participants:
+  - name: Fluid
+    solver: OpenFOAM
+    dimensionality: 2
+  - name: Solid
+    solver: C++
+    dimensionality: 2
+exchanges:
+  - from: Fluid
+    to: Solid
+    data: Force
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Solid
+    to: Fluid
+    data: Displacement
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [interface]

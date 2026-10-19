@@ -1,0 +1,21 @@
+participants:
+  - name: Dirichlet
+    solver: DirichletSolver
+    dimensionality: 2
+  - name: Neumann
+    solver: NeumannSolver
+    dimensionality: 2
+exchanges:
+  - from: Dirichlet
+    to: Neumann
+    data: Heat-Flux
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Neumann
+    to: Dirichlet
+    data: Temperature
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]

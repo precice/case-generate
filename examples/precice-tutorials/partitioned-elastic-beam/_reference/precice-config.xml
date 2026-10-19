@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink format="---[precice] %ColorizedSeverity% %Message%" />
+  </log>
+
+  <data:vector name="Displacement" />
+  <data:vector name="Force" />
+
+  <mesh name="Neumann-Mesh" dimensions="3">
+    <use-data name="Displacement" />
+    <use-data name="Force" />
+  </mesh>
+
+  <mesh name="Dirichlet-Mesh" dimensions="3">
+    <use-data name="Displacement" />
+    <use-data name="Force" />
+  </mesh>
+
+  <participant name="Dirichlet">
+    <provide-mesh name="Dirichlet-Mesh" />
+    <receive-mesh name="Neumann-Mesh" from="Neumann" />
+    <read-data name="Displacement" mesh="Dirichlet-Mesh" />
+    <write-data name="Force" mesh="Dirichlet-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Neumann-Mesh"
+      to="Dirichlet-Mesh"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="Dirichlet-Mesh"
+      to="Neumann-Mesh"
+      constraint="conservative" />
+  </participant>
+
+  <participant name="Neumann">
+    <provide-mesh name="Neumann-Mesh" />
+    <read-data name="Force" mesh="Neumann-Mesh" />
+    <write-data name="Displacement" mesh="Neumann-Mesh" />
+  </participant>
+
+  <m2n:sockets acceptor="Dirichlet" connector="Neumann" exchange-directory=".." />
+
+  <coupling-scheme:parallel-implicit>
+    <participants first="Dirichlet" second="Neumann" />
+    <exchange data="Displacement" mesh="Neumann-Mesh" from="Neumann" to="Dirichlet" />
+    <exchange data="Force" mesh="Neumann-Mesh" from="Dirichlet" to="Neumann" />
+    <time-window-size value="0.1" />
+    <max-time-windows value="10" />
+    <relative-convergence-measure data="Displacement" mesh="Neumann-Mesh" limit="0.1" />
+    <relative-convergence-measure data="Force" mesh="Neumann-Mesh" limit="0.1" />
+    <acceleration:IQN-ILS>
+      <data name="Displacement" mesh="Neumann-Mesh" />
+      <data name="Force" mesh="Neumann-Mesh" />
+    </acceleration:IQN-ILS>
+  </coupling-scheme:parallel-implicit>
+</precice-configuration>

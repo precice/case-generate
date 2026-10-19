@@ -1,0 +1,14 @@
+participants:
+  - name: Fluid
+    solver: OpenFOAM
+    dimensionality: 2
+  - name: Source
+    solver: Nutils
+    dimensionality: 2
+exchanges:
+  - from: Source
+    to: Fluid
+    data: Velocity
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [interface]

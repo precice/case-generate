@@ -1,0 +1,24 @@
+{
+    "participant_name": "Drain",
+    "precice_config_file_path": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "Drain-Mesh",
+            "location_type": "surface",
+            "location_names": [
+                "interface"
+            ],
+            "is_received": false,
+            "read_data": [
+                {
+                    "name": "Source-Data"
+                }
+            ],
+            "write_data": [
+                {
+                    "name": "Drain-Data"
+                }
+            ]
+        }
+    ]
+}

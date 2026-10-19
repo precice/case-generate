@@ -1,0 +1,35 @@
+participants:
+  - name: Controller
+    solver: Controller-Solver
+    dimensionality: 2
+  - name: Fluid
+    solver: OpenFOAM
+    dimensionality: 2
+  - name: Solid
+    solver: Python
+    dimensionality: 2
+exchanges:
+  - from: Fluid
+    to: Solid
+    data: Force
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Solid
+    to: Fluid
+    data: Displacement-Cylinder
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Controller
+    to: Solid
+    data: Displacement-Spring
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Solid
+    to: Controller
+    data: Displacement-Cylinder
+    type: weak
+    from-location-names: [interface]
+    to-location-names: [interface]

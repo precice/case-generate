@@ -1,0 +1,22 @@
+participants:
+  - name: Fluid
+    solver: FluidSolver
+    dimensionality: 2
+  - name: Solid
+    solver: SolidSolver
+    dimensionality: 2
+exchanges:
+  - from: Fluid
+    to: Solid
+    data: Temperature
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]
+  - from: Solid
+    to: Fluid
+    data: HeatFlux
+    data-type: scalar
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [interface]

@@ -1,0 +1,14 @@
+participants:
+  - name: Fluid
+    solver: Fluid-Solver
+    dimensionality: 2
+  - name: Particles
+    solver: Particles-Solver
+    dimensionality: 2
+exchanges: # TODO api-access required
+  - from: Fluid
+    to: Particles
+    data: Velocity
+    from-location-names: [interface]
+    to-location-names: [interface]
+    type: strong

@@ -1,0 +1,43 @@
+participants:
+  - name: Fluid
+    solver: OpenFOAM
+    dimensionality: 2
+  - name: Solid-Upstream
+    solver: DealII
+    dimensionality: 2
+  - name: Solid-Downstream
+    solver: DealII
+    dimensionality: 2
+exchanges:
+  - from: Fluid
+    to: Solid-Upstream
+    data: Stress-Upstream
+    type: strong
+    from-location-names: [centers-upstream]
+    to-location-names: [interface]
+    from-location-type: volume # TODO change type
+    to-location-type: surface
+  - from: Fluid
+    to: Solid-Downstream
+    data: Stress-Downstream
+    type: strong
+    from-location-names: [centers-downstream]
+    to-location-names: [interface]
+    from-location-type: volume
+    to-location-type: surface
+  - from: Solid-Upstream
+    to: Fluid
+    data: Displacement-Upstream
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [nodes-upstream]
+    from-location-type: surface
+    to-location-type: surface
+  - from: Solid-Downstream
+    to: Fluid
+    data: Displacement-Downstream
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [nodes-downstream]
+    from-location-type: surface
+    to-location-type: surface

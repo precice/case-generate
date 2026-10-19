@@ -13,34 +13,34 @@ exchanges:
   - from: MuscleFibers
     to: MuscleMechanics
     from-location-names: [interface]
-    to-location-names: [interface]
+    to-location-names: [fibers]
     data: Gamma
     type: weak
     data-type: scalar
   - from: MuscleMechanics
     to: MuscleFibers
-    from-location-names: [interface]
-    to-location-names: [interface]
+    from-location-names: [fibers]
     data: Geometry
+    to-location-names: [interface]
     type: weak
     data-type: vector
   - from: TendonBottom
     to: MuscleMechanics
     from-location-names: [interface]
-    to-location-names: [interface]
+    to-location-names: [bottom]
     data: Displacement
     type: strong
     data-type: vector
   - from: TendonBottom
     to: MuscleMechanics
     from-location-names: [interface]
-    to-location-names: [interface]
+    to-location-names: [bottom]
     data: Velocity
     type: strong
     data-type: vector
   - from: MuscleMechanics
     to: TendonBottom
-    from-location-names: [interface]
+    from-location-names: [bottom]
     to-location-names: [interface]
     data: Traction
     type: strong
@@ -48,20 +48,20 @@ exchanges:
   - from: TendonTopA
     to: MuscleMechanics
     from-location-names: [interface]
-    to-location-names: [interface]
+    to-location-names: [top-a]
     data: Displacement
     type: strong
     data-type: vector
   - from: TendonTopA
     to: MuscleMechanics
     from-location-names: [interface]
-    to-location-names: [interface]
+    to-location-names: [top-a]
     data: Velocity
     type: strong
     data-type: vector
   - from: MuscleMechanics
     to: TendonTopA
-    from-location-names: [interface]
+    from-location-names: [top-a]
     to-location-names: [interface]
     data: Traction
     type: strong
@@ -69,20 +69,20 @@ exchanges:
   - from: TendonTopB
     to: MuscleMechanics
     from-location-names: [interface]
-    to-location-names: [interface]
+    to-location-names: [top-b]
     data: Displacement
     type: strong
     data-type: vector
   - from: TendonTopB
     to: MuscleMechanics
     from-location-names: [interface]
-    to-location-names: [interface]
+    to-location-names: [top-b]
     data: Velocity
     type: strong
     data-type: vector
   - from: MuscleMechanics
     to: TendonTopB
-    from-location-names: [interface]
+    from-location-names: [top-b]
     to-location-names: [interface]
     data: Traction
     type: strong

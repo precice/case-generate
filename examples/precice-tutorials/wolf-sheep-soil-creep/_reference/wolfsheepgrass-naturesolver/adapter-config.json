@@ -1,0 +1,24 @@
+{
+    "participant_name": "WolfSheepGrass",
+    "precice_config_file_path": "../precice-config.xml",
+    "interfaces": [
+        {
+            "mesh_name": "WolfSheepGrass-Mesh",
+            "location_type": "surface",
+            "location_names": [
+                "interface"
+            ],
+            "is_received": false,
+            "read_data": [
+                {
+                    "name": "Soil"
+                }
+            ],
+            "write_data": [
+                {
+                    "name": "Grass"
+                }
+            ]
+        }
+    ]
+}

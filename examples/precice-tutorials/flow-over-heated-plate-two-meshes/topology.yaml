@@ -1,0 +1,25 @@
+participants:
+  - name: Fluid
+    solver: OpenFOAM
+    dimensionality: 2
+  - name: Solid
+    solver: CalculiX
+    dimensionality: 2
+exchanges:
+  - from: Fluid
+    to: Solid
+    data: Temperature
+    type: strong
+    from-location-names: [interface]
+    to-location-names: [nodes]
+    from-location-type: surface
+    to-location-type: volume # TODO change type
+  - from: Solid
+    to: Fluid
+    data: HeatFlux
+    data-type: scalar
+    type: strong
+    from-location-names: [centers]
+    to-location-names: [interface]
+    from-location-type: surface
+    to-location-type: surface
