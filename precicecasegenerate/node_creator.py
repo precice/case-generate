@@ -311,6 +311,16 @@ class NodeCreator:
             implicit_coupling_scheme.acceleration = acceleration
             # Every exchanged data needs to be accelerated
             for exchange in implicit_coupling_scheme.exchanges:
+                # If we added an acceleration-data node for this data-node and this mesh-node already, skip
+                # This also includes skipping the convergence measure which has only these two degrees of freedom as well
+                # (so the convergence measure is also defined only by the mesh and data, when the coupling-scheme is known)
+                if any(d.data.name == exchange.data.name and d.mesh.name == exchange.mesh.name for d in acceleration.data):
+                    assert any(cv.data.name == exchange.data.name and cv.mesh.name == exchange.mesh.name for cv in
+                               implicit_coupling_scheme.convergence_measures), ("Duplicate acceleration-data for mesh "
+                                                                                f"{exchange.mesh.name} and data "
+                                                                                f"{exchange.data.name}, but not duplicate "
+                                                                                f"convergence-measure.")
+                    continue
                 acceleration_data: n.AccelerationDataNode = n.AccelerationDataNode(acceleration=acceleration,
                                                                                    data=exchange.data,
                                                                                    mesh=exchange.mesh)
@@ -682,8 +692,8 @@ class NodeCreator:
 
                     if mesh_name not in created_meshes:
                         mesh: n.MeshNode = n.MeshNode(name=mesh_name + "-Mesh",
-                                          dimensions=self.participant_dimensionality[from_participant],
-                                          use_data=[])
+                                                      dimensions=self.participant_dimensionality[from_participant],
+                                                      use_data=[])
                         self.meshes.append(mesh)
                         from_participant.provide_meshes.append(mesh)
                         created_meshes[mesh_name] = mesh
@@ -692,7 +702,8 @@ class NodeCreator:
                     for to_participant in partner_group:
                         if (data_kind, location_type) in participant_mesh_type_map[(from_participant, to_participant)]:
                             participant_mesh_map[
-                                (from_participant, to_participant, data_kind, location_type)] = created_meshes[mesh_name]
+                                (from_participant, to_participant, data_kind, location_type)] = created_meshes[
+                                mesh_name]
 
         # Step 4: Loop over the exchanges again and assign mesh nodes to the correct location nodes
         for exchange in self.topology["exchanges"]:
