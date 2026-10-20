@@ -175,7 +175,7 @@ class NodeCreator:
                                  f"{second_participant.name}.")
 
     def _create_strong_coupling_schemes(self, strong_couplings: list[dict], weak_couplings: list[dict]) \
-            -> (dict[frozenset[n.ParticipantNode], n.CouplingSchemeNode]):
+            -> (dict[frozenset[n.ParticipantNode], n.CouplingSchemeNode | n.MultiCouplingSchemeNode]):
         """
         Create coupling-schemes for strong interactions.
         First, bidirectional strong couplings are determined. If there is more than one bidirectional strong coupling,
