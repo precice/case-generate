@@ -446,6 +446,9 @@ class NodeCreator:
         :param data_map: A dict mapping data names to data nodes.
         :return: A dict mapping (from-mesh, to-mesh) to mapping nodes.
         """
+        # Keep track of which data was mentioned in a log message
+        seen_data_with_unknown_label: set[n.DataNode] = set()
+        # Map meshes to mapping nodes
         mapping_map: dict[tuple[n.MeshNode, n.MeshNode], n.MappingNode] = {}
         # Check for each exchange whether it already has a mapping and if not, create one
         for exchange in self.topology["exchanges"]:
@@ -455,10 +458,12 @@ class NodeCreator:
             from_location_type: helper.LocationType = exchange["from-location-type"]
             to_location_type: helper.LocationType = exchange["to-location-type"]
 
+            # Get the label (extensive or intensive) to decide which mapping is needed
             data_label: helper.DataKind = helper.get_data_label(data.name.lower())
-            if helper.is_unknown_data_kind(data.name):
+            if helper.is_unknown_data_kind(data.name) and data not in seen_data_with_unknown_label:
                 logger.info(f"Data \"{data.name}\" is neither extensive nor intensive. Choosing default "
                             f"{helper.DEFAULT_DATA_KIND} with corresponding {helper.DEFAULT_MAPPING_KIND}-mapping.")
+                seen_data_with_unknown_label.add(data)
 
             from_mesh: n.MeshNode = mesh_map[(from_participant, to_participant, data_label, from_location_type)]
             to_mesh: n.MeshNode = mesh_map[(to_participant, from_participant, data_label, to_location_type)]
