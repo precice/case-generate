@@ -209,6 +209,13 @@ class UtilityFileCreator:
 
         readme_str += topic_separator
         readme_str += (
+            "Please note that the generated `precice-config.xml` file is completely inferred from the original "
+            "`topology.yaml` file. This means that it uses precice's default values and elements whenever possible "
+            "and may use values that are not optimal for your simulation. Please update and adapt the file to suit "
+            "your simulation needs.\n"
+        )
+        readme_str += "\n"
+        readme_str += (
             "For more information, see the [preCICE documentation](https://precice.org/docs.html) and "
             "[precice-case-generate](https://github.com/precice/case-generate)."
         )
