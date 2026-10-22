@@ -1,6 +1,8 @@
 """
 This file tests the functionality of the StateTracker and the file generation process.
 """
+import os
+import time
 import shutil
 from pathlib import Path
 
@@ -22,6 +24,33 @@ def test_state_tracker():
 
     # Generate initial files
     assert 0 == generate_case(input_file, generated_directory), "Initial case generation failed."
+
+    precice_config: Path = generated_directory / "precice-config.xml"
+    original_content: str = precice_config.read_text()
+
+    # Artificially age the generated precice-config file by 10 seconds
+    old_time: float = time.time() - 10
+    os.utime(precice_config, (old_time, old_time))
+
+    assert precice_config.stat().st_mtime == old_time, "Failed to age the file."
+
+    # Modify the topology file to trigger a state change
+    original_topology: str = input_file.read_text()
+    try:
+        with input_file.open("a") as f:
+            f.write("\n# THIS IS A DRILL\n")
+
+        # Run the generator again
+        assert 0 == generate_case(input_file, generated_directory), "Regeneration failed."
+
+        # Check if it was rewritten (timestamp updated) but content remained identical
+        new_time: float = precice_config.stat().st_mtime
+        assert new_time > old_time, "precice-config.xml was not rewritten."
+        assert precice_config.read_text() == original_content, "Content unexpectedly changed."
+
+    finally:
+        # Restore the original topology file so subsequent tests aren't affected
+        input_file.write_text(original_topology)
 
     # Find the solver directory dynamically
     solver_dirs: list[Path] = [d for d in generated_directory.iterdir()
@@ -57,7 +86,7 @@ def test_state_tracker():
     assert len(backup_dirs) == 1, f"Expected 1 backup directory, found {len(backup_dirs)}."
     backup_dir = backup_dirs[0]
 
-    # D) Check that the modified file was moved to the backup folder properly
+    # Check that the modified file was moved to the backup folder properly
     # The relative structure is preserved, so it should be inside _generated/backups/<timestamp>/generator-asolver/run.sh
     backed_up_file: Path = backup_dir / solver_dir.name / "run.sh"
 
