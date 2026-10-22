@@ -46,8 +46,98 @@ class TopologyProcessor:
         self._resolve_location_types()
         self._update_data_uniquifiers()
         self._remove_unused_participants()
+        self._preprocess_data()
 
         return return_value
+
+    def _preprocess_data(self):
+        """
+        Preprocess data entries in the topology. This includes the ``data: ...`` and ``data-type: ...`` entries.
+        First, the data-types are written to the topology for each exchange, i.e., the default is appended
+        if no value is present.
+        Next, the data are renamed if they appear with different types.
+        Finally, data is uniquified if it appears in exchanges between the same two participants in both directions.
+        :return: None
+        """
+        # First, apply a data-type to each exchange and output a warning if none was given
+        # Keep track of data that we have seen that did not have a data type.
+        seen_data_no_type: set[str] = set()
+        for exchange in self.topology["exchanges"]:
+            data_name: str = exchange["data"]
+            data_type: str | None = exchange.get("data-type")
+            if data_type is None:
+                data_type = helper.DEFAULT_DATA_TYPE.value
+                # Check if the data has a default type. Sort by key length to have a deterministic order
+                for key in sorted(helper.DEFAULT_DATA_TYPES.keys(), key=len, reverse=True):
+                    if key.lower() in data_name.lower():
+                        data_type = helper.DEFAULT_DATA_TYPES[key].value
+                        break
+
+                if data_name not in seen_data_no_type:
+                    logger.warning(f"No data type provided for data \"{data_name}\". "
+                                   f"Choosing default type \"{data_type}\".")
+                seen_data_no_type.add(data_name)
+                exchange["data-type"] = data_type
+                logger.debug(f"Added default data-type \"{data_type}\" for data \"{data_name}\".")
+
+        # Second, check which data has multiple types
+        # Keep track of the types
+        data_data_type_map: dict[str, set[str]] = {}
+        for exchange in self.topology["exchanges"]:
+            data_name: str = exchange["data"]
+            data_type: str = exchange["data-type"]
+            if data_name in data_data_type_map:
+                data_data_type_map[data_name].add(data_type)
+            else:
+                data_data_type_map[data_name] = {data_type}
+        # Now go over each exchange again and split the data into -scalar or -vector variants
+        for exchange in self.topology["exchanges"]:
+            data_name: str = exchange["data"]
+            data_type: str = exchange["data-type"]
+            # Check if the data has multiple types. If so, we need to split it
+            if len(data_data_type_map[data_name]) > 1:
+                exchange["data"] = data_name + "-" + data_type.capitalize()
+        # Log messages
+        for data_name in data_data_type_map.keys():
+            if len(data_data_type_map[data_name]) > 1:
+                logger.warning(f"Split data \"{data_name}\" into \"{data_name}-Scalar\" "
+                               f"and \"{data_name}-Vector\".")
+
+        # Third, uniquify data names if they appear in exchanges of the form A--X->B and B--X->A
+        # Map data -> tuples of (from-participant, to_participant)
+        data_exchange_map: dict[str, set[tuple[str, str]]] = {}
+        for exchange in self.topology["exchanges"]:
+            data_name: str = exchange["data"]
+            from_participant: str = exchange["from"]
+            to_participant: str = exchange["to"]
+            if data_name in data_exchange_map:
+                data_exchange_map[data_name].add((from_participant, to_participant))
+            else:
+                data_exchange_map[data_name] = {(from_participant, to_participant)}
+
+        # Keep track of which data we uniquifed, map data, from-participant, to-participant -> uniquified_data_name
+        data_uniquified_data_map: dict[tuple[str, str, str], str] = {}
+        for exchange in self.topology["exchanges"]:
+            data_name: str = exchange["data"]
+            from_participant: str = exchange["from"]
+            to_participant: str = exchange["to"]
+            if ((from_participant, to_participant) in data_exchange_map[data_name]
+                    and (to_participant, from_participant) in data_exchange_map[data_name]):
+                # Create a new data name for the pair (from-participant,to-participant) and store it
+                new_data_name = helper.get_uniquifier().capitalize() + "-" + data_name
+                data_uniquified_data_map[(from_participant, to_participant, data_name)] = new_data_name
+                logger.warning(f"Data name \"{data_name}\" is exchanged by participants {from_participant} "
+                               f"and {to_participant} in both directions. Using \"{new_data_name}\" for one direction.")
+                # Remove the pair so that we do not create more new data for the pair
+                data_exchange_map[data_name].remove((from_participant, to_participant))
+
+        # Now actually rename the data
+        for exchange in self.topology["exchanges"]:
+            data_name: str = exchange["data"]
+            from_participant: str = exchange["from"]
+            to_participant: str = exchange["to"]
+            if (from_participant, to_participant, data_name) in data_uniquified_data_map:
+                exchange["data"] = data_uniquified_data_map[(from_participant, to_participant, data_name)]
 
     def _validate_topology(self) -> int:
         """
@@ -189,8 +279,8 @@ class TopologyProcessor:
         for exchange in self.topology["exchanges"]:
             from_participant: str = exchange["from"]
             to_participant: str = exchange["to"]
-            from_location_names: tuple[str, ...] = exchange["from-location-names"]
-            to_location_names: tuple[str, ...] = exchange["to-location-names"]
+            from_location_names: list[str] = exchange["from-location-names"]
+            to_location_names: list[str] = exchange["to-location-names"]
 
             exchange["from-location-type"] = self._participant_location_type_map.get(
                 (from_participant, from_location_names[0]), helper.LocationType(helper.DEFAULT_LOCATION_TYPE))
