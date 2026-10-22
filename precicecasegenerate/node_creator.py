@@ -88,7 +88,7 @@ class NodeCreator:
 
         # Initialize data from exchanges tag (defined implicitly)
         # This uses exchanges from the topology dict as keys, so the topology may not be modified afterward
-        data_map: dict[frozenset, n.DataNode] = self._initialize_data(participant_map)
+        data_map: dict[frozenset, n.DataNode] = self._initialize_data()
         logger.debug(f"Created {len(set(data_map.values()))} data nodes.")
 
         # Initialize meshes from the exchanges tag (defined implicitly)
@@ -314,7 +314,8 @@ class NodeCreator:
                 # If we added an acceleration-data node for this data-node and this mesh-node already, skip
                 # This also includes skipping the convergence measure which has only these two degrees of freedom as well
                 # (so the convergence measure is also defined only by the mesh and data, when the coupling-scheme is known)
-                if any(d.data.name == exchange.data.name and d.mesh.name == exchange.mesh.name for d in acceleration.data):
+                if any(d.data.name == exchange.data.name and d.mesh.name == exchange.mesh.name for d in
+                       acceleration.data):
                     assert any(cv.data.name == exchange.data.name and cv.mesh.name == exchange.mesh.name for cv in
                                implicit_coupling_scheme.convergence_measures), ("Duplicate acceleration-data for mesh "
                                                                                 f"{exchange.mesh.name} and data "
@@ -794,281 +795,31 @@ class NodeCreator:
                      f"with frequency {frequency_map[control_participant]}.")
         return control_participant
 
-    def _initialize_data(self, participant_map: dict[str, n.ParticipantNode]) -> dict[frozenset, n.DataNode]:
+    def _initialize_data(self) -> dict[frozenset, n.DataNode]:
         """
-        Initialize data nodes based on the participants and exchanges in the topology.
-        This takes into account the type of the data node, i.e., either scalar or vector.
-        In case a pair of participants A and B exchanges a data "C" in both directions (A->B and B->A),
-        two nodes are created, one with a "uniquified" name.
-        In case participants A and B exchange data "C" with different types (e.g., A->B with scalar data
-        and B->A with vector data), two data nodes "C-Scalar" and "C-Vector" are created.
-        These cases can also be mixed and are thus even more challenging to handle;
-        in particular, with more than four exchanges,
-        there may not be enough information to uniquely identify the data node.
-        Such cases should, however, not occur frequently.
-        :param participant_map: A dict mapping participant names to participant nodes.
-        :return: A dict mapping exchanges to data nodes.
+        Initialize data nodes from the topology dict.
+        Due to the heavy preprocessing, we can safely initialize data nodes based only on the name given in the topology.
+        :return: A dict mapping exchanges to the corresponding data node.
         """
+        # Keep track of created data nodes
+        created_data: dict[str, n.DataNode] = {}
         # Map exchanges to data nodes. Use a frozenset since it is hashable and can be used as a key in a dict
         exchange_data_map: dict[frozenset, n.DataNode] = {}
-        # Map data names to their respective data nodes, differentiating between "vector" and "scalar" data
-        data_name_map: dict[str, dict[e.DataType, list[n.DataNode]]] = {}
-        # Map pairs of participants and data names to data nodes, differentiating between "vector" and "scalar" data
-        participant_data_name_map: dict[
-            tuple[n.ParticipantNode, n.ParticipantNode, str], dict[e.DataType, n.DataNode]] = {}
-        # Keep track of data nodes exchanged by participants
-        participant_data_map: dict[tuple[n.ParticipantNode, str], list[n.DataNode]] = {}
 
         for exchange in self.topology["exchanges"]:
-            data_name: str = exchange["data"]
-            data_type: e.DataType = exchange.get("data-type")
-            if data_type is None:
-                data_type = helper.DEFAULT_DATA_TYPE
-                # Check if the data has a default type. Sort by key length to have a deterministic order
-                for key in sorted(helper.DEFAULT_DATA_TYPES.keys(), key=len, reverse=True):
-                    if key.lower() in data_name.lower():
-                        data_type = helper.DEFAULT_DATA_TYPES[key]
-                        break
-                logger.warning(f"No data type provided for data \"{data_name}\". "
-                               f"Choosing default type \"{data_type.value}\".")
-            else:
-                data_type = e.DataType(data_type)
+            data_name: str = helper.capitalize_name(exchange["data"])
+            data_type: e.DataType = e.DataType(exchange["data-type"])
 
-            from_participant: n.ParticipantNode = participant_map[exchange["from"]]
-            to_participant: n.ParticipantNode = participant_map[exchange["to"]]
-            logger.debug(f"Handling data {data_name} with type {data_type.value} between participants "
-                         f"{from_participant.name} and {to_participant.name}")
-
-            # Roughly, there are three possibilities:
-            # 1. The data is not known (great), create a new data node.
-            # 2. The data is known and exchanged from A->B and from B->A. This is not allowed; create a new unique data node.
-            # 3. The data is known and exchanged from A->B. Now there are two more possibilities:
-            # 3.1 Known data has type t; current data has type t (great); we do nothing
-            # 3.2 Known data has type t; current data has type s; we need to create a new unique data node.
-            # Variations of these cases can occur
-            # The more participants are involved, the less unique these cases become,
-            # and the resulting precice-config.xml might depend on the ordering of exchanges.
-            # However, these are all very special cases that only occur in the very rare case that many exchanges have
-            # the same data name.
-
-            # Check if this data is known
-            if data_name in data_name_map:
-                vector_data_node: list[n.DataNode] = data_name_map[data_name].get(e.DataType.VECTOR)
-                scalar_data_node: list[n.DataNode] = data_name_map[data_name].get(e.DataType.SCALAR)
-                log_msg: str = f"Data {data_name} with type {data_type.value} is already known with type"
-                log_msg += f" vector" if vector_data_node is not None else ""
-                log_msg += " and" if vector_data_node is not None and scalar_data_node is not None else ""
-                log_msg += f" scalar" if scalar_data_node is not None else ""
-                logger.debug(log_msg)
-
-                if vector_data_node and scalar_data_node:
-                    # Check if the to_participant already exchanged this data with vector and scalar type.
-                    # This means that "data-scalar" and "data-vector" already exist.
-                    # In this case, we want to create a new unique data node; so unique-data.
-                    # This case is again entered, if the from_participant exchanged this data with vector and scalar type.
-                    # Then it will generate "unique-data-vector" and "unique-data-scalar".
-                    if ((to_participant, data_name) in participant_data_map
-                            and any(vdn in participant_data_map[(to_participant, data_name)]
-                                    for vdn in vector_data_node)
-                            and any(sdn in participant_data_map[(to_participant, data_name)]
-                                    for sdn in scalar_data_node)):
-                        # Check the case that the from_participant already exchanged this data with either vector and scalar type (not both).
-                        if (from_participant, data_name) in participant_data_map:
-                            # This should be == 1, since we only enter this method if B->A exchanges both vector and scalar,
-                            # and A->B already exchanges one type. Since it is not allowed/possible to exchange
-                            # the same data with the type multiple times, we should not be able to reach this point more than once.
-                            assert len(participant_data_map[(from_participant, data_name)]) == 1, "Duplicate entry."
-                            # Then, we want to get this data to have "unique-data-vector" and "unique-data-scalar",
-                            # instead of "unique1-data" and "unique2-data".
-                            old_data_node: n.DataNode = participant_data_map[(from_participant, data_name)][0]
-                            old_data_name: str = old_data_node.name
-                            new_data_name: str = helper.capitalize_name(old_data_name + "-" + data_type.value)
-                            old_data_node.name = helper.capitalize_name(
-                                old_data_node.name + "-" + old_data_node.data_type.value)
-                            new_data_node: n.DataNode = n.DataNode(name=new_data_name, data_type=data_type)
-
-                            exchange_data_map[frozenset(exchange.items())] = new_data_node
-                            self.data.append(new_data_node)
-                            data_name_map[data_name][data_type].append(new_data_node)
-                            if (from_participant, data_name) in participant_data_map:
-                                participant_data_map[(from_participant, data_name)].append(new_data_node)
-                            else:
-                                participant_data_map[(from_participant, data_name)] = [new_data_node]
-                            if (from_participant, to_participant, data_name) not in participant_data_name_map:
-                                participant_data_name_map[(from_participant, to_participant, data_name)] = {
-                                    data_type: new_data_node}
-                            else:
-                                participant_data_name_map[(from_participant, to_participant, data_name)][
-                                    data_type] = new_data_node
-                            logger.warning(f"Split up data \"{old_data_name}\" into \"{old_data_node.name}\" and "
-                                           f"\"{new_data_node.name}\", since it occurs with different data types.")
-                        # The to_participant does not exchange this data with vector or scalar type yet.
-                        # This means we uniquify the data name (instead of "splitting").
-                        else:
-                            uniquifier: str = helper.get_uniquifier()
-                            new_data_name: str = f"{uniquifier.capitalize()}-{helper.capitalize_name(data_name)}"
-                            logger.warning(
-                                f"Data name \"{data_name}\" is exchanged by participants {from_participant.name} "
-                                f"and {to_participant.name} in both directions. Using \"{new_data_name}\" "
-                                f"for one direction.")
-                            new_data_node = n.DataNode(name=new_data_name, data_type=data_type)
-                            if (from_participant, to_participant, data_name) not in participant_data_name_map:
-                                participant_data_name_map[(from_participant, to_participant, data_name)] = {
-                                    data_type: new_data_node}
-                            else:
-                                participant_data_name_map[(from_participant, to_participant, data_name)][
-                                    data_type] = new_data_node
-                            if data_type in data_name_map[data_name]:
-                                data_name_map[data_name][data_type].append(new_data_node)
-                            else:
-                                data_name_map[data_name][data_type] = [new_data_node]
-                            self.data.append(new_data_node)
-                            if (from_participant, data_name) in participant_data_map:
-                                participant_data_map[(from_participant, data_name)].append(new_data_node)
-                            else:
-                                participant_data_map[(from_participant, data_name)] = [new_data_node]
-                            exchange_data_map[frozenset(exchange.items())] = new_data_node
-
-                    # Check if this data is already exchanged in the other direction (but not with both types)
-                    elif (to_participant, from_participant, data_name) in participant_data_name_map:
-                        # If so, the data name needs to be uniquified (and a new data node has to be created),
-                        # to avoid both participants writing and reading this data
-                        logger.debug(f"{from_participant.name}->{to_participant.name}: {data_name}({data_type.value})")
-                        # Here, we also want to check that A -> B does not yet exchange this data;
-                        # in that case we should not uniquify but split
-                        if (from_participant, to_participant, data_name) in participant_data_name_map:
-                            print(participant_data_name_map[(from_participant, to_participant, data_name)])
-                            # We know that the other type must be known, since it cannot be known with the current type
-                            if data_type == e.DataType.VECTOR:
-                                old_data_node: n.DataNode = \
-                                    participant_data_name_map[(from_participant, to_participant, data_name)][
-                                        e.DataType.SCALAR]
-                            else:
-                                old_data_node: n.DataNode = \
-                                    participant_data_name_map[(from_participant, to_participant, data_name)][
-                                        e.DataType.VECTOR]
-                            new_data_name: str = helper.capitalize_name(old_data_node.name + "-" + data_type.value)
-                            old_data_name: str = helper.capitalize_name(
-                                old_data_node.name + "-" + old_data_node.data_type.value)
-                            old_data_node.name = old_data_name
-                            new_data_node: n.DataNode = n.DataNode(name=new_data_name, data_type=data_type)
-                            logger.warning(f"Split up data \"{old_data_name}\" into \"{old_data_node.name}\" and "
-                                           f"\"{new_data_node.name}\", since it occurs with different data types.")
-                        else:
-                            uniquifier: str = helper.get_uniquifier()
-                            new_data_name: str = f"{uniquifier.capitalize()}-{helper.capitalize_name(data_name)}"
-                            logger.warning(
-                                f"Data name \"{data_name}\" is exchanged by participants {from_participant.name} "
-                                f"and {to_participant.name} in both directions. Using \"{new_data_name}\" "
-                                f"for one direction.")
-                            new_data_node = n.DataNode(name=new_data_name, data_type=data_type)
-                        # Add information to the maps
-                        if (from_participant, to_participant, data_name) not in participant_data_name_map:
-                            participant_data_name_map[(from_participant, to_participant, data_name)] = {
-                                data_type: new_data_node}
-                        else:
-                            participant_data_name_map[(from_participant, to_participant, data_name)][
-                                data_type] = new_data_node
-                        if data_type in data_name_map[data_name]:
-                            data_name_map[data_name][data_type].append(new_data_node)
-                        else:
-                            data_name_map[data_name][data_type] = [new_data_node]
-                        self.data.append(new_data_node)
-                        if (from_participant, data_name) in participant_data_map:
-                            participant_data_map[(from_participant, data_name)].append(new_data_node)
-                        else:
-                            participant_data_map[(from_participant, data_name)] = [new_data_node]
-                        exchange_data_map[frozenset(exchange.items())] = new_data_node
-                    else:
-                        # Otherwise, we use a data node already exchanged by the from-participant
-                        data_node: n.DataNode = None
-                        for key, value in participant_data_name_map.items():
-                            # key[0] is the from-participant, key[1] is the to-participant, key[2] is the data name
-                            if key[0] == from_participant and key[2] == data_name and data_type in value:
-                                data_node = value[data_type]
-                        # This should not happen
-                        assert data_node is not None, "Data node not found."
-                        logger.debug(f"Chose data {data_node.name} with type {data_type.value}.")
-                        exchange_data_map[frozenset(exchange.items())] = data_node
-
-                # Either a vector or a scalar variant of the data is already known (not both)
-                else:
-                    # This data node is used solely to check the type of the data node,
-                    # and, since they all have the same "name", also to determine a new name
-                    data_node: n.DataNode = vector_data_node[0] if vector_data_node else scalar_data_node[0]
-
-                    # Check if this data is known with another data type
-                    # For this, it does not matter which data node out of the list we choose
-                    if data_node.data_type != data_type:
-                        data_node.name = helper.capitalize_name(data_node.name + "-" + data_node.data_type.value)
-                        new_data_node_name: str = helper.capitalize_name(data_name + "-" + data_type.value)
-                        new_data_node: n.DataNode = n.DataNode(name=new_data_node_name, data_type=data_type)
-                        # Add information to the maps
-                        if (from_participant, to_participant, data_name) not in participant_data_name_map:
-                            participant_data_name_map[(from_participant, to_participant, data_name)] = {
-                                data_type: new_data_node}
-                        else:
-                            participant_data_name_map[(from_participant, to_participant, data_name)][
-                                data_type] = new_data_node
-                        if (from_participant, data_name) in participant_data_map:
-                            participant_data_map[(from_participant, data_name)].append(new_data_node)
-                        else:
-                            participant_data_map[(from_participant, data_name)] = [new_data_node]
-                        if data_type in data_name_map[data_name]:
-                            data_name_map[data_name][data_type].append(new_data_node)
-                        else:
-                            data_name_map[data_name][data_type] = [new_data_node]
-                        self.data.append(new_data_node)
-                        logger.warning(f"Split up data \"{data_name}\" into {data_node.name} and {new_data_node.name}, "
-                                       f"since it occurs with different data types.")
-                        exchange_data_map[frozenset(exchange.items())] = new_data_node
-
-                    # Check if this data is exchanged in the other direction, which is not allowed
-                    elif (to_participant, from_participant, data_name) in participant_data_name_map:
-                        uniquifier: str = helper.get_uniquifier()
-                        new_data_name: str = f"{uniquifier.capitalize()}-{helper.capitalize_name(data_name)}"
-                        logger.warning(
-                            f"Data name \"{data_name}\" is exchanged by participants {from_participant.name} "
-                            f"and {to_participant.name} in both directions. Using \"{new_data_name}\" "
-                            f"for one direction.")
-                        new_data_node = n.DataNode(name=new_data_name, data_type=data_type)
-                        # Add information to the maps
-                        if (from_participant, to_participant, data_name) not in participant_data_name_map:
-                            participant_data_name_map[(from_participant, to_participant, data_name)] = {
-                                data_type: new_data_node}
-                        else:
-                            participant_data_name_map[(from_participant, to_participant, data_name)][
-                                data_type] = new_data_node
-                        if (from_participant, data_name) in participant_data_map:
-                            participant_data_map[(from_participant, data_name)].append(new_data_node)
-                        else:
-                            participant_data_map[(from_participant, data_name)] = [new_data_node]
-                        self.data.append(new_data_node)
-                        if data_type in data_name_map[data_name]:
-                            data_name_map[data_name][data_type].append(new_data_node)
-                        else:
-                            data_name_map[data_name][data_type] = [new_data_node]
-                        exchange_data_map[frozenset(exchange.items())] = new_data_node
-                    # Otherwise, record that we observed this data exchange in one direction
-                    else:
-                        exchange_data_map[frozenset(exchange.items())] = data_node
-                        if (from_participant, to_participant, data_name) not in participant_data_name_map:
-                            participant_data_name_map[(from_participant, to_participant, data_name)] = {
-                                data_type: data_node}
-                        else:
-                            participant_data_name_map[(from_participant, to_participant, data_name)][
-                                data_type] = data_node
-
-            # This data is unknown, so we create a new data node
-            else:
-                data_node: n.DataNode = n.DataNode(name=helper.capitalize_name(data_name), data_type=data_type)
-                data_name_map[data_name] = {data_type: [data_node]}
-                logger.debug(f"Created new data node {data_node.name} for data {data_name} "
-                             f"between participants {from_participant.name} and {to_participant.name}")
+            if data_name not in created_data:
+                data_node = n.DataNode(name=data_name, data_type=data_type)
                 self.data.append(data_node)
-                participant_data_map[(from_participant, data_name)] = [data_node]
-                participant_data_name_map[(from_participant, to_participant, data_name)] = {data_type: data_node}
-                exchange_data_map[frozenset(exchange.items())] = data_node
+                created_data[data_name] = data_node
+                from_participant: str = exchange["from"]
+                to_participant: str = exchange["to"]
+                logger.debug(f"Created new data node {data_node.name} for data {data_name} "
+                             f"between participants {from_participant} and {to_participant}")
+
+            exchange_data_map[frozenset(exchange.items())] = created_data[data_name]
 
         return exchange_data_map
 
