@@ -8,16 +8,16 @@ from pathlib import Path
 
 from precicecasegenerate.cli import generate_case
 
+test_directory: Path = Path(__file__).parent
+input_file: Path = test_directory / "topology.yaml"
+generated_directory: Path = test_directory / "_generated"
+
 
 def test_state_tracker():
     """
     Check that running the generator again preserves custom files
     and correctly backs up modified generated files before overwriting.
     """
-    test_directory: Path = Path(__file__).parent
-    input_file: Path = test_directory / "topology.yaml"
-    generated_directory: Path = test_directory / "_generated"
-
     # Remove any previously generated files
     if generated_directory.exists():
         shutil.rmtree(generated_directory, ignore_errors=True)
@@ -56,7 +56,7 @@ def test_state_tracker():
     solver_dirs: list[Path] = [d for d in generated_directory.iterdir()
                                if d.is_dir() and "-" in d.name and not d.name.startswith("backup")]
     assert len(solver_dirs) > 0, "No solver directory found."
-    solver_dir = solver_dirs[0]
+    solver_dir: Path = solver_dirs[0]
 
     # Add a custom file to the first solver directory
     custom_file: Path = solver_dir / "info.txt"
@@ -92,3 +92,61 @@ def test_state_tracker():
 
     assert backed_up_file.exists(), f"Modified file was not backed up to {backed_up_file}."
     assert "# USER MODIFIED CONTENT" in backed_up_file.read_text(), "Backed up file does not contain manual edits."
+
+
+def test_old_directory_cleanup():
+    """
+    Check that when modifying participant/solver name pairs in the topology the previous folders are backed up
+    if they contain edits and deleted otherwise.
+    """
+    # Remove previously generated files
+    if generated_directory.exists():
+        shutil.rmtree(generated_directory, ignore_errors=True)
+
+    assert 0 == generate_case(input_file, generated_directory), "Initial case generation failed."
+
+    # Identify the two solver directories
+    solver_dirs: list[Path] = [d for d in generated_directory.iterdir()
+                               if d.is_dir() and "-" in d.name and not d.name.startswith("backup")]
+    assert len(solver_dirs) >= 2, "There are less than two solver directories."
+
+    dir_to_modify: Path = solver_dirs[0]
+    dir_to_delete: Path = solver_dirs[1]
+
+    # Add a custom file to the modified directory
+    custom_file = dir_to_modify / "custom_mesh.txt"
+    custom_file.write_text("Binary mesh data")
+
+    # Rename the participants in the topology to orphan both directories
+    original_topology: str = input_file.read_text()
+    modified_topology: str = original_topology.replace("Generator", "Alligator").replace("Propagator", "Crocodile")
+
+    try:
+        input_file.write_text(modified_topology)
+
+        # Run the generator again
+        assert 0 == generate_case(input_file, generated_directory), "Regeneration failed."
+
+        # Check that the old folders were handled correctly
+        assert not dir_to_modify.exists(), f"Modified old directory '{dir_to_modify.name}' was not removed."
+        assert not dir_to_delete.exists(), f"Unmodified old directory '{dir_to_delete.name}' was not deleted."
+
+        # Check that they were (not) backed up
+        backups_root: Path = generated_directory / "backups"
+        backup_dirs: list[Path] = list(backups_root.glob("*"))
+        assert len(backup_dirs) == 1, "Backup directory was not created."
+
+        backup_dir: Path = backup_dirs[0]
+        backed_up_modified_dir: Path = backup_dir / dir_to_modify.name
+        backed_up_deleted_dir: Path = backup_dir / dir_to_delete.name
+
+        # The modified directory should exist in the backup with the custom file
+        assert backed_up_modified_dir.exists(), f"Modified directory was not backed up to '{backed_up_modified_dir}'."
+        assert (backed_up_modified_dir / "custom_mesh.txt").exists(), "Custom file was lost during backup."
+
+        # The unmodified directory should not exist in the backup
+        assert not backed_up_deleted_dir.exists(), "Unmodified directory was backed up instead of being deleted."
+
+    finally:
+        # Restore original topology
+        input_file.write_text(original_topology)
