@@ -17,6 +17,7 @@ from precicecasegenerate.file_creators.utility_file_creator import UtilityFileCr
 
 logger = logging.getLogger(__name__)
 
+
 def makeGenerateParser(add_help: bool = True) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Initialize a preCICE case given a topology file",
@@ -27,7 +28,7 @@ def makeGenerateParser(add_help: bool = True) -> argparse.ArgumentParser:
         type=cli_helper.yaml_file,
         nargs="?",
         help="Path to the input YAML topology file.",
-        default=cli_helper.DEFAULT_TOPOLOGY_NAME # Needs to be a string to cover the case no input is given
+        default=cli_helper.DEFAULT_TOPOLOGY_NAME  # Needs to be a string to cover the case no input is given
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Enable verbose logging output."
@@ -39,6 +40,7 @@ def makeGenerateParser(add_help: bool = True) -> argparse.ArgumentParser:
         help="A custom output path for the generated folder. Already existing folders and files will be overwritten."
     )
     return parser
+
 
 def runGenerate(args: argparse.Namespace) -> int:
     setup_logging(verbose=args.verbose)
@@ -100,11 +102,14 @@ def generate_case(input_file: Path, output_root: Path) -> int:
 
     logger.debug("Creating participant directories.")
     participant_solver_map: dict = node_creator.get_participant_solver_map()
+    # Track directories that were created
+    generated_directories: set[Path] = set()
     for participant in participant_solver_map:
         participant_directory: Path = helper.get_participant_solver_directory(output_root, participant.name,
                                                                               participant_solver_map[participant])
         # Create the participant directory if it does not exist
         participant_directory.mkdir(parents=True, exist_ok=True)
+        generated_directories.add(participant_directory)
         logger.debug(f"Created participant directory at {participant_directory}")
 
     logger.debug("Starting adapter config creator.")
@@ -118,6 +123,8 @@ def generate_case(input_file: Path, output_root: Path) -> int:
     utility_file_creator: UtilityFileCreator = UtilityFileCreator(participant_solver_map)
     utility_file_creator.create_utility_files(parent_directory=output_root)
 
+    # Remove old directories and save new state
+    state_tracker.cleanup_old_directories(generated_directories)
     state_tracker.save_new_state()
 
     return 0
