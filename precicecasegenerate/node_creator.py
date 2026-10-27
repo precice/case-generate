@@ -396,7 +396,7 @@ class NodeCreator:
             data: n.DataNode = data_map[frozenset(exchange.items())]
             from_location_type: helper.LocationType = exchange["from-location-type"]
             to_location_type: helper.LocationType = exchange["to-location-type"]
-            data_label: helper.DataKind = helper.get_data_label(data.name.lower())
+            data_label: helper.DataKind = helper.get_data_label(data.name)
             from_mesh: n.MeshNode = mesh_map[(from_participant, to_participant, data_label, from_location_type)]
             to_mesh: n.MeshNode = mesh_map[(to_participant, from_participant, data_label, to_location_type)]
 
@@ -459,7 +459,7 @@ class NodeCreator:
             to_location_type: helper.LocationType = exchange["to-location-type"]
 
             # Get the label (extensive or intensive) to decide which mapping is needed
-            data_label: helper.DataKind = helper.get_data_label(data.name.lower())
+            data_label: helper.DataKind = helper.get_data_label(data.name)
             if helper.is_unknown_data_kind(data.name) and data not in seen_data_with_unknown_label:
                 logger.info(f"Data \"{data.name}\" is neither extensive nor intensive. Choosing default "
                             f"{helper.DEFAULT_DATA_KIND} with corresponding {helper.DEFAULT_MAPPING_KIND}-mapping.")
@@ -680,24 +680,24 @@ class NodeCreator:
                 created_meshes: dict[str, n.MeshNode] = {}
 
                 for data_kind, location_type in group_mesh_types:
-                    mesh_name: str = from_participant.name[:1].upper() + from_participant.name[1:]
+                    mesh_name: str = from_participant.name
 
                     # Only include partner name(s) if the participant has multiple distinct location groups
                     if num_groups > 1:
                         if len(partner_group) == 1:
                             only_partner: n.ParticipantNode = next(iter(partner_group))
-                            mesh_name += "-" + only_partner.name[:1].upper() + only_partner.name[1:]
+                            mesh_name += "-" + only_partner.name
                         elif num_multi_partner_groups > 1:
                             sorted_partners: list[n.ParticipantNode] = sorted(partner_group, key=lambda p: p.name)
-                            mesh_name += "-" + "-".join(p.name[:1].upper() + p.name[1:] for p in sorted_partners)
+                            mesh_name += "-" + "-".join(p.name for p in sorted_partners)
 
                     if requires_kind_split:
-                        mesh_name += "-" + data_kind.value.capitalize()
+                        mesh_name += "-" + data_kind.value
                     if requires_loc_type_split:
-                        mesh_name += "-" + location_type.value.capitalize()
+                        mesh_name += "-" + location_type.value
 
                     if mesh_name not in created_meshes:
-                        mesh: n.MeshNode = n.MeshNode(name=mesh_name + "-Mesh",
+                        mesh: n.MeshNode = n.MeshNode(name=helper.capitalize_name(mesh_name) + "-Mesh",
                                                       dimensions=self.participant_dimensionality[from_participant],
                                                       use_data=[])
                         self.meshes.append(mesh)

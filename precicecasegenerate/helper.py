@@ -29,7 +29,6 @@ DEFAULT_LOCATION_TYPE: str = "surface"
 EXTENSIVE_DATA: list[str] = [
     "extensive",
     "force",
-    "heat-transfer",
     "heattransfer",
     "mass",
     "current",
@@ -41,7 +40,6 @@ INTENSIVE_DATA: list[str] = [
     "temperature",
     "pressure",
     "velocity",
-    "heat-flux",
     "heatflux",
     "traction",
     "stress",
@@ -79,7 +77,8 @@ def is_unknown_data_kind(data_name: str) -> bool:
     :param data_name: The name of the data to check.
     :return: True, if the data kind is unknown. False otherwise.
     """
-    return not _is_extensive(data_name) and not _is_intensive(data_name)
+    normalized_data_name: str = normalize_data_name(data_name)
+    return not _is_extensive(normalized_data_name) and not _is_intensive(normalized_data_name)
 
 
 def _is_extensive(data_name: str) -> bool:
@@ -88,10 +87,12 @@ def _is_extensive(data_name: str) -> bool:
     :param data_name: The name of the data to check.
     :return: True, if the data extensive. False otherwise.
     """
+    normalized_data_name: str = normalize_data_name(data_name)
     # E.g., a "heat-transfer-coefficient" is not extensive
-    if data_name.lower().__contains__("coefficient"):
+    if normalize_data_name(normalized_data_name).__contains__("coefficient"):
         return False
-    return any(data_name.lower().__contains__(extensive_data) for extensive_data in EXTENSIVE_DATA)
+    return any(normalize_data_name(normalized_data_name).__contains__(extensive_data)
+               for extensive_data in EXTENSIVE_DATA)
 
 
 def _is_intensive(data_name: str) -> bool:
@@ -100,10 +101,12 @@ def _is_intensive(data_name: str) -> bool:
     :param data_name: The name of the data to check.
     :return: True, if the data intensive. False otherwise.
     """
+    normalized_data_name: str = normalize_data_name(data_name)
     # E.g., a "heat-transfer-coefficient" is intensive
-    if data_name.lower().__contains__("coefficient"):
+    if normalize_data_name(normalized_data_name).__contains__("coefficient"):
         return True
-    return any(data_name.lower().__contains__(intensive_data) for intensive_data in INTENSIVE_DATA)
+    return any(normalize_data_name(normalized_data_name).__contains__(intensive_data)
+               for intensive_data in INTENSIVE_DATA)
 
 
 # To make duplicate data names unique
@@ -128,9 +131,7 @@ DEFAULT_DATA_TYPES: dict[str, e.DataType] = {
     "temperature": e.DataType.SCALAR,
     "pressure": e.DataType.SCALAR,
     "velocity": e.DataType.VECTOR,
-    "heat-flux": e.DataType.VECTOR,
     "heatflux": e.DataType.VECTOR,
-    "heat-transfer": e.DataType.SCALAR,
     "heattransfer": e.DataType.SCALAR,
     "stress": e.DataType.VECTOR,
     "mass": e.DataType.SCALAR,
@@ -143,9 +144,19 @@ DEFAULT_DATA_TYPES: dict[str, e.DataType] = {
 }
 
 
+def normalize_data_name(name: str) -> str:
+    """
+    Normalize the data name by removing hyphens ("-"), underscores ("_"), spaces (" ") and using only lowercase letters.
+    :param name: The name to normalize.
+    :return: The normalized name.
+    """
+    return name.lower().replace("-", "").replace("_", "").replace(" ", "")
+
+
 def capitalize_name(name: str) -> str:
     """
     Capitalize the first letter of each word in a string.
+    The string can have mutiple names separated by hyphens ("-"), all of which will be capitalized.
     :param name: The string to capitalize.
     :return: A capitalized string.
     """
