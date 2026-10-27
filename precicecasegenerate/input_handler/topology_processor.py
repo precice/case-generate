@@ -67,9 +67,10 @@ class TopologyProcessor:
             data_type: str | None = exchange.get("data-type")
             if data_type is None:
                 data_type = helper.DEFAULT_DATA_TYPE.value
+                normalized_data_name: str = helper.normalize_data_name(data_name)
                 # Check if the data has a default type. Sort by key length to have a deterministic order
                 for key in sorted(helper.DEFAULT_DATA_TYPES.keys(), key=len, reverse=True):
-                    if key.lower() in data_name.lower():
+                    if key in normalized_data_name:
                         data_type = helper.DEFAULT_DATA_TYPES[key].value
                         break
 
