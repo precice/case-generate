@@ -16,6 +16,7 @@ authors = [
 
 requires-python = ">= 3.10"
 dependencies = [
+    "precice-config-check",
     "precice-config-graph",
     "precice-adapter-schema",
     "ruamel.yaml",
@@ -26,7 +27,6 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "precice-config-check",
 ]
 
 [project.scripts]
