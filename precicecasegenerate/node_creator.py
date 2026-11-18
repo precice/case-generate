@@ -399,6 +399,7 @@ class NodeCreator:
             data_label: helper.DataKind = helper.get_data_label(data.name)
             from_mesh: n.MeshNode = mesh_map[(from_participant, to_participant, data_label, from_location_type)]
             to_mesh: n.MeshNode = mesh_map[(to_participant, from_participant, data_label, to_location_type)]
+            initial: bool = exchange.get("initial", False)
 
             # This will prevent exchanges between meshes of different dimensions from being created.
             # If this ever becomes allowed, this block can be removed.
@@ -422,7 +423,9 @@ class NodeCreator:
                 # In a read-mapping, the exchanged mesh is the "from"-mesh
                 exchange_node: n.ExchangeNode = n.ExchangeNode(coupling_scheme=None, data=data, mesh=from_mesh,
                                                                from_participant=from_participant,
-                                                               to_participant=to_participant)
+                                                               to_participant=to_participant,
+                                                               initialize=initial
+                                                               )
                 logger.debug(f"Created exchange from {from_participant.name} to {to_participant.name} "
                              f"for data {data.name} on mesh {from_mesh.name}.")
             # Either strong or weak
