@@ -62,7 +62,7 @@ class UtilityFileCreator:
             shutil.copy2(real_src_path, file_path)
 
         # Make the file executable
-        file_path.chmod(file_path.stat().st_mode | stat.S_IEXEC)
+        file_path.chmod(file_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
         logger.debug(f"File clean.sh written to {file_path.resolve()}")
 
@@ -85,6 +85,7 @@ class UtilityFileCreator:
         # Use as_file to get a real path
         with as_file(src) as real_src_path:
             shutil.copy2(real_src_path, file_path)
+        file_path.chmod(file_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
         logger.debug(f"File run.sh written to {file_path.resolve()}")
 
     def _create_readme_file(self, directory: Path = "./", filename: str = "README.md") -> None:
