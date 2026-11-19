@@ -8,7 +8,7 @@ from preciceconfigcheck.cli import runCheck
 
 def list_examples():
     examples = Path(__file__).parent.parent / "examples"
-    return examples.rglob("topology.yaml")
+    return tuple(examples.rglob("topology.yaml"))
 
 
 @pytest.mark.parametrize("example", list_examples())
