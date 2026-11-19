@@ -100,9 +100,13 @@
               "weak"
             ]
           },
-          "initial": {
-            "type": "boolean",
-            "description": "Specifies whether the data is initially provided by the sending participant."
+          "initialState": {
+            "type": "string",
+            "description": "Specifies whether the data is initially provided by the sending participant or zero.",
+            "enum": [
+              "zero",
+              "provided"
+            ]
           }
         },
         "required": [
@@ -117,7 +121,7 @@
           "data-type",
           "from-location-type",
           "to-location-type",
-          "initial"
+          "initialState"
         ],
         "additionalProperties": false
       },
