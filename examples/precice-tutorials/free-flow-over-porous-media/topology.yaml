@@ -20,3 +20,4 @@ exchanges: # TODO requires write-consistent mapping
     type: strong
     from-location-names: [interface]
     to-location-names: [interface]
+    initialState: provided

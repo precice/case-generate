@@ -17,7 +17,7 @@ authors = [
 requires-python = ">= 3.10"
 dependencies = [
     "precice-config-check",
-    "precice-config-graph",
+    "precice-config-graph >= 3.1",
     "precice-adapter-schema",
     "ruamel.yaml",
     "jsonschema",

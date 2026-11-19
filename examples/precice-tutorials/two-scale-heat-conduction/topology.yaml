@@ -34,3 +34,4 @@ exchanges: # TODO api-access for grain size, active-steps and active-state
     type: strong
     from-location-names: [interface]
     to-location-names: [interface]
+    initialState: provided

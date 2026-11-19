@@ -13,6 +13,7 @@ exchanges: # TODO requires write-consistent mapping
     type: strong
     from-location-names: [interface]
     to-location-names: [interface]
+    initialState: provided
   - from: Mass-Right
     to: Mass-Left
     data: Force-Right
@@ -20,3 +21,4 @@ exchanges: # TODO requires write-consistent mapping
     type: strong
     from-location-names: [interface]
     to-location-names: [interface]
+    initialState: provided

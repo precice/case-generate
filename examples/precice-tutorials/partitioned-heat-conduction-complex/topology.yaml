@@ -18,3 +18,4 @@ exchanges:
     type: strong
     from-location-names: [interface]
     to-location-names: [interface]
+    initialState: provided

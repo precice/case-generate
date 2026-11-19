@@ -27,9 +27,11 @@ exchanges:
     type: weak
     from-location-names: [interface]
     to-location-names: [interface]
+    initialState: provided
   - from: Solid
     to: Controller
     data: Displacement-Cylinder
     type: weak
     from-location-names: [interface]
     to-location-names: [interface]
+    initialState: provided

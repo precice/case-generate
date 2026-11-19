@@ -13,6 +13,7 @@ exchanges:
     type: strong
     from-location-names: [interface]
     to-location-names: [interface]
+    initialState: provided
   - from: Neumann
     to: Dirichlet
     data: Velocity
@@ -20,3 +21,4 @@ exchanges:
     type: strong
     from-location-names: [interface]
     to-location-names: [interface]
+    initialState: provided

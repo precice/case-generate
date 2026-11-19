@@ -12,6 +12,7 @@ exchanges:
     type: weak
     from-location-names: [interface]
     to-location-names: [interface]
+    initialState: provided
   - from: Soil-Creep
     to: Wolf-Sheep-Grass
     data: Soil

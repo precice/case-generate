@@ -12,9 +12,11 @@ exchanges:
     type: strong
     from-location-names: [interface]
     to-location-names: [interface]
+    initialState: provided
   - from: Right
     to: Left
     data: Temperature-Right
     type: strong
     from-location-names: [interface]
     to-location-names: [interface]
+    initialState: provided

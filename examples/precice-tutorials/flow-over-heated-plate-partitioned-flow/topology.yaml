@@ -41,6 +41,7 @@ exchanges:
     type: strong
     from-location-names: [interface]
     to-location-names: [interface]
+    initialState: provided
   - from: Fluid1
     to: Fluid2
     data: FlowTemperature-Fluid
